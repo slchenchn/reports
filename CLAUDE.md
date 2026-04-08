@@ -14,7 +14,8 @@
 - 不写“希望这份文档对你有帮助”“如果需要我可以继续补充”这类 AI 腔收尾
 - 不刻意追求对称排比，句子自然一点，信息密度高一点
 - 英文术语保留行业常用写法，比如 kernel、token、Claude，禁止翻译腔
-- 如果某个地方需要生成图片，但你没有生图能力，就在对应地方写一个alt-text的placeholder，后续我会使用nano banana生成。格式示例：<img src="placeholder.png" alt="placeholder">
+- 如果某个地方需要图片，但你没有生图能力，就在对应地方写一个**详细的**alt-text作为placeholder，后续我会使用nano banana生成。格式示例：<img src="placeholder.png" alt="placeholder">
+- 不要把参考资料列在文末，而是直接做成带链接的文本
 
 ## 格式细则
 
