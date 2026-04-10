@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style C: Vintage Editorial</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #f5f3ee; }
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-family: 'Work Sans', sans-serif;
+    background: #f5f3ee;
+    color: #1a1a1a;
+}
+
+/* Geometric accent shapes */
+.geo-circle {
+    position: absolute;
+    top: clamp(2rem, 8vh, 6rem);
+    right: clamp(3rem, 10vw, 10rem);
+    width: clamp(80px, 15vw, 180px);
+    height: clamp(80px, 15vw, 180px);
+    border: 2px solid #1a1a1a;
+    border-radius: 50%;
+    opacity: 0;
+    animation: geoIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+@keyframes geoIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 0.15; transform: scale(1); }
+}
+
+.geo-line {
+    position: absolute;
+    bottom: clamp(3rem, 10vh, 8rem);
+    left: clamp(2rem, 6vw, 6rem);
+    width: clamp(60px, 12vw, 150px);
+    height: 2px;
+    background: #1a1a1a;
+    opacity: 0;
+    animation: lineIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+}
+
+@keyframes lineIn {
+    from { opacity: 0; transform: scaleX(0); }
+    to { opacity: 0.15; transform: scaleX(1); }
+}
+
+.geo-dot {
+    position: absolute;
+    bottom: calc(clamp(3rem, 10vh, 8rem) - 4px);
+    left: calc(clamp(2rem, 6vw, 6rem) + clamp(60px, 12vw, 150px) + 12px);
+    width: 10px;
+    height: 10px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    opacity: 0;
+    animation: geoIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: min(85vw, 700px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.8rem, 2.5vw, 2rem);
+}
+
+.eyebrow {
+    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #555;
+    border: 1px solid #ccc;
+    padding: clamp(0.25rem, 0.5vw, 0.4rem) clamp(0.8rem, 1.5vw, 1.2rem);
+    border-radius: 2px;
+    animation: fadeDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    opacity: 0;
+    transform: translateY(-15px);
+}
+
+@keyframes fadeDown {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(2.5rem, 7vw, 5.5rem);
+    line-height: 1.05;
+    color: #1a1a1a;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+@keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hr {
+    width: clamp(40px, 6vw, 80px);
+    height: 3px;
+    background: #1a1a1a;
+    animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+@keyframes scaleIn {
+    to { opacity: 1; transform: scaleX(1); }
+}
+
+.subtitle {
+    font-size: clamp(0.85rem, 1.5vw, 1.15rem);
+    color: #555;
+    line-height: 1.6;
+    max-width: 500px;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+.cta-box {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(0.4rem, 0.8vw, 0.6rem);
+    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+    border: 2px solid #1a1a1a;
+    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+.cta-box:hover {
+    background: #1a1a1a;
+    color: #f5f3ee;
+}
+
+.cta-box .arrow {
+    transition: transform 0.3s ease;
+}
+
+.cta-box:hover .arrow {
+    transform: translateX(4px);
+}
+</style>
+</head>
+<body>
+<section class="slide">
+    <div class="geo-circle"></div>
+    <div class="geo-line"></div>
+    <div class="geo-dot"></div>
+    <div class="content">
+        <span class="eyebrow">调研报告 · 2026</span>
+        <h1>Harness<br>Engineering</h1>
+        <div class="hr"></div>
+        <p class="subtitle">让 agent 在真实工程里长时间持续做对的执行系统设计</p>
+        <div class="cta-box">
+            <span>开始阅读</span>
+            <span class="arrow">→</span>
+        </div>
+    </div>
+</section>
+</body>
+</html>

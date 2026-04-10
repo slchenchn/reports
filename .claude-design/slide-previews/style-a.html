@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style A: Bold Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #1a1a1a; }
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+    font-family: 'Space Grotesk', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    color: #ffffff;
+}
+
+/* Grid overlay */
+.slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+.slide-number {
+    position: absolute;
+    top: clamp(1.5rem, 4vw, 3rem);
+    left: clamp(1.5rem, 4vw, 3rem);
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(3rem, 8vw, 8rem);
+    color: rgba(255,255,255,0.06);
+    line-height: 1;
+    z-index: 1;
+}
+
+.nav-breadcrumb {
+    position: absolute;
+    top: clamp(1.5rem, 4vw, 3rem);
+    right: clamp(1.5rem, 4vw, 3rem);
+    display: flex;
+    gap: clamp(0.5rem, 1vw, 1rem);
+    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.nav-breadcrumb span { opacity: 0.3; }
+.nav-breadcrumb span.active { opacity: 1; color: #FF5722; }
+
+.content-area {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: clamp(2rem, 6vw, 6rem);
+    gap: clamp(2rem, 4vw, 5rem);
+    z-index: 2;
+}
+
+.text-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+}
+
+.card-side {
+    flex: 0 0 clamp(200px, 35vw, 450px);
+    height: clamp(250px, 45vh, 400px);
+    background: #FF5722;
+    border-radius: clamp(12px, 2vw, 24px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(255, 87, 34, 0.3);
+    animation: cardSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateX(40px);
+}
+
+@keyframes cardSlide {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.card-side::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 80%;
+    height: 120%;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+
+.card-label {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 3.5rem);
+    color: #1a1a1a;
+    line-height: 1.1;
+}
+
+.card-sub {
+    font-size: clamp(0.65rem, 1vw, 0.85rem);
+    color: rgba(26,26,26,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: clamp(0.3rem, 0.5vw, 0.5rem);
+}
+
+h1 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    line-height: 1.05;
+    animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+@keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.subtitle {
+    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+    color: rgba(255,255,255,0.5);
+    max-width: 400px;
+    line-height: 1.5;
+    animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+.tag {
+    display: inline-block;
+    padding: clamp(0.3rem, 0.5vw, 0.4rem) clamp(0.6rem, 1vw, 1rem);
+    border: 1px solid rgba(255,87,34,0.4);
+    border-radius: 100px;
+    font-size: clamp(0.55rem, 0.9vw, 0.75rem);
+    color: #FF5722;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    opacity: 0;
+    transform: translateY(25px);
+}
+
+@media (max-width: 768px) {
+    .content-area { flex-direction: column-reverse; padding: clamp(1.5rem, 4vw, 3rem); }
+    .card-side { flex: none; width: 100%; height: clamp(150px, 25vh, 200px); }
+}
+</style>
+</head>
+<body>
+<section class="slide">
+    <div class="slide-number">01</div>
+    <div class="nav-breadcrumb">
+        <span class="active">起源</span>
+        <span>控制回路</span>
+        <span>实践</span>
+        <span>反直觉</span>
+    </div>
+    <div class="content-area">
+        <div class="text-side">
+            <h1>Harness Engineering</h1>
+            <p class="subtitle">让 agent 在真实工程里长时间持续做对的执行系统设计</p>
+            <span class="tag">调研报告 · 2026</span>
+        </div>
+        <div class="card-side">
+            <div class="card-label">Model + Harness = Agent</div>
+            <div class="card-sub">From prompt to system</div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
