@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harness Engineering 调研报告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ===========================================
+       THEME: VINTAGE EDITORIAL
+       Based on .claude-design/slide-previews/style-c.html
+       =========================================== */
+    :root {
+      --bg-cream: #f5f3ee;
+      --bg-paper: #faf8f1;
+      --text-primary: #1a1a1a;
+      --text-secondary: #55504a;
+      --text-muted: #7b756f;
+      --line: #1a1a1a;
+      --line-soft: rgba(26, 26, 26, 0.16);
+      --accent-warm: #e8d4c0;
+      --accent-rust: #b75d3a;
+      --accent-moss: #67785f;
+      --accent-blue: #4d708f;
+      --font-display: "Fraunces", serif;
+      --font-body: "Work Sans", sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-normal: 0.7s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ===========================================
+       VIEWPORT FITTING: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       These styles ensure slides fit exactly in the viewport.
+       =========================================== */
+
+    /* 1. Lock html/body to viewport */
+    html, body {
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+    }
+
+    /* 2. Each slide = exact viewport height */
+    .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    /* 3. Content container with flex for centering */
+    .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+    }
+
+    /* 4. ALL typography uses clamp() for responsive scaling */
+    :root {
+        /* Titles scale from mobile to desktop */
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+        /* Body text */
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+        /* Spacing scales with viewport */
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+    }
+
+    /* 5. Cards/containers use viewport-relative max sizes */
+    .card, .container, .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+    }
+
+    /* 6. Lists auto-scale with viewport */
+    .feature-list, .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+    }
+
+    .feature-list li, .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+    }
+
+    /* 7. Grids adapt to available space */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+    }
+
+    /* 8. Images constrained to viewport */
+    img, .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+    }
+
+    /* ===========================================
+       RESPONSIVE BREAKPOINTS
+       Aggressive scaling for smaller viewports
+       =========================================== */
+
+    /* Short viewports (< 700px height) */
+    @media (max-height: 700px) {
+        :root {
+            --slide-padding: clamp(0.75rem, 3vw, 2rem);
+            --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+            --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+            --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+    }
+
+    /* Very short viewports (< 600px height) */
+    @media (max-height: 600px) {
+        :root {
+            --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+            --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+            --title-size: clamp(1.1rem, 4vw, 2rem);
+            --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots, .keyboard-hint, .decorative {
+            display: none;
+        }
+    }
+
+    /* Extremely short (landscape phones, < 500px height) */
+    @media (max-height: 500px) {
+        :root {
+            --slide-padding: clamp(0.4rem, 2vw, 1rem);
+            --title-size: clamp(1rem, 3.5vw, 1.5rem);
+            --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+            --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+    }
+
+    /* Narrow viewports (< 600px width) */
+    @media (max-width: 600px) {
+        :root {
+            --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ===========================================
+       REDUCED MOTION
+       Respect user preferences
+       =========================================== */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+
+        html {
+            scroll-behavior: auto;
+        }
+    }
+
+    /* ===========================================
+       BASE PRESENTATION STYLES
+       =========================================== */
+    body {
+      background: var(--bg-cream);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+    }
+
+    .slide {
+      background:
+        linear-gradient(90deg, rgba(26, 26, 26, 0.035) 1px, transparent 1px),
+        linear-gradient(rgba(26, 26, 26, 0.035) 1px, transparent 1px),
+        var(--bg-cream);
+      background-size: clamp(2.5rem, 6vw, 4.5rem) clamp(2.5rem, 6vw, 4.5rem);
+      color: var(--text-primary);
+      isolation: isolate;
+    }
+
+    .slide::before,
+    .slide::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .slide::before {
+      top: clamp(1.5rem, 5vh, 4rem);
+      right: clamp(1.5rem, 7vw, 6rem);
+      width: clamp(4.5rem, 13vw, 11rem);
+      height: clamp(4.5rem, 13vw, 11rem);
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      opacity: 0.12;
+      transform: scale(0.9);
+      transition: opacity var(--duration-normal) var(--ease-out-expo), transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .slide::after {
+      left: clamp(1rem, 5vw, 5rem);
+      bottom: clamp(1.5rem, 7vh, 5.5rem);
+      width: clamp(4rem, 12vw, 10rem);
+      height: 2px;
+      background: var(--line);
+      opacity: 0.14;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .slide.visible::before {
+      opacity: 0.16;
+      transform: scale(1);
+    }
+
+    .slide.visible::after {
+      transform: scaleX(1);
+    }
+
+    .slide-content {
+      width: min(100%, 1180px);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      gap: var(--content-gap);
+    }
+
+    h1,
+    h2,
+    h3,
+    .display {
+      font-family: var(--font-display);
+      letter-spacing: 0;
+      color: var(--text-primary);
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 8vw, 6.3rem);
+      line-height: 0.98;
+      font-weight: 900;
+    }
+
+    h2 {
+      font-size: var(--h2-size);
+      line-height: 1.05;
+      font-weight: 900;
+      max-width: min(92vw, 960px);
+    }
+
+    h3 {
+      font-size: var(--h3-size);
+      line-height: 1.12;
+      font-weight: 700;
+    }
+
+    p {
+      color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: min(88vw, 820px);
+    }
+
+    a {
+      color: inherit;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid rgba(26, 26, 26, 0.28);
+      color: var(--text-secondary);
+      padding: clamp(0.26rem, 0.6vw, 0.42rem) clamp(0.72rem, 1.6vw, 1.2rem);
+      border-radius: 2px;
+      font-size: clamp(0.55rem, 0.95vw, 0.78rem);
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .kicker {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.5vw, 2.3rem);
+      line-height: 1.15;
+      color: var(--text-primary);
+      max-width: min(88vw, 820px);
+    }
+
+    .accent-rule {
+      width: clamp(2.5rem, 6vw, 5rem);
+      height: 3px;
+      background: var(--line);
+      transform-origin: left;
+    }
+
+    .slide-number {
+      position: absolute;
+      top: clamp(0.8rem, 2vw, 1.6rem);
+      left: clamp(0.8rem, 2vw, 1.8rem);
+      z-index: 3;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: clamp(0.9rem, 1.8vw, 1.55rem);
+      font-weight: 700;
+    }
+
+    .source {
+      font-size: clamp(0.6rem, 0.95vw, 0.78rem);
+      color: var(--text-muted);
+      max-width: min(88vw, 860px);
+    }
+
+    .source a {
+      color: var(--text-secondary);
+    }
+
+    /* ===========================================
+       ANIMATIONS
+       =========================================== */
+    .reveal,
+    .reveal-left,
+    .reveal-scale {
+      opacity: 0;
+      transition:
+        opacity var(--duration-normal) var(--ease-out-expo),
+        transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .reveal {
+      transform: translateY(clamp(0.8rem, 2vh, 1.8rem));
+    }
+
+    .reveal-left {
+      transform: translateX(calc(-1 * clamp(1rem, 4vw, 3rem)));
+    }
+
+    .reveal-scale {
+      transform: scale(0.96);
+    }
+
+    .slide.visible .reveal,
+    .slide.visible .reveal-left,
+    .slide.visible .reveal-scale {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+
+    .reveal:nth-child(1),
+    .reveal-left:nth-child(1),
+    .reveal-scale:nth-child(1) {
+      transition-delay: 0.08s;
+    }
+
+    .reveal:nth-child(2),
+    .reveal-left:nth-child(2),
+    .reveal-scale:nth-child(2) {
+      transition-delay: 0.16s;
+    }
+
+    .reveal:nth-child(3),
+    .reveal-left:nth-child(3),
+    .reveal-scale:nth-child(3) {
+      transition-delay: 0.24s;
+    }
+
+    .reveal:nth-child(4),
+    .reveal-left:nth-child(4),
+    .reveal-scale:nth-child(4) {
+      transition-delay: 0.32s;
+    }
+
+    .reveal:nth-child(5),
+    .reveal-left:nth-child(5),
+    .reveal-scale:nth-child(5) {
+      transition-delay: 0.4s;
+    }
+
+    /* ===========================================
+       SHARED COMPONENTS
+       =========================================== */
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: clamp(1rem, 3vw, 3rem);
+      align-items: center;
+      width: 100%;
+      max-height: min(82vh, 760px);
+    }
+
+    .three-column {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(0.7rem, 1.8vw, 1.25rem);
+      width: 100%;
+    }
+
+    .panel,
+    .stat,
+    .principle,
+    .failure-card,
+    .future-card {
+      background: rgba(250, 248, 241, 0.76);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      box-shadow: clamp(0.2rem, 0.8vw, 0.55rem) clamp(0.2rem, 0.8vw, 0.55rem) 0 rgba(26, 26, 26, 0.12);
+    }
+
+    .panel {
+      padding: clamp(0.85rem, 2vw, 1.4rem);
+    }
+
+    .table {
+      display: grid;
+      border: 1px solid var(--line);
+      background: rgba(250, 248, 241, 0.82);
+      box-shadow: clamp(0.25rem, 0.8vw, 0.6rem) clamp(0.25rem, 0.8vw, 0.6rem) 0 rgba(26, 26, 26, 0.1);
+      max-height: min(62vh, 540px);
+      overflow: hidden;
+    }
+
+    .table-row {
+      display: grid;
+      min-height: 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .table-row:last-child {
+      border-bottom: 0;
+    }
+
+    .table-cell {
+      padding: clamp(0.42rem, 1vw, 0.78rem);
+      border-right: 1px solid var(--line-soft);
+      min-width: 0;
+      line-height: 1.35;
+      color: var(--text-secondary);
+      font-size: clamp(0.62rem, 1.04vw, 0.95rem);
+    }
+
+    .table-cell:last-child {
+      border-right: 0;
+    }
+
+    .table-head .table-cell {
+      background: var(--text-primary);
+      color: var(--bg-cream);
+      font-weight: 600;
+    }
+
+    .quote {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 3.5vw, 3.1rem);
+      line-height: 1.1;
+      color: var(--text-primary);
+      max-width: min(86vw, 900px);
+    }
+
+    .bullet-list {
+      display: flex;
+      flex-direction: column;
+      max-width: min(88vw, 880px);
+      list-style: none;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: clamp(1rem, 2vw, 1.4rem);
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.68em;
+      width: clamp(0.34rem, 0.75vw, 0.48rem);
+      height: clamp(0.34rem, 0.75vw, 0.48rem);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--accent-warm);
+    }
+
+    .tag {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: clamp(0.18rem, 0.45vw, 0.34rem) clamp(0.52rem, 1.1vw, 0.9rem);
+      font-size: clamp(0.55rem, 0.88vw, 0.74rem);
+      color: var(--text-secondary);
+      background: rgba(232, 212, 192, 0.45);
+      line-height: 1.2;
+    }
+
+    .mono {
+      font-family: "Work Sans", sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ===========================================
+       TITLE SLIDE
+       =========================================== */
+    .title-slide .slide-content {
+      align-items: center;
+      text-align: center;
+      gap: clamp(0.8rem, 2.2vw, 1.8rem);
+    }
+
+    .title-slide h1 {
+      max-width: min(92vw, 940px);
+    }
+
+    .title-slide .subtitle {
+      font-size: clamp(0.9rem, 1.55vw, 1.2rem);
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: min(84vw, 620px);
+    }
+
+    .cta-box {
+      display: inline-flex;
+      align-items: center;
+      gap: clamp(0.35rem, 0.8vw, 0.6rem);
+      padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+      border: 2px solid var(--line);
+      border-radius: 2px;
+      font-size: clamp(0.58rem, 0.92vw, 0.78rem);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      background: transparent;
+    }
+
+    .cta-box .arrow {
+      transition: transform 0.3s ease;
+    }
+
+    .cta-box:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    /* ===========================================
+       PARADIGM SLIDE
+       =========================================== */
+    .paradigm-table {
+      grid-template-columns: 0.8fr 1.45fr 0.78fr 1.24fr;
+    }
+
+    .paradigm-table .table-cell:first-child {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ===========================================
+       ORIGIN AND METRICS SLIDES
+       =========================================== */
+    .origin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(0.8rem, 2vw, 1.5rem);
+      width: 100%;
+    }
+
+    .origin-card {
+      min-height: clamp(8rem, 24vh, 14rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(0.7rem, 1.5vw, 1.1rem);
+      padding: clamp(0.85rem, 2vw, 1.4rem);
+      border: 1px solid var(--line);
+      background: rgba(250, 248, 241, 0.82);
+      box-shadow: clamp(0.2rem, 0.8vw, 0.5rem) clamp(0.2rem, 0.8vw, 0.5rem) 0 rgba(26, 26, 26, 0.1);
+    }
+
+    .origin-card p {
+      font-size: clamp(0.68rem, 1.12vw, 0.95rem);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(0.55rem, 1.4vw, 1rem);
+      width: 100%;
+    }
+
+    .stat {
+      min-height: clamp(5.2rem, 14vh, 8.2rem);
+      padding: clamp(0.75rem, 1.8vw, 1.2rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.45rem, 3.8vw, 3.2rem);
+      line-height: 0.95;
+      color: var(--text-primary);
+      font-weight: 900;
+    }
+
+    .stat-label {
+      font-size: clamp(0.62rem, 1vw, 0.82rem);
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* ===========================================
+       CONTROL LOOP SLIDE
+       =========================================== */
+    .loop-layout {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: clamp(0.8rem, 2vw, 1.5rem);
+      align-items: center;
+      width: 100%;
+    }
+
+    .loop-card {
+      min-height: clamp(14rem, 42vh, 22rem);
+      padding: clamp(0.9rem, 2vw, 1.5rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      background: rgba(250, 248, 241, 0.84);
+    }
+
+    .loop-card:nth-child(1) {
+      box-shadow: clamp(0.2rem, 0.8vw, 0.55rem) clamp(0.2rem, 0.8vw, 0.55rem) 0 rgba(103, 120, 95, 0.26);
+    }
+
+    .loop-card:nth-child(3) {
+      box-shadow: clamp(0.2rem, 0.8vw, 0.55rem) clamp(0.2rem, 0.8vw, 0.55rem) 0 rgba(183, 93, 58, 0.22);
+    }
+
+    .loop-arrow {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 4rem);
+      color: var(--text-primary);
+      transform: translateY(-0.1em);
+    }
+
+    .loop-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.45rem, 1vh, 0.8rem);
+    }
+
+    .loop-card li {
+      color: var(--text-secondary);
+      font-size: clamp(0.68rem, 1.1vw, 0.95rem);
+      line-height: 1.35;
+    }
+
+    /* ===========================================
+       CHART SLIDE
+       =========================================== */
+    .chart-frame {
+      width: min(88vw, 940px);
+      max-height: min(54vh, 420px);
+      padding: clamp(0.4rem, 1vw, 0.8rem);
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      box-shadow: clamp(0.2rem, 0.8vw, 0.55rem) clamp(0.2rem, 0.8vw, 0.55rem) 0 rgba(26, 26, 26, 0.12);
+    }
+
+    .chart-frame img {
+      display: block;
+      width: 100%;
+      max-height: min(46vh, 340px);
+      object-fit: contain;
+    }
+
+    .chart-note {
+      display: grid;
+      grid-template-columns: 0.4fr 1fr;
+      gap: clamp(0.55rem, 1.4vw, 1rem);
+      align-items: start;
+      width: min(88vw, 940px);
+    }
+
+    .chart-note .quote {
+      font-size: clamp(1rem, 2.25vw, 1.95rem);
+    }
+
+    /* ===========================================
+       PRINCIPLES AND FAILURE MODES
+       =========================================== */
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: clamp(0.4rem, 1vw, 0.7rem);
+      width: 100%;
+    }
+
+    .principle {
+      min-height: clamp(8.6rem, 25vh, 13.5rem);
+      padding: clamp(0.58rem, 1.25vw, 1rem);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.35rem, 0.8vw, 0.55rem);
+    }
+
+    .principle h3 {
+      font-size: clamp(0.85rem, 1.35vw, 1.22rem);
+      line-height: 1.05;
+    }
+
+    .principle p {
+      font-size: clamp(0.56rem, 0.9vw, 0.78rem);
+      line-height: 1.42;
+      color: var(--text-secondary);
+    }
+
+    .principle .tag {
+      margin-top: auto;
+      border-radius: 2px;
+      background: transparent;
+    }
+
+    .failure-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(0.55rem, 1.4vw, 1rem);
+      width: 100%;
+    }
+
+    .failure-card {
+      padding: clamp(0.7rem, 1.55vw, 1.1rem);
+      min-height: clamp(7rem, 18vh, 10rem);
+      display: grid;
+      grid-template-columns: clamp(2rem, 4vw, 3.4rem) 1fr;
+      gap: clamp(0.5rem, 1.2vw, 0.9rem);
+      align-items: start;
+    }
+
+    .failure-index {
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 3.2vw, 2.7rem);
+      line-height: 0.9;
+      color: rgba(26, 26, 26, 0.34);
+      font-weight: 900;
+    }
+
+    .failure-card h3 {
+      font-size: clamp(0.9rem, 1.45vw, 1.25rem);
+      margin-bottom: clamp(0.22rem, 0.6vw, 0.38rem);
+    }
+
+    .failure-card p {
+      font-size: clamp(0.62rem, 1vw, 0.83rem);
+      line-height: 1.42;
+    }
+
+    /* ===========================================
+       CASE STUDY AND TRADEOFF SLIDES
+       =========================================== */
+    .case-score {
+      display: flex;
+      align-items: baseline;
+      gap: clamp(0.6rem, 1.4vw, 1rem);
+      flex-wrap: wrap;
+    }
+
+    .score-number {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: clamp(2.5rem, 7vw, 5.8rem);
+      line-height: 0.92;
+      color: var(--text-primary);
+    }
+
+    .score-delta {
+      font-size: clamp(0.9rem, 1.4vw, 1.15rem);
+      color: var(--text-secondary);
+    }
+
+    .middleware-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(0.55rem, 1.4vw, 1rem);
+    }
+
+    .middleware {
+      padding: clamp(0.7rem, 1.55vw, 1.1rem);
+      border: 1px solid var(--line);
+      min-height: clamp(8rem, 22vh, 12rem);
+      background: rgba(250, 248, 241, 0.82);
+    }
+
+    .middleware h3 {
+      font-size: clamp(0.85rem, 1.35vw, 1.2rem);
+      margin-bottom: clamp(0.45rem, 0.9vw, 0.65rem);
+    }
+
+    .middleware p {
+      font-size: clamp(0.62rem, 1vw, 0.82rem);
+      line-height: 1.42;
+    }
+
+    .tradeoff {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(0.8rem, 2vw, 1.5rem);
+      width: 100%;
+    }
+
+    .tradeoff .panel {
+      min-height: clamp(13rem, 38vh, 20rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .tradeoff h3 {
+      font-size: clamp(1.05rem, 2vw, 1.8rem);
+    }
+
+    .tradeoff .label {
+      font-size: clamp(0.6rem, 0.95vw, 0.76rem);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    /* ===========================================
+       FUTURE SLIDE
+       =========================================== */
+    .future-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(0.65rem, 1.7vw, 1.2rem);
+      width: 100%;
+    }
+
+    .future-card {
+      min-height: clamp(11rem, 32vh, 18rem);
+      padding: clamp(0.8rem, 1.8vw, 1.25rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(0.6rem, 1.2vw, 0.9rem);
+    }
+
+    .future-card .future-num {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 3.5vw, 3rem);
+      color: rgba(26, 26, 26, 0.32);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .future-card p {
+      font-size: clamp(0.64rem, 1.04vw, 0.88rem);
+      line-height: 1.45;
+    }
+
+    /* ===========================================
+       NAVIGATION
+       =========================================== */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: var(--text-primary);
+      z-index: 1000;
+      transition: width 0.2s ease;
+    }
+
+    .nav-dots {
+      position: fixed;
+      right: clamp(0.55rem, 1.3vw, 1rem);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.28rem, 0.7vh, 0.46rem);
+    }
+
+    .nav-dot {
+      width: clamp(0.45rem, 0.82vw, 0.62rem);
+      height: clamp(0.45rem, 0.82vw, 0.62rem);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .nav-dot.active {
+      background: var(--line);
+      transform: scale(1.18);
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      right: clamp(0.8rem, 2vw, 1.6rem);
+      bottom: clamp(0.6rem, 1.6vw, 1.2rem);
+      z-index: 1000;
+      color: var(--text-muted);
+      font-size: clamp(0.58rem, 0.9vw, 0.72rem);
+    }
+
+    /* ===========================================
+       RESPONSIVE SLIDE LAYOUTS
+       =========================================== */
+    @media (max-width: 920px) {
+      .two-column,
+      .loop-layout,
+      .tradeoff,
+      .chart-note {
+        grid-template-columns: 1fr;
+      }
+
+      .loop-arrow {
+        display: none;
+      }
+
+      .principles-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .principle {
+        min-height: clamp(5.8rem, 15vh, 8rem);
+      }
+
+      .middleware-list,
+      .future-grid,
+      .metrics-grid,
+      .three-column {
+        grid-template-columns: 1fr;
+      }
+
+      .middleware,
+      .future-card,
+      .stat {
+        min-height: auto;
+      }
+
+      .origin-grid,
+      .failure-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .table-cell {
+        font-size: clamp(0.55rem, 1.6vw, 0.78rem);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .paradigm-table {
+        display: none;
+      }
+
+      .mobile-stack {
+        display: flex;
+      }
+
+      .principles-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .principle:nth-child(n + 4) {
+        display: none;
+      }
+
+      .failure-card:nth-child(n + 4) {
+        display: none;
+      }
+
+      .nav-dots {
+        display: none;
+      }
+    }
+
+    @media (min-width: 721px) {
+      .mobile-stack {
+        display: none;
+      }
+    }
+
+    @media (max-height: 700px) {
+      .principle {
+        min-height: clamp(6.5rem, 22vh, 9rem);
+      }
+
+      .failure-card {
+        min-height: clamp(5.6rem, 16vh, 7.5rem);
+      }
+
+      .slide::before {
+        opacity: 0.08;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .source,
+      .keyboard-hint {
+        display: none;
+      }
+
+      .slide-content {
+        gap: clamp(0.35rem, 1vw, 0.7rem);
+      }
+
+      .chart-frame img {
+        max-height: min(42vh, 290px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" aria-hidden="true"></div>
+  <nav class="nav-dots" aria-label="Slide navigation"></nav>
+  <div class="keyboard-hint" aria-hidden="true">↑ ↓ / Space / Swipe</div>
+
+  <section class="slide title-slide">
+    <div class="slide-content">
+      <span class="eyebrow reveal">调研报告 · 2026</span>
+      <h1 class="reveal">Harness<br />Engineering</h1>
+      <div class="accent-rule reveal"></div>
+      <p class="subtitle reveal">让 agent 在真实工程里长时间持续做对的执行系统设计</p>
+      <div class="cta-box reveal">
+        <span>开始阅读</span>
+        <span class="arrow">→</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">01</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Problem Scope</span>
+      <h2 class="reveal">Prompt、Context、Harness 解决的是三层问题</h2>
+      <div class="table paradigm-table reveal-scale">
+        <div class="table-row table-head">
+          <div class="table-cell">范式</div>
+          <div class="table-cell">解决的问题</div>
+          <div class="table-cell">核心对象</div>
+          <div class="table-cell">典型手段</div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell">Prompt Engineering</div>
+          <div class="table-cell">这次怎么让模型答对</div>
+          <div class="table-cell">单轮输入</div>
+          <div class="table-cell">模板、few-shot、格式约束</div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell">Context Engineering</div>
+          <div class="table-cell">决策所需信息有没有被正确装进上下文</div>
+          <div class="table-cell">信息装载</div>
+          <div class="table-cell">检索、RAG、MCP、知识压缩</div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell">Harness Engineering</div>
+          <div class="table-cell">怎么让 agent 在真实工程里持续做对</div>
+          <div class="table-cell">执行系统</div>
+          <div class="table-cell">hooks、lint、progress file、evaluator</div>
+        </div>
+      </div>
+      <div class="mobile-stack bullet-list reveal">
+        <li>Prompt 关心单次输出质量</li>
+        <li>Context 关心信息是否被正确装载</li>
+        <li>Harness 关心真实工程里的长程稳定性</li>
+      </div>
+      <p class="reveal">当 agent 开始读仓库、跑命令、改代码、提 PR，瓶颈会从表达质量转向约束、反馈和恢复能力</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">02</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Origin</span>
+      <h2 class="reveal">这个词先是经验判断，后来变成工程范式</h2>
+      <div class="origin-grid">
+        <article class="origin-card reveal-left">
+          <span class="tag">Mitchell Hashimoto</span>
+          <h3>从重复错误里提炼机制</h3>
+          <p>在 <a href="https://mitchellh.com/writing/my-ai-adoption-journey">My AI Adoption Journey</a> 中，Harness 的朴素定义是：agent 重复犯错时，把修复固化成系统性的预防措施</p>
+        </article>
+        <article class="origin-card reveal">
+          <span class="tag">OpenAI</span>
+          <h3>把开发重心转向基础设施</h3>
+          <p><a href="https://openai.com/index/harness-engineering/">OpenAI 的实践</a> 把它推进成 agent-first 产品开发流程：人主要构建 agent 能持续工作的环境</p>
+        </article>
+      </div>
+      <p class="source reveal">核心变化不是“prompt 写得更长”，而是把对话里的临时修补推进到 repo 内可版本化、可复用、可验证的机制</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">03</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">OpenAI Case</span>
+      <h2 class="reveal">当代码由 agent 大规模产出，人要写的是运行环境</h2>
+      <div class="metrics-grid">
+        <div class="stat reveal-scale">
+          <div class="stat-value">5</div>
+          <div class="stat-label">约 5 个月开发周期</div>
+        </div>
+        <div class="stat reveal-scale">
+          <div class="stat-value">7</div>
+          <div class="stat-label">团队从 3 人扩展到 7 人</div>
+        </div>
+        <div class="stat reveal-scale">
+          <div class="stat-value">100万</div>
+          <div class="stat-label">约 100 万行代码</div>
+        </div>
+        <div class="stat reveal-scale">
+          <div class="stat-value">0</div>
+          <div class="stat-label">人工手写代码 0 行</div>
+        </div>
+        <div class="stat reveal-scale">
+          <div class="stat-value">1,500</div>
+          <div class="stat-label">约 1,500 个 Pull Request</div>
+        </div>
+        <div class="stat reveal-scale">
+          <div class="stat-value">3.5</div>
+          <div class="stat-label">人均约 3.5 个 PR/天</div>
+        </div>
+      </div>
+      <p class="reveal">这种模式下，工程师的关键动作变成设计高容错环境、闭环反馈回路和确定性架构约束</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">04</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Control Loop</span>
+      <h2 class="reveal">Harness 本质是闭环控制系统</h2>
+      <div class="loop-layout">
+        <article class="loop-card reveal-left">
+          <span class="tag">Guides · 前馈控制</span>
+          <h3>在动手前收窄搜索空间</h3>
+          <ul>
+            <li>AGENTS.md 作为入口地图</li>
+            <li>ARCHITECTURE.md 解释模块边界</li>
+            <li>schema、skills、脚本沉淀可执行约束</li>
+          </ul>
+        </article>
+        <div class="loop-arrow reveal">↔</div>
+        <article class="loop-card reveal">
+          <span class="tag">Sensors · 反馈控制</span>
+          <h3>在动手后发现偏差并推动自修复</h3>
+          <ul>
+            <li>lint、编译检查、测试过滤</li>
+            <li>安全/策略扫描、review agent</li>
+            <li>Playwright 截图、日志、trace</li>
+          </ul>
+        </article>
+      </div>
+      <p class="source reveal">从 <a href="https://martinfowler.com/articles/harness-engineering.html">ThoughtWorks 的梳理</a> 看，Harness 不是替模型思考，而是把高方差系统压到可控区间里</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">05</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Why It Matters</span>
+      <h2 class="reveal">长期维护能力不是一次性正确率</h2>
+      <div class="chart-frame reveal-scale">
+        <img src="swe_ci_zero_regression_rate.png" alt="SWE-CI zero regression rate chart" />
+      </div>
+      <div class="chart-note">
+        <p class="quote reveal-left">只有少数模型在 zero regression rate 上超过 50%</p>
+        <p class="reveal">SWE-CI 把 agent 放进真实仓库的多轮 CI 演化过程里，评估的是持续改代码、跑测试、避免回归的能力。吞吐上去后，没有 Harness 的代码库很快会累积结构性熵</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">06</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Workflow Shift</span>
+      <h2 class="reveal">Agent 会把治理成本前置到小项目阶段</h2>
+      <div class="two-column">
+        <p class="quote reveal-left">过去团队变大才暴露的问题，现在会被 agent 吞吐提前放大</p>
+        <ul class="bullet-list reveal">
+          <li>CI/CD 不稳定会直接变成 agent 的噪声源</li>
+          <li>代码质量规则不明确，agent 会在风格和边界上随机游走</li>
+          <li>领域边界模糊，修复循环会把局部问题扩散成架构漂移</li>
+          <li>可观察性不足时，模型容易过早宣布完成</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">07</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Five Principles</span>
+      <h2 class="reveal">OpenAI 的五条原则，本质都是把隐性知识物理化</h2>
+      <div class="principles-grid">
+        <article class="principle reveal-scale">
+          <h3>What the agent can't see doesn't exist</h3>
+          <p>Slack 讨论、设计决策、schema 必须沉淀为 repo 内 artifact</p>
+          <span class="tag">知识可见</span>
+        </article>
+        <article class="principle reveal-scale">
+          <h3>Ask what capability is missing</h3>
+          <p>优先把错误归因为环境缺能力，而不是让人手动兜底</p>
+          <span class="tag">能力补齐</span>
+        </article>
+        <article class="principle reveal-scale">
+          <h3>Mechanical enforcement</h3>
+          <p>文档防君子不防 agent，用 lint、CI 和结构约束强制边界</p>
+          <span class="tag">机械执行</span>
+        </article>
+        <article class="principle reveal-scale">
+          <h3>Give the agent eyes</h3>
+          <p>动态行为要靠截图、日志、trace 和可重复探针来验证</p>
+          <span class="tag">可观察</span>
+        </article>
+        <article class="principle reveal-scale">
+          <h3>A map, not a manual</h3>
+          <p>入口文件要薄，细节按需加载，避免巨型手册污染 context</p>
+          <span class="tag">上下文节制</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">08</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">LangChain Case</span>
+      <h2 class="reveal">不换模型，只改 Harness，也能带来明显增益</h2>
+      <div class="case-score reveal">
+        <span class="score-number">52.8% → 66.5%</span>
+        <span class="score-delta">Terminal Bench 2.0，提升 13.7 个百分点</span>
+      </div>
+      <div class="middleware-list">
+        <article class="middleware reveal-scale">
+          <h3>LoopDetectionMiddleware</h3>
+          <p>追踪文件编辑次数，超过阈值后提示 agent 重新评估当前路径</p>
+        </article>
+        <article class="middleware reveal-scale">
+          <h3>PreCompletionChecklistMiddleware</h3>
+          <p>退出前拦截，强制对照任务规格运行验证，降低过早收尾概率</p>
+        </article>
+        <article class="middleware reveal-scale">
+          <h3>Trace Analyzer Skill</h3>
+          <p>拉取 LangSmith trace，派生并行分析 agent，再汇总失败模式</p>
+        </article>
+      </div>
+      <p class="source reveal">案例来自 <a href="https://blog.langchain.com/improving-deep-agents-with-harness-engineering/">LangChain 的 Harness Engineering 实践</a></p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">09</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Failure Modes</span>
+      <h2 class="reveal">常见失败模式都不是单靠更会说话能解决的</h2>
+      <div class="failure-grid">
+        <article class="failure-card reveal-scale">
+          <div class="failure-index">01</div>
+          <div>
+            <h3>上下文越长 agent 越笨</h3>
+            <p>无关搜索结果和长日志挤占注意力，应该限制注入量，用过滤测试替代全量噪声</p>
+          </div>
+        </article>
+        <article class="failure-card reveal-scale">
+          <div class="failure-index">02</div>
+          <div>
+            <h3>AGENTS.md 越长效果越差</h3>
+            <p>巨型说明书不可验证，入口文件应削薄成目录，细则下沉到模块文档</p>
+          </div>
+        </article>
+        <article class="failure-card reveal-scale">
+          <div class="failure-index">03</div>
+          <div>
+            <h3>agent 总说自己已经搞定了</h3>
+            <p>模型自评有正向偏误，需要独立 evaluator，如强制截图校验或 trace 检查</p>
+          </div>
+        </article>
+        <article class="failure-card reveal-scale">
+          <div class="failure-index">04</div>
+          <div>
+            <h3>合并快但代码库越来越脏</h3>
+            <p>吞吐提高后熵管理要单独成 lane，用自动化定期扫除无效抽象</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">10</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Counterintuitive</span>
+      <h2 class="reveal">更多 instruction 不一定更好，信号密度才重要</h2>
+      <div class="two-column">
+        <p class="quote reveal-left">LLM 生成的 agentfile 可能稀释真正有用的约束</p>
+        <div class="panel reveal">
+          <ul class="bullet-list">
+            <li><a href="https://arxiv.org/html/2603.25723v1">ETH Zurich 对 138 个 agentfile 的研究</a> 发现，LLM 生成 agentfile 对性能有负面影响</li>
+            <li>原因不是“文档没用”，而是泛泛最佳实践会淹没具体代码库的关键约束</li>
+            <li>人工文件设计不佳时也只带来约 4% 提升，因为描述性文档不能直接改变决策路径</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">11</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Cold Start</span>
+      <h2 class="reveal">Harness 建立初期，效率往往低于人工</h2>
+      <div class="two-column">
+        <div class="panel reveal-left">
+          <h3>缺什么就卡什么</h3>
+          <ul class="bullet-list">
+            <li>没有自动化验证，agent 会在修复循环里打转</li>
+            <li>lint 规则不清，输出会持续漂移</li>
+            <li>领域边界模糊，幻觉代码更难被提前拦截</li>
+          </ul>
+        </div>
+        <div class="panel reveal">
+          <h3>稳态后才出现复合收益</h3>
+          <p>OpenAI 报告的约 <a href="https://openai.com/index/harness-engineering/">10x 效率提升</a> 是 Harness 成熟后的结果。前期的基础设施开销会压低短期产出，但每个新增工程师都会复用同一套能力边界</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">12</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Throughput Tradeoff</span>
+      <h2 class="reveal">极高并发下，Gatekeeper 模式会变成瓶颈</h2>
+      <div class="tradeoff">
+        <article class="panel reveal-left">
+          <span class="label">传统模式</span>
+          <h3>防错优先</h3>
+          <p>单次修改成本高，准入卡点严格，等待阻塞的成本相对可接受</p>
+        </article>
+        <article class="panel reveal">
+          <span class="label">高吞吐模式</span>
+          <h3>容错优先</h3>
+          <p>依赖快速 merge、快速发现、快速回滚。局部丑陋可以容忍，过早抽象反而会放大返工</p>
+        </article>
+      </div>
+      <p class="reveal">Three similar lines of code is better than a premature abstraction</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">13</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Depreciation</span>
+      <h2 class="reveal">Harness 也会折旧，需要版本化和清理</h2>
+      <div class="two-column">
+        <p class="quote reveal-left">今天有效的 guardrail，可能只是在绕开当前模型的短板</p>
+        <ul class="bullet-list reveal">
+          <li>loop detection 针对盲目重试</li>
+          <li>退出前 checklist 针对过早收尾</li>
+          <li>时间提示针对低估耗时</li>
+          <li>模型变强后，补丁可能从约束变成噪声</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <span class="slide-number">14</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Where It Goes</span>
+      <h2 class="reveal">未来 Harness 会从手写规则走向协同演化</h2>
+      <div class="future-grid">
+        <article class="future-card reveal-scale">
+          <div class="future-num">01</div>
+          <h3>半自动生成</h3>
+          <p>agent 从历史日志里反思失败模式，提出 hooks、checklist、evaluator 候选，再由人决定是否固化</p>
+        </article>
+        <article class="future-card reveal-scale">
+          <div class="future-num">02</div>
+          <h3>Agent Team Harness</h3>
+          <p>多 agent 并行后，关键问题会变成任务边界、文件所有权、交接协议和冲突检测</p>
+        </article>
+        <article class="future-card reveal-scale">
+          <div class="future-num">03</div>
+          <h3>架构面向 agent 可读</h3>
+          <p>选框架、目录、schema、日志和测试策略时，会同时考虑人是否好维护、agent 是否容易验证</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide title-slide">
+    <span class="slide-number">15</span>
+    <div class="slide-content">
+      <span class="eyebrow reveal">Takeaway</span>
+      <p class="quote reveal">Harness Engineering 不是让 prompt 更长，而是把经验变成 agent 能执行、能看见、能自我修复的工程系统</p>
+      <div class="accent-rule reveal"></div>
+      <p class="subtitle reveal">当模型能力继续上升，真正拉开差距的是组织能否把失败沉淀成闭环</p>
+    </div>
+  </section>
+
+  <script>
+    /* ===========================================
+       SLIDE PRESENTATION CONTROLLER
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll(".slide"));
+        this.currentSlide = 0;
+        this.isScrolling = false;
+        this.touchStartY = 0;
+        this.progressBar = document.querySelector(".progress-bar");
+        this.navDotsContainer = document.querySelector(".nav-dots");
+        this.setupIntersectionObserver();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupProgressBar();
+        this.setupNavDots();
+        this.goToSlide(0, false);
+      }
+
+      setupIntersectionObserver() {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                this.currentSlide = this.slides.indexOf(entry.target);
+                this.updateProgress();
+                this.updateNavDots();
+              }
+            });
+          },
+          { threshold: 0.58 }
+        );
+
+        this.slides.forEach((slide) => observer.observe(slide));
+      }
+
+      setupKeyboardNav() {
+        window.addEventListener("keydown", (event) => {
+          const nextKeys = ["ArrowDown", "ArrowRight", " ", "PageDown"];
+          const prevKeys = ["ArrowUp", "ArrowLeft", "PageUp"];
+
+          if (nextKeys.includes(event.key)) {
+            event.preventDefault();
+            this.nextSlide();
+          }
+
+          if (prevKeys.includes(event.key)) {
+            event.preventDefault();
+            this.prevSlide();
+          }
+
+          if (event.key === "Home") {
+            event.preventDefault();
+            this.goToSlide(0);
+          }
+
+          if (event.key === "End") {
+            event.preventDefault();
+            this.goToSlide(this.slides.length - 1);
+          }
+        });
+      }
+
+      setupTouchNav() {
+        window.addEventListener("touchstart", (event) => {
+          this.touchStartY = event.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener("touchend", (event) => {
+          const touchEndY = event.changedTouches[0].clientY;
+          const deltaY = this.touchStartY - touchEndY;
+
+          if (Math.abs(deltaY) < 48) return;
+          if (deltaY > 0) this.nextSlide();
+          else this.prevSlide();
+        }, { passive: true });
+      }
+
+      setupWheelNav() {
+        window.addEventListener("wheel", (event) => {
+          if (this.isScrolling || Math.abs(event.deltaY) < 20) return;
+          this.isScrolling = true;
+
+          if (event.deltaY > 0) this.nextSlide();
+          else this.prevSlide();
+
+          window.setTimeout(() => {
+            this.isScrolling = false;
+          }, 520);
+        }, { passive: true });
+      }
+
+      setupProgressBar() {
+        window.addEventListener("scroll", () => this.updateProgress(), { passive: true });
+        window.addEventListener("resize", () => this.updateProgress());
+      }
+
+      setupNavDots() {
+        this.navDotsContainer.innerHTML = "";
+        this.slides.forEach((_, index) => {
+          const button = document.createElement("button");
+          button.className = "nav-dot";
+          button.type = "button";
+          button.setAttribute("aria-label", `Go to slide ${index + 1}`);
+          button.addEventListener("click", () => this.goToSlide(index));
+          this.navDotsContainer.appendChild(button);
+        });
+        this.updateNavDots();
+      }
+
+      updateProgress() {
+        const maxIndex = Math.max(this.slides.length - 1, 1);
+        const percent = (this.currentSlide / maxIndex) * 100;
+        this.progressBar.style.width = `${percent}%`;
+      }
+
+      updateNavDots() {
+        const dots = this.navDotsContainer.querySelectorAll(".nav-dot");
+        dots.forEach((dot, index) => {
+          dot.classList.toggle("active", index === this.currentSlide);
+        });
+      }
+
+      goToSlide(index, smooth = true) {
+        const targetIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.currentSlide = targetIndex;
+        this.slides[targetIndex].scrollIntoView({
+          behavior: smooth ? "smooth" : "auto",
+          block: "start"
+        });
+        this.updateProgress();
+        this.updateNavDots();
+      }
+
+      nextSlide() {
+        this.goToSlide(this.currentSlide + 1);
+      }
+
+      prevSlide() {
+        this.goToSlide(this.currentSlide - 1);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      new SlidePresentation();
+    });
+  </script>
+</body>
+</html>
