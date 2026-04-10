@@ -53,12 +53,14 @@ Harness Engineering 最早由 Mitchell Hashimoto 在博客 [My AI Adoption Journ
 
 ## 为什么需要harness
 
-SWE-CI 是一个让代码 agent 在真实仓库的多轮 CI 演化过程中不断改代码、跑测试，从而评估其“长期代码维护能力（而非一次性正确性）”的 benchmark。
+如下图，SWE-CI 是一个让代码 agent 在真实仓库的多轮 CI 演化过程中不断改代码、跑测试，从而评估其“长期代码维护能力（而非一次性正确性）”的 benchmark。
 在其测试结果中，仅有Claude Opus 4.5/4.6的zero regression rate超过50%，其他模型的长期代码维护能力远低于人工，很容易将代码变成“屎山”
 <figure style="text-align:center;">
   <img src="swe_ci_zero_regression_rate.png" alt="swe_ci_zero_regression_rate" style="width:80%;" />
   <figcaption>SWE-CI zero regression rate</figcaption>
 </figure>
+
+Agent 开发会把 CI/CD、代码质量和一致性问题提前暴露出来。过去这些通常是团队变大后的治理成本，现在因为 agent 吞吐高、非确定性强，小项目也需要更早把自动化验证和架构边界放进 workflow
 
 
 
@@ -73,47 +75,39 @@ SWE-CI 是一个让代码 agent 在真实仓库的多轮 CI 演化过程中不�
 | A map, not a manual                    | 巨型说明书会挤掉真正相关的 context       | 薄 `AGENTS.md` 做索引，细节按需加载下沉到分层 docs      |
 
 
-## 常见发散与失败模式
-
-| 症状                     | 根因                                               | 补救动作                                               |
-| ------------------------ | -------------------------------------------------- | ------------------------------------------------------ |
-| 上下文越长 agent 越笨    | 无关搜索结果、长日志挤占了核心注意力               | 限制单次注入信息量，用过滤测试替代全量测试跑出的长报错 |
-| `AGENTS.md` 越长效果越差 | 巨型说明书不可验证、信号权重失真                   | 把入口文件削薄成目录，具体细则下沉到特定模块按需加载   |
-| 局部实现好但整体拼不起来 | 过于关注局部 completeness，丢失了 global coherence | 引入 milestone gate，强制先连线跑通主链路再打磨细节    |
-| agent 总说自己已经搞定了 | 模型对自身输出的评估天然带有正向偏误               | 引入独立的 evaluator 探针，如强制 Playwright 截图校验  |
-| 合并快但代码库越来越脏   | 吞吐量上去了，熵管理没有跟上                       | 单独开启 cleanup lane，用自动化工具定期扫除无效抽象    |
 
 ## 行业实践案例
 
 ### LangChain：纯 Harness 改进，13.7 个百分点提升
 
-[LangChain](https://blog.langchain.com/improving-deep-agents-with-harness-engineering/) 在 Terminal Bench 2.0 上将得分从 52.8% 提升到 66.5%——从 Top 30 开外跃升至 Top 5——模型 (GPT-5.2-Codex) 零更换，仅改变 Harness。关键技术：
+[LangChain](https://blog.langchain.com/improving-deep-agents-with-harness-engineering/) 在 Terminal Bench 2.0 上将得分从 52.8% 提升到 66.5%（从 Top 30 开外跃升至 Top 5）。不改变模型，仅改变 Harness关键技术：
 
-- **Reasoning Sandwich**：planning 阶段使用 xhigh reasoning，implementation 阶段降至 high，verification 阶段回升至 xhigh。纯 xhigh 反而只有 53.9%（因超时）
 - **LoopDetectionMiddleware**：追踪每个文件的编辑次数，超过阈值后触发"consider reconsidering your approach"
 - **PreCompletionChecklistMiddleware**：在 Agent 退出前拦截，强制其对照任务规格运行验证
-- **Trace Analyzer Skill**：自动从 LangSmith trace 中衍生并行错误分析 Agent，类似 ensemble boosting
+- **Trace Analyzer Skill**：把 LangSmith trace 拉出来，派生多个并行错误分析 agent，再由主 agent 汇总失败模式和改进建议
 
 
-## 其他insights
-- **Harness 是动态折旧的资产**，今天的 guardrail 往往是在为现有模型的缺陷打补丁，切忌把历史包袱当成永久的最佳实践，甚至后续可能出现新的xxx engineering
+## 常见失败模式
 
-- **自然语言规则的边际收益递减**，写一大堆“你必须注意XXX”的 prompt 很快会失效，把规则改成强制lint规则等会更好
-
+| 症状                     | 根因                                 | 补救动作                                               |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------ |
+| 上下文越长 agent 越笨    | 无关搜索结果、长日志挤占了核心注意力 | 限制单次注入信息量，用过滤测试替代全量测试跑出的长报错 |
+| `AGENTS.md` 越长效果越差 | 巨型说明书不可验证、信号权重失真     | 把入口文件削薄成目录，具体细则下沉到特定模块按需加载   |
+| agent 总说自己已经搞定了 | 模型对自身输出的评估天然带有正向偏误 | 引入独立的 evaluator 探针，如强制 Playwright 截图校验  |
+| 合并快但代码库越来越脏   | 吞吐量上去了，熵管理没有跟上         | 单独开启 cleanup lane，用自动化工具定期扫除无效抽象    |
 
 
 ## 反直觉的结论
-### 过度规格化悖论
+### 过犹不及&人的作用
 
 [ETH Zurich 对 138 个 agentfile 的研究](https://arxiv.org/html/2603.25723v1)发现：
 - LLM 生成的 agentfile 对性能有**负面**影响——生成内容倾向于泛泛而谈的最佳实践，缺乏针对具体代码库的关键约束，反而稀释了有效信号
 - 人工编写的文件在设计不佳时也仅带来约 4% 的提升——设计不佳指缺乏可执行性的描述性文档，Agent 读了但无法据此做出更好的决策
-- Agent 处理指令时多消耗 14-22% 的推理 token，但解决率没有提升——指令增加了 Agent 需要内化的信息量，但这些信息对实际任务分解和执行没有提供增量价值
 
 
-### 效率悖论与冷启动阵痛
-在 Harness 环境建立初期，整体效率往往低于人工开发
-因缺乏配套的自动化验证、明确的 Lint 规则和清晰的领域边界，Agent 会频繁陷入修复循环或产出幻觉代码，基础设施的完备度直接决定了 Agent 的产出上限
+### 冷启动阵痛
+
+在 Harness 环境建立初期，整体效率往往低于人工开发。因缺乏配套的自动化验证、明确的 Lint 规则和清晰的领域边界，Agent 会频繁陷入修复循环或产出幻觉代码，基础设施的完备度直接决定了 Agent 的产出上限
 
 OpenAI 报告的总效率提升约 [10x](https://openai.com/index/harness-engineering/)，但这是 Harness 成熟后的稳态数据。在冷启动阶段，基础设施的构建开销使实际产出低于纯人工开发。吞吐量随团队规模增长而非线性提升，因为更好的 Harness 设计对每一位工程师产生复合价值——这是传统开发中不存在的网络效应
 
@@ -125,9 +119,17 @@ OpenAI 报告的总效率提升约 [10x](https://openai.com/index/harness-engine
 
 这种模式下必须容忍局部的代码丑陋，防止过早抽象 (Three similar lines of code is better than a premature abstraction)
 
+### Harness 会折旧
 
-### 避免过早抽象
+今天有效的 guardrail，往往是在绕开当前模型的短板。比如 loop detection、退出前 checklist、时间提示，都是针对现阶段 agent 容易盲目重试、过早收尾、低估耗时的工程补丁。模型变强后，这些补丁可能变成噪声
 
-> Three similar lines of code is better than a premature abstraction
->
-> Claude Code prompt
+因此 Harness 也需要版本化和清理
+
+
+## 未来会往哪里走
+
+1. Harness 会从手写规则走向半自动生成。agent 可以从过去日志里反思，再基于自己的能力边界，生成候选 hooks、checklist 或 evaluator，再由人决定是否固化
+
+2. Agent Team 会需要新的 harness。多 agent 并行时，关键问题会变成任务边界、文件所有权、交接协议、冲突检测和最终验收
+
+3. Agent的可读性会反过来影响软件架构。未来选框架、目录结构、schema、日志和测试策略时，不只看人是否好维护，也会看 agent 是否容易理解和验证
