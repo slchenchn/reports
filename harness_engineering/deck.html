@@ -416,9 +416,29 @@
       display: grid;
       grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
       gap: clamp(0.9rem, 2.4vw, 2.4rem);
-      align-items: center;
+      align-items: start;
       width: 100%;
       max-height: min(86vh, 820px);
+    }
+
+    /* 双 panel：等高外框，内容仍顶对齐 */
+    .two-column--dual-panels {
+      align-items: stretch;
+    }
+
+    .two-column--dual-panels .panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: clamp(0.45rem, 1vw, 0.75rem);
+    }
+
+    .two-column--dual-panels .panel > h3 {
+      margin: 0;
+    }
+
+    .two-column--dual-panels .panel > p {
+      margin: 0;
     }
 
     .three-column {
@@ -487,6 +507,12 @@
       line-height: 1.1;
       color: var(--text-primary);
       max-width: min(92vw, 1040px);
+    }
+
+    /* 双栏页左侧结论句：避免与右侧列表字号反差过大 */
+    .quote--lede {
+      font-size: clamp(1.05rem, 2.05vw, 1.72rem);
+      line-height: 1.38;
     }
 
     .bullet-list {
@@ -579,7 +605,7 @@
        PARADIGM SLIDE
        =========================================== */
     .paradigm-table {
-      grid-template-columns: 0.8fr 1.45fr 0.78fr 1.24fr;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .paradigm-table .table-cell:first-child {
@@ -592,16 +618,22 @@
        =========================================== */
     .origin-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: clamp(0.75rem, 1.75vw, 1.35rem);
+      align-items: start;
       width: 100%;
     }
 
+    .origin-card .tag {
+      font-size: clamp(0.88rem, 1.55vw, 1.2rem);
+      padding: clamp(0.28rem, 0.55vw, 0.42rem) clamp(0.72rem, 1.35vw, 1.1rem);
+    }
+
     .origin-card {
-      min-height: clamp(10.5rem, 31vh, 18.5rem);
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: clamp(0.65rem, 1.25vw, 1rem);
       padding: clamp(1rem, 2.25vw, 1.75rem);
       border: 1px solid var(--line);
@@ -649,16 +681,22 @@
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       gap: clamp(0.8rem, 1.8vw, 1.35rem);
-      align-items: center;
+      align-items: start;
       width: 100%;
     }
 
+    .loop-card .tag {
+      font-size: clamp(0.88rem, 1.55vw, 1.2rem);
+      padding: clamp(0.28rem, 0.55vw, 0.42rem) clamp(0.72rem, 1.35vw, 1.1rem);
+    }
+
     .loop-card {
-      min-height: clamp(16.5rem, 50vh, 27rem);
+      min-height: 0;
       padding: clamp(1.05rem, 2.2vw, 1.8rem);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: clamp(0.55rem, 1.1vw, 0.95rem);
       border: 1px solid var(--line);
       background: rgba(250, 248, 241, 0.84);
     }
@@ -675,7 +713,8 @@
       font-family: var(--font-display);
       font-size: clamp(2.4rem, 5.8vw, 4.8rem);
       color: var(--text-primary);
-      transform: translateY(-0.1em);
+      align-self: center;
+      margin-top: clamp(2.5rem, 8vh, 5rem);
     }
 
     .loop-card ul {
@@ -761,16 +800,26 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: clamp(0.68rem, 1.6vw, 1.2rem);
+      align-items: stretch;
       width: 100%;
     }
 
     .failure-card {
       padding: clamp(0.9rem, 1.8vw, 1.35rem);
-      min-height: clamp(9.2rem, 23vh, 13rem);
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+      box-sizing: border-box;
       display: grid;
       grid-template-columns: clamp(2.4rem, 4.8vw, 4rem) 1fr;
       gap: clamp(0.5rem, 1.2vw, 0.9rem);
       align-items: start;
+    }
+
+    .failure-card > div:last-child {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.28rem, 0.65vw, 0.45rem);
     }
 
     .failure-index {
@@ -783,7 +832,7 @@
 
     .failure-card h3 {
       font-size: clamp(1.08rem, 1.76vw, 1.58rem);
-      margin-bottom: clamp(0.22rem, 0.6vw, 0.38rem);
+      margin: 0;
     }
 
     .failure-card p {
@@ -804,8 +853,8 @@
     .score-number {
       font-family: var(--font-display);
       font-weight: 900;
-      font-size: clamp(3.4rem, 8.8vw, 7.6rem);
-      line-height: 0.92;
+      font-size: clamp(1.75rem, 3.85vw, 3rem);
+      line-height: 0.95;
       color: var(--text-primary);
     }
 
@@ -818,18 +867,27 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: clamp(0.68rem, 1.55vw, 1.16rem);
+      align-items: start;
     }
 
     .middleware {
       padding: clamp(0.9rem, 1.85vw, 1.35rem);
       border: 1px solid var(--line);
-      min-height: clamp(10.5rem, 29vh, 15.8rem);
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.35rem, 0.75vw, 0.55rem);
       background: rgba(250, 248, 241, 0.82);
     }
 
     .middleware h3 {
-      font-size: clamp(1.04rem, 1.62vw, 1.48rem);
-      margin-bottom: clamp(0.45rem, 0.9vw, 0.65rem);
+      font-size: clamp(0.78rem, 1.25vw, 1.22rem);
+      line-height: 1.25;
+      margin: 0;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-weight: 700;
     }
 
     .middleware p {
@@ -841,14 +899,22 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: clamp(0.85rem, 1.8vw, 1.35rem);
+      align-items: start;
       width: 100%;
     }
 
     .tradeoff .panel {
-      min-height: clamp(16.5rem, 47vh, 25rem);
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: clamp(0.5rem, 1.1vw, 0.85rem);
+    }
+
+    .tradeoff .panel > .label,
+    .tradeoff .panel > h3,
+    .tradeoff .panel > p {
+      margin: 0;
     }
 
     .tradeoff h3 {
@@ -869,16 +935,21 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: clamp(0.72rem, 1.7vw, 1.25rem);
+      align-items: start;
       width: 100%;
     }
 
     .future-card {
-      min-height: clamp(14rem, 39vh, 22.5rem);
-      padding: clamp(1rem, 2vw, 1.5rem);
+      min-height: 0;
+      padding: clamp(0.85rem, 1.65vw, 1.25rem);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: clamp(0.6rem, 1.2vw, 0.9rem);
+      justify-content: flex-start;
+      gap: clamp(0.38rem, 0.85vw, 0.6rem);
+    }
+
+    .future-card h3 {
+      margin: 0;
     }
 
     .future-card .future-num {
@@ -953,6 +1024,10 @@
       .tradeoff,
       .chart-note {
         grid-template-columns: 1fr;
+      }
+
+      .two-column--dual-panels {
+        align-items: start;
       }
 
       .loop-arrow {
@@ -1047,7 +1122,7 @@
       }
 
       .failure-card {
-        min-height: clamp(5.6rem, 16vh, 7.5rem);
+        min-height: 0;
       }
 
       .slide::before {
@@ -1236,7 +1311,7 @@
       <span class="eyebrow reveal">Workflow Shift</span>
       <h2 class="reveal">Agent 会把治理成本前置到小项目阶段</h2>
       <div class="two-column">
-        <p class="quote reveal-left">过去团队变大才暴露的问题，现在会被 agent 吞吐提前放大</p>
+        <p class="quote quote--lede reveal-left">过去团队变大才暴露的问题，现在会被 agent 吞吐提前放大</p>
         <ul class="bullet-list reveal">
           <li>CI/CD 不稳定会直接变成 agent 的噪声源</li>
           <li>代码质量规则不明确，agent 会在风格和边界上随机游走</li>
@@ -1370,7 +1445,7 @@
     <div class="slide-content">
       <span class="eyebrow reveal">Cold Start</span>
       <h2 class="reveal">Harness 建立初期，效率往往低于人工</h2>
-      <div class="two-column">
+      <div class="two-column two-column--dual-panels">
         <div class="panel reveal-left">
           <h3>缺什么就卡什么</h3>
           <ul class="bullet-list">
@@ -1414,7 +1489,7 @@
       <span class="eyebrow reveal">Depreciation</span>
       <h2 class="reveal">Harness 也会折旧，需要版本化和清理</h2>
       <div class="two-column">
-        <p class="quote reveal-left">今天有效的 guardrail，可能只是在绕开当前模型的短板</p>
+        <p class="quote quote--lede reveal-left">今天有效的 guardrail，可能只是在绕开当前模型的短板</p>
         <ul class="bullet-list reveal">
           <li>loop detection 针对盲目重试</li>
           <li>退出前 checklist 针对过早收尾</li>
