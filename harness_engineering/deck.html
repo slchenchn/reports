@@ -79,17 +79,17 @@
     /* 4. ALL typography uses clamp() for responsive scaling */
     :root {
         /* Titles scale from mobile to desktop */
-        --title-size: clamp(1.5rem, 5vw, 4rem);
-        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
-        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+        --title-size: clamp(1.8rem, 6.3vw, 5.4rem);
+        --h2-size: clamp(1.55rem, 4.7vw, 3.8rem);
+        --h3-size: clamp(1.12rem, 3vw, 2.22rem);
 
         /* Body text */
-        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
-        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+        --body-size: clamp(0.9rem, 1.9vw, 1.42rem);
+        --small-size: clamp(0.74rem, 1.18vw, 1.02rem);
 
         /* Spacing scales with viewport */
-        --slide-padding: clamp(1rem, 4vw, 4rem);
-        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --slide-padding: clamp(0.75rem, 2.6vw, 2.6rem);
+        --content-gap: clamp(0.5rem, 1.45vw, 1.35rem);
         --element-gap: clamp(0.25rem, 1vw, 1rem);
     }
 
@@ -131,20 +131,20 @@
     /* Short viewports (< 700px height) */
     @media (max-height: 700px) {
         :root {
-            --slide-padding: clamp(0.75rem, 3vw, 2rem);
-            --content-gap: clamp(0.4rem, 1.5vw, 1rem);
-            --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
-            --h2-size: clamp(1rem, 3vw, 1.75rem);
+            --slide-padding: clamp(0.65rem, 2.5vw, 1.8rem);
+            --content-gap: clamp(0.35rem, 1.25vw, 0.9rem);
+            --title-size: clamp(1.35rem, 5vw, 2.8rem);
+            --h2-size: clamp(1.08rem, 3.45vw, 2rem);
         }
     }
 
     /* Very short viewports (< 600px height) */
     @media (max-height: 600px) {
         :root {
-            --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+            --slide-padding: clamp(0.45rem, 2vw, 1.3rem);
             --content-gap: clamp(0.3rem, 1vw, 0.75rem);
             --title-size: clamp(1.1rem, 4vw, 2rem);
-            --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            --body-size: clamp(0.7rem, 1.3vw, 1rem);
         }
 
         /* Hide non-essential elements */
@@ -205,7 +205,7 @@
         linear-gradient(90deg, rgba(26, 26, 26, 0.035) 1px, transparent 1px),
         linear-gradient(rgba(26, 26, 26, 0.035) 1px, transparent 1px),
         var(--bg-cream);
-      background-size: clamp(2.5rem, 6vw, 4.5rem) clamp(2.5rem, 6vw, 4.5rem);
+      background-size: clamp(2.2rem, 5vw, 3.8rem) clamp(2.2rem, 5vw, 3.8rem);
       color: var(--text-primary);
       isolation: isolate;
     }
@@ -221,8 +221,8 @@
     .slide::before {
       top: clamp(1.5rem, 5vh, 4rem);
       right: clamp(1.5rem, 7vw, 6rem);
-      width: clamp(4.5rem, 13vw, 11rem);
-      height: clamp(4.5rem, 13vw, 11rem);
+      width: clamp(5.5rem, 15vw, 13rem);
+      height: clamp(5.5rem, 15vw, 13rem);
       border: 2px solid var(--line);
       border-radius: 50%;
       opacity: 0.12;
@@ -252,7 +252,7 @@
     }
 
     .slide-content {
-      width: min(100%, 1180px);
+      width: min(97vw, 1380px);
       margin: 0 auto;
       position: relative;
       z-index: 1;
@@ -269,7 +269,7 @@
     }
 
     h1 {
-      font-size: clamp(2.4rem, 8vw, 6.3rem);
+      font-size: clamp(3rem, 10.2vw, 8.8rem);
       line-height: 0.98;
       font-weight: 900;
     }
@@ -278,7 +278,7 @@
       font-size: var(--h2-size);
       line-height: 1.05;
       font-weight: 900;
-      max-width: min(92vw, 960px);
+      max-width: min(96vw, 1260px);
     }
 
     h3 {
@@ -290,7 +290,7 @@
     p {
       color: var(--text-secondary);
       line-height: 1.55;
-      max-width: min(88vw, 820px);
+      max-width: min(94vw, 1080px);
     }
 
     a {
@@ -304,9 +304,9 @@
       width: fit-content;
       border: 1px solid rgba(26, 26, 26, 0.28);
       color: var(--text-secondary);
-      padding: clamp(0.26rem, 0.6vw, 0.42rem) clamp(0.72rem, 1.6vw, 1.2rem);
+      padding: clamp(0.3rem, 0.7vw, 0.5rem) clamp(0.86rem, 1.8vw, 1.35rem);
       border-radius: 2px;
-      font-size: clamp(0.55rem, 0.95vw, 0.78rem);
+      font-size: clamp(0.62rem, 1.05vw, 0.88rem);
       font-weight: 500;
       letter-spacing: 0.24em;
       text-transform: uppercase;
@@ -339,7 +339,7 @@
     }
 
     .source {
-      font-size: clamp(0.6rem, 0.95vw, 0.78rem);
+      font-size: clamp(0.66rem, 1.02vw, 0.86rem);
       color: var(--text-muted);
       max-width: min(88vw, 860px);
     }
@@ -415,10 +415,10 @@
     .two-column {
       display: grid;
       grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-      gap: clamp(1rem, 3vw, 3rem);
+      gap: clamp(0.9rem, 2.4vw, 2.4rem);
       align-items: center;
       width: 100%;
-      max-height: min(82vh, 760px);
+      max-height: min(86vh, 820px);
     }
 
     .three-column {
@@ -440,7 +440,7 @@
     }
 
     .panel {
-      padding: clamp(0.85rem, 2vw, 1.4rem);
+      padding: clamp(0.95rem, 2.1vw, 1.65rem);
     }
 
     .table {
@@ -463,12 +463,12 @@
     }
 
     .table-cell {
-      padding: clamp(0.42rem, 1vw, 0.78rem);
+      padding: clamp(0.48rem, 1.12vw, 0.9rem);
       border-right: 1px solid var(--line-soft);
       min-width: 0;
       line-height: 1.35;
       color: var(--text-secondary);
-      font-size: clamp(0.62rem, 1.04vw, 0.95rem);
+      font-size: clamp(0.72rem, 1.16vw, 1.08rem);
     }
 
     .table-cell:last-child {
@@ -483,10 +483,10 @@
 
     .quote {
       font-family: var(--font-display);
-      font-size: clamp(1.25rem, 3.5vw, 3.1rem);
+      font-size: clamp(1.6rem, 4.55vw, 4.2rem);
       line-height: 1.1;
       color: var(--text-primary);
-      max-width: min(86vw, 900px);
+      max-width: min(92vw, 1040px);
     }
 
     .bullet-list {
@@ -498,7 +498,7 @@
 
     .bullet-list li {
       position: relative;
-      padding-left: clamp(1rem, 2vw, 1.4rem);
+      padding-left: clamp(1.12rem, 2.2vw, 1.6rem);
       color: var(--text-secondary);
     }
 
@@ -520,7 +520,7 @@
       border: 1px solid var(--line);
       border-radius: 999px;
       padding: clamp(0.18rem, 0.45vw, 0.34rem) clamp(0.52rem, 1.1vw, 0.9rem);
-      font-size: clamp(0.55rem, 0.88vw, 0.74rem);
+      font-size: clamp(0.62rem, 0.98vw, 0.84rem);
       color: var(--text-secondary);
       background: rgba(232, 212, 192, 0.45);
       line-height: 1.2;
@@ -538,28 +538,28 @@
     .title-slide .slide-content {
       align-items: center;
       text-align: center;
-      gap: clamp(0.8rem, 2.2vw, 1.8rem);
+      gap: clamp(0.9rem, 2vw, 1.7rem);
     }
 
     .title-slide h1 {
-      max-width: min(92vw, 940px);
+      max-width: min(96vw, 1240px);
     }
 
     .title-slide .subtitle {
-      font-size: clamp(0.9rem, 1.55vw, 1.2rem);
+      font-size: clamp(1.08rem, 2vw, 1.58rem);
       color: var(--text-secondary);
       line-height: 1.65;
-      max-width: min(84vw, 620px);
+      max-width: min(90vw, 860px);
     }
 
     .cta-box {
       display: inline-flex;
       align-items: center;
       gap: clamp(0.35rem, 0.8vw, 0.6rem);
-      padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+      padding: clamp(0.58rem, 1.1vw, 0.85rem) clamp(1.15rem, 2.2vw, 1.7rem);
       border: 2px solid var(--line);
       border-radius: 2px;
-      font-size: clamp(0.58rem, 0.92vw, 0.78rem);
+      font-size: clamp(0.64rem, 1vw, 0.88rem);
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -593,36 +593,36 @@
     .origin-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: clamp(0.8rem, 2vw, 1.5rem);
+      gap: clamp(0.75rem, 1.75vw, 1.35rem);
       width: 100%;
     }
 
     .origin-card {
-      min-height: clamp(8rem, 24vh, 14rem);
+      min-height: clamp(10.5rem, 31vh, 18.5rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: clamp(0.7rem, 1.5vw, 1.1rem);
-      padding: clamp(0.85rem, 2vw, 1.4rem);
+      gap: clamp(0.65rem, 1.25vw, 1rem);
+      padding: clamp(1rem, 2.25vw, 1.75rem);
       border: 1px solid var(--line);
       background: rgba(250, 248, 241, 0.82);
       box-shadow: clamp(0.2rem, 0.8vw, 0.5rem) clamp(0.2rem, 0.8vw, 0.5rem) 0 rgba(26, 26, 26, 0.1);
     }
 
     .origin-card p {
-      font-size: clamp(0.68rem, 1.12vw, 0.95rem);
+      font-size: clamp(0.88rem, 1.42vw, 1.2rem);
     }
 
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(0.55rem, 1.4vw, 1rem);
+      gap: clamp(0.65rem, 1.55vw, 1.15rem);
       width: 100%;
     }
 
     .stat {
-      min-height: clamp(5.2rem, 14vh, 8.2rem);
-      padding: clamp(0.75rem, 1.8vw, 1.2rem);
+      min-height: clamp(6.8rem, 18vh, 10.8rem);
+      padding: clamp(0.9rem, 1.95vw, 1.45rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -630,14 +630,14 @@
 
     .stat-value {
       font-family: var(--font-display);
-      font-size: clamp(1.45rem, 3.8vw, 3.2rem);
+      font-size: clamp(2rem, 5.1vw, 4.6rem);
       line-height: 0.95;
       color: var(--text-primary);
       font-weight: 900;
     }
 
     .stat-label {
-      font-size: clamp(0.62rem, 1vw, 0.82rem);
+      font-size: clamp(0.78rem, 1.24vw, 1.08rem);
       color: var(--text-muted);
       line-height: 1.35;
     }
@@ -648,14 +648,14 @@
     .loop-layout {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      gap: clamp(0.8rem, 2vw, 1.5rem);
+      gap: clamp(0.8rem, 1.8vw, 1.35rem);
       align-items: center;
       width: 100%;
     }
 
     .loop-card {
-      min-height: clamp(14rem, 42vh, 22rem);
-      padding: clamp(0.9rem, 2vw, 1.5rem);
+      min-height: clamp(16.5rem, 50vh, 27rem);
+      padding: clamp(1.05rem, 2.2vw, 1.8rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -673,7 +673,7 @@
 
     .loop-arrow {
       font-family: var(--font-display);
-      font-size: clamp(2rem, 5vw, 4rem);
+      font-size: clamp(2.4rem, 5.8vw, 4.8rem);
       color: var(--text-primary);
       transform: translateY(-0.1em);
     }
@@ -682,12 +682,12 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: clamp(0.45rem, 1vh, 0.8rem);
+      gap: clamp(0.5rem, 1vh, 0.82rem);
     }
 
     .loop-card li {
       color: var(--text-secondary);
-      font-size: clamp(0.68rem, 1.1vw, 0.95rem);
+      font-size: clamp(0.88rem, 1.4vw, 1.18rem);
       line-height: 1.35;
     }
 
@@ -695,9 +695,9 @@
        CHART SLIDE
        =========================================== */
     .chart-frame {
-      width: min(88vw, 940px);
-      max-height: min(54vh, 420px);
-      padding: clamp(0.4rem, 1vw, 0.8rem);
+      width: min(95vw, 1180px);
+      max-height: min(60vh, 485px);
+      padding: clamp(0.45rem, 1vw, 0.82rem);
       background: var(--bg-paper);
       border: 1px solid var(--line);
       box-shadow: clamp(0.2rem, 0.8vw, 0.55rem) clamp(0.2rem, 0.8vw, 0.55rem) 0 rgba(26, 26, 26, 0.12);
@@ -706,7 +706,7 @@
     .chart-frame img {
       display: block;
       width: 100%;
-      max-height: min(46vh, 340px);
+      max-height: min(51vh, 410px);
       object-fit: contain;
     }
 
@@ -715,11 +715,11 @@
       grid-template-columns: 0.4fr 1fr;
       gap: clamp(0.55rem, 1.4vw, 1rem);
       align-items: start;
-      width: min(88vw, 940px);
+      width: min(95vw, 1180px);
     }
 
     .chart-note .quote {
-      font-size: clamp(1rem, 2.25vw, 1.95rem);
+      font-size: clamp(1.1rem, 2.55vw, 2.2rem);
     }
 
     /* ===========================================
@@ -728,25 +728,25 @@
     .principles-grid {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: clamp(0.4rem, 1vw, 0.7rem);
+      gap: clamp(0.48rem, 1.1vw, 0.82rem);
       width: 100%;
     }
 
     .principle {
-      min-height: clamp(8.6rem, 25vh, 13.5rem);
-      padding: clamp(0.58rem, 1.25vw, 1rem);
+      min-height: clamp(11rem, 32vh, 17rem);
+      padding: clamp(0.72rem, 1.45vw, 1.18rem);
       display: flex;
       flex-direction: column;
       gap: clamp(0.35rem, 0.8vw, 0.55rem);
     }
 
     .principle h3 {
-      font-size: clamp(0.85rem, 1.35vw, 1.22rem);
+      font-size: clamp(1rem, 1.62vw, 1.52rem);
       line-height: 1.05;
     }
 
     .principle p {
-      font-size: clamp(0.56rem, 0.9vw, 0.78rem);
+      font-size: clamp(0.72rem, 1.1vw, 1rem);
       line-height: 1.42;
       color: var(--text-secondary);
     }
@@ -760,34 +760,34 @@
     .failure-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: clamp(0.55rem, 1.4vw, 1rem);
+      gap: clamp(0.68rem, 1.6vw, 1.2rem);
       width: 100%;
     }
 
     .failure-card {
-      padding: clamp(0.7rem, 1.55vw, 1.1rem);
-      min-height: clamp(7rem, 18vh, 10rem);
+      padding: clamp(0.9rem, 1.8vw, 1.35rem);
+      min-height: clamp(9.2rem, 23vh, 13rem);
       display: grid;
-      grid-template-columns: clamp(2rem, 4vw, 3.4rem) 1fr;
+      grid-template-columns: clamp(2.4rem, 4.8vw, 4rem) 1fr;
       gap: clamp(0.5rem, 1.2vw, 0.9rem);
       align-items: start;
     }
 
     .failure-index {
       font-family: var(--font-display);
-      font-size: clamp(1.35rem, 3.2vw, 2.7rem);
+      font-size: clamp(1.9rem, 4.3vw, 3.65rem);
       line-height: 0.9;
       color: rgba(26, 26, 26, 0.34);
       font-weight: 900;
     }
 
     .failure-card h3 {
-      font-size: clamp(0.9rem, 1.45vw, 1.25rem);
+      font-size: clamp(1.08rem, 1.76vw, 1.58rem);
       margin-bottom: clamp(0.22rem, 0.6vw, 0.38rem);
     }
 
     .failure-card p {
-      font-size: clamp(0.62rem, 1vw, 0.83rem);
+      font-size: clamp(0.8rem, 1.24vw, 1.08rem);
       line-height: 1.42;
     }
 
@@ -804,59 +804,59 @@
     .score-number {
       font-family: var(--font-display);
       font-weight: 900;
-      font-size: clamp(2.5rem, 7vw, 5.8rem);
+      font-size: clamp(3.4rem, 8.8vw, 7.6rem);
       line-height: 0.92;
       color: var(--text-primary);
     }
 
     .score-delta {
-      font-size: clamp(0.9rem, 1.4vw, 1.15rem);
+      font-size: clamp(1.08rem, 1.7vw, 1.45rem);
       color: var(--text-secondary);
     }
 
     .middleware-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(0.55rem, 1.4vw, 1rem);
+      gap: clamp(0.68rem, 1.55vw, 1.16rem);
     }
 
     .middleware {
-      padding: clamp(0.7rem, 1.55vw, 1.1rem);
+      padding: clamp(0.9rem, 1.85vw, 1.35rem);
       border: 1px solid var(--line);
-      min-height: clamp(8rem, 22vh, 12rem);
+      min-height: clamp(10.5rem, 29vh, 15.8rem);
       background: rgba(250, 248, 241, 0.82);
     }
 
     .middleware h3 {
-      font-size: clamp(0.85rem, 1.35vw, 1.2rem);
+      font-size: clamp(1.04rem, 1.62vw, 1.48rem);
       margin-bottom: clamp(0.45rem, 0.9vw, 0.65rem);
     }
 
     .middleware p {
-      font-size: clamp(0.62rem, 1vw, 0.82rem);
+      font-size: clamp(0.8rem, 1.24vw, 1.06rem);
       line-height: 1.42;
     }
 
     .tradeoff {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: clamp(0.8rem, 2vw, 1.5rem);
+      gap: clamp(0.85rem, 1.8vw, 1.35rem);
       width: 100%;
     }
 
     .tradeoff .panel {
-      min-height: clamp(13rem, 38vh, 20rem);
+      min-height: clamp(16.5rem, 47vh, 25rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
 
     .tradeoff h3 {
-      font-size: clamp(1.05rem, 2vw, 1.8rem);
+      font-size: clamp(1.35rem, 2.65vw, 2.42rem);
     }
 
     .tradeoff .label {
-      font-size: clamp(0.6rem, 0.95vw, 0.76rem);
+      font-size: clamp(0.66rem, 1.02vw, 0.86rem);
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.14em;
@@ -868,13 +868,13 @@
     .future-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(0.65rem, 1.7vw, 1.2rem);
+      gap: clamp(0.72rem, 1.7vw, 1.25rem);
       width: 100%;
     }
 
     .future-card {
-      min-height: clamp(11rem, 32vh, 18rem);
-      padding: clamp(0.8rem, 1.8vw, 1.25rem);
+      min-height: clamp(14rem, 39vh, 22.5rem);
+      padding: clamp(1rem, 2vw, 1.5rem);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -883,14 +883,14 @@
 
     .future-card .future-num {
       font-family: var(--font-display);
-      font-size: clamp(1.5rem, 3.5vw, 3rem);
+      font-size: clamp(2.15rem, 4.8vw, 4.2rem);
       color: rgba(26, 26, 26, 0.32);
       font-weight: 900;
       line-height: 1;
     }
 
     .future-card p {
-      font-size: clamp(0.64rem, 1.04vw, 0.88rem);
+      font-size: clamp(0.84rem, 1.3vw, 1.12rem);
       line-height: 1.45;
     }
 
@@ -957,6 +957,25 @@
 
       .loop-arrow {
         display: none;
+      }
+
+      .loop-card,
+      .tradeoff .panel {
+        min-height: auto;
+        gap: clamp(0.35rem, 1.2vw, 0.75rem);
+      }
+
+      .loop-card {
+        padding: clamp(0.72rem, 2.6vw, 1.05rem);
+      }
+
+      .loop-card li {
+        font-size: clamp(0.72rem, 2.6vw, 0.94rem);
+        line-height: 1.28;
+      }
+
+      .tradeoff .panel {
+        padding: clamp(0.72rem, 2.6vw, 1.05rem);
       }
 
       .principles-grid {
