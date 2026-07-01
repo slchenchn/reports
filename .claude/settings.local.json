@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:tilelang.com)",
+      "WebFetch(domain:mp.weixin.qq.com)"
+    ]
+  }
+}
