@@ -1,0 +1,124 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2026_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{graphicx}
+% \usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{caption}
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{wrapfig}
+\usepackage[table]{xcolor}
+\usepackage{arydshln}
+\usepackage{subcaption}
+
+\usepackage{booktabs} % For professional table lines
+\usepackage{graphicx} % For scaling tables if needed
+\usepackage{multirow} % For merging rows
+\usepackage{array} % For custom column settings
+
+\definecolor{citecolor}{HTML}{0071BC}
+\definecolor{linkcolor}{HTML}{ED1C24}
+\definecolor{hangrey}{RGB}{138,139,140}
+\definecolor{hanblue}{RGB}{1, 84, 134}
+\definecolor{hanred}{RGB}{163, 31, 52}
+\definecolor{NvidiaGreen}{HTML}{76B900}
+\urlstyle{same}
+\hypersetup{urlcolor=NvidiaGreen}
+
+\hypersetup{
+colorlinks=true,
+linkcolor=linkcolor,
+citecolor=citecolor,
+}
+
+%\newcommand{\QeRL}{\mbox{\textbf{\textcolor{hanblue}{Q}{e}\textcolor{hanred}{RL}}}}
+\newcommand{\QeRL}{\mbox{{{QeRL}}}}
+
+
+\title{{\QeRL}: Beyond Efficiency -- Quantization-enhanced Reinforcement Learning for LLMs}
+
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+%Wei Huang, Yi Ge, Shuai Yang, Yicheng Xiao, Huizi Mao, Yujun Lin, Hanrong Ye, Sifei Liu, Ka Chun Cheung, Hongxu Yin, Yao Lu, Xiaojuan Qi, Song Han, Yukang Chen
+
+\author{
+\begin{minipage}[t]{\textwidth}
+\centering\hspace*{-2em}
+Wei Huang$^{1,3}$ \quad Yi Ge$^{2,4}$ \quad Shuai Yang$^{1}$ 
+\quad Yicheng Xiao$^4$ \quad Huizi Mao$^1$  \quad  Yujun Lin$^1$\\[0.1cm]
+\centering\hspace*{-2em}
+Hanrong Ye$^1$ \quad  Sifei Liu$^1$ \quad  Ka Chun Cheung$^1$ \quad Hongxu Yin$^1$ \quad Yao Lu$^1$ \\[0.1cm]
+\centering\hspace*{-2em}
+Xiaojuan Qi$^{3}$ \quad Song Han$^{1,2}$  \quad Yukang Chen$^1$\\[0.3cm]
+\centering\hspace*{-4em}
+$^1$NVIDIA \quad $^2$MIT \quad $^3$HKU \quad $^4$THU
+\\[0.3cm]
+\centering\hspace*{-3em}\href{https://github.com/NVlabs/QeRL}{https://github.com/NVlabs/QeRL}
+\end{minipage}
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\xjqi}[1]{{\color{red}{{[\textbf{xjqi}: #1]}}}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+% We propose \QeRL, a {{Quantization}}-enhanced {{Reinforcement Learning}} framework for LLMs. Beyond efficiency, quantized large language models (LLMs) improve exploration during RL training. \QeRL $\,$ integrates quantized LLMs with low-rank adaptation (LoRA).
+% RL is essential for equipping LLMs with multi-step reasoning capabilities.
+% However, RL training is costly, requiring large GPU memory and incurring slow training due to its complex pipeline and long rollouts.
+% To address these challenges, QeRL accelerates training through quantization and LoRA. 
+% In experiments, QeRL is highly resource-efficient, enabling the training of a 34B-parameter LLM on a single 80GB A100 GPU, and achieving up to 2× speedup.
+% Surprisingly, we find that this approach even performs better than full fine-tuning, as quantization introduces higher entropy that benefits exploration.
+We propose QeRL, a Quantization-enhanced Reinforcement Learning framework for large language models (LLMs). While RL is essential for LLMs' reasoning capabilities, it is resource-intensive, requiring substantial GPU memory and long rollout durations. QeRL addresses these issues by combining NVFP4 quantization with Low-Rank Adaptation (LoRA), accelerating rollout phase of RL while reducing memory overhead. Beyond efficiency, our findings show that quantization noise increases policy entropy, enhancing exploration, and enabling the discovery of better strategies during RL. To further optimize exploration, QeRL introduces an Adaptive Quantization Noise (AQN) mechanism, which dynamically adjusts noise during training. 
+%This approach enhances exploration without increasing parameters, using a noise-sharing technique integrated into the layernorm. 
+Experiments demonstrate that QeRL delivers over 1.5$\times$ speedup in the rollout phase. Moreover, this is the first framework to enable RL training of a 32B LLM on a single H100 80GB GPU, while delivering overall speedups for RL training. It also achieves faster reward growth and higher final accuracy than 16-bit LoRA and QLoRA, while matching the performance of full-parameter fine-tuning on mathematical benchmarks such as GSM8K (90.8\%) and MATH 500 (77.4\%) in the 7B model. These results establish QeRL as an efficient and effective framework for RL training in LLMs.
+%Code is available at \href{https://github.com/NVlabs/QeRL}{https://github.com/NVlabs/QeRL}.
+
+% Surprisingly, quantization noise increases policy entropy, enhancing exploration and improving reward optimization. To further boost exploration, QeRL introduces adaptive quantization noise (AQN), which dynamically adjusts noise during training with zero-parameter overhead. Experiments show QeRL achieves up to 2$\times$ speedup, enabling the training of a 34B-parameter LLM on a single 80GB GPU while surpassing 16-bit LoRA and QLoRA in speed, training reward, and evaluation accuracy. QeRL matches full fine-tuning performance on benchmarks like GSM8K and MATH 500, making it an efficient and effective framework for RL-based reasoning in LLMs.
+\end{abstract}
+
+\input{01_intro}
+\input{03_preliminaries}
+\input{04_method}
+\input{05_experiment}
+\input{06_conclusion}
+
+
+\bibliography{iclr2026_conference}
+\bibliographystyle{iclr2026_conference}
+\clearpage
+\appendix
+\input{07_appendix}
+
+
+
+
+\end{document}

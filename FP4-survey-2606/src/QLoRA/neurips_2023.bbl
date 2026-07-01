@@ -1,0 +1,511 @@
+\begin{thebibliography}{73}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[An et~al.(2022)An, Li, Lin, Liu, Chen, Fu, Chen, Zheng, and
+  Lou]{an2022input}
+S.~An, Y.~Li, Z.~Lin, Q.~Liu, B.~Chen, Q.~Fu, W.~Chen, N.~Zheng, and J.-G. Lou.
+\newblock Input-tuning: Adapting unfamiliar inputs to frozen pretrained models.
+\newblock \emph{arXiv preprint arXiv:2203.03131}, 2022.
+
+\bibitem[Askell et~al.(2021)Askell, Bai, Chen, Drain, Ganguli, Henighan, Jones,
+  Joseph, Mann, DasSarma, et~al.]{askell2021general}
+A.~Askell, Y.~Bai, A.~Chen, D.~Drain, D.~Ganguli, T.~Henighan, A.~Jones,
+  N.~Joseph, B.~Mann, N.~DasSarma, et~al.
+\newblock A general language assistant as a laboratory for alignment.
+\newblock \emph{arXiv preprint arXiv:2112.00861}, 2021.
+
+\bibitem[Bach et~al.(2022)Bach, Sanh, Yong, Webson, Raffel, Nayak, Sharma, Kim,
+  Bari, Fevry, et~al.]{bach2022promptsource}
+S.~H. Bach, V.~Sanh, Z.-X. Yong, A.~Webson, C.~Raffel, N.~V. Nayak, A.~Sharma,
+  T.~Kim, M.~S. Bari, T.~Fevry, et~al.
+\newblock Promptsource: An integrated development environment and repository
+  for natural language prompts.
+\newblock \emph{arXiv preprint arXiv:2202.01279}, 2022.
+
+\bibitem[Bai et~al.(2022{\natexlab{a}})Bai, Jones, Ndousse, Askell, Chen,
+  DasSarma, Drain, Fort, Ganguli, Henighan, et~al.]{bai2022training}
+Y.~Bai, A.~Jones, K.~Ndousse, A.~Askell, A.~Chen, N.~DasSarma, D.~Drain,
+  S.~Fort, D.~Ganguli, T.~Henighan, et~al.
+\newblock Training a helpful and harmless assistant with reinforcement learning
+  from human feedback.
+\newblock \emph{arXiv preprint arXiv:2204.05862}, 2022{\natexlab{a}}.
+
+\bibitem[Bai et~al.(2022{\natexlab{b}})Bai, Kadavath, Kundu, Askell, Kernion,
+  Jones, Chen, Goldie, Mirhoseini, McKinnon, et~al.]{bai2022constitutional}
+Y.~Bai, S.~Kadavath, S.~Kundu, A.~Askell, J.~Kernion, A.~Jones, A.~Chen,
+  A.~Goldie, A.~Mirhoseini, C.~McKinnon, et~al.
+\newblock Constitutional ai: Harmlessness from ai feedback.
+\newblock \emph{arXiv preprint arXiv:2212.08073}, 2022{\natexlab{b}}.
+
+\bibitem[Bender et~al.(2021)Bender, Gebru, McMillan-Major, and
+  Shmitchell]{bender2021dangers}
+E.~M. Bender, T.~Gebru, A.~McMillan-Major, and S.~Shmitchell.
+\newblock On the dangers of stochastic parrots: Can language models be too big?
+\newblock In \emph{Proceedings of the 2021 ACM conference on fairness,
+  accountability, and transparency}, pages 610--623, 2021.
+
+\bibitem[Biderman et~al.(2023)Biderman, Schoelkopf, Anthony, Bradley, O'Brien,
+  Hallahan, Khan, Purohit, Prashanth, Raff, et~al.]{biderman2023pythia}
+S.~Biderman, H.~Schoelkopf, Q.~Anthony, H.~Bradley, K.~O'Brien, E.~Hallahan,
+  M.~A. Khan, S.~Purohit, U.~S. Prashanth, E.~Raff, et~al.
+\newblock Pythia: A suite for analyzing large language models across training
+  and scaling.
+\newblock \emph{arXiv preprint arXiv:2304.01373}, 2023.
+
+\bibitem[Bommasani et~al.(2021)Bommasani, Hudson, Adeli, Altman, Arora, von
+  Arx, Bernstein, Bohg, Bosselut, Brunskill,
+  et~al.]{bommasani2021opportunities}
+R.~Bommasani, D.~A. Hudson, E.~Adeli, R.~Altman, S.~Arora, S.~von Arx, M.~S.
+  Bernstein, J.~Bohg, A.~Bosselut, E.~Brunskill, et~al.
+\newblock On the opportunities and risks of foundation models.
+\newblock \emph{arXiv preprint arXiv:2108.07258}, 2021.
+
+\bibitem[Chen et~al.(2016)Chen, Xu, Zhang, and Guestrin]{chen2016training}
+T.~Chen, B.~Xu, C.~Zhang, and C.~Guestrin.
+\newblock Training deep nets with sublinear memory cost.
+\newblock \emph{arXiv preprint arXiv:1604.06174}, 2016.
+
+\bibitem[Chiang et~al.(2023)Chiang, Li, Lin, Sheng, Wu, Zhang, Zheng, Zhuang,
+  Zhuang, Gonzalez, Stoica, and Xing]{vicuna2023}
+W.-L. Chiang, Z.~Li, Z.~Lin, Y.~Sheng, Z.~Wu, H.~Zhang, L.~Zheng, S.~Zhuang,
+  Y.~Zhuang, J.~E. Gonzalez, I.~Stoica, and E.~P. Xing.
+\newblock Vicuna: An open-source chatbot impressing gpt-4 with 90\%* chatgpt
+  quality, March 2023.
+\newblock URL \url{https://lmsys.org/blog/2023-03-30-vicuna/}.
+
+\bibitem[Christiano et~al.(2017)Christiano, Leike, Brown, Martic, Legg, and
+  Amodei]{christiano2017deep}
+P.~F. Christiano, J.~Leike, T.~Brown, M.~Martic, S.~Legg, and D.~Amodei.
+\newblock Deep reinforcement learning from human preferences.
+\newblock \emph{Advances in neural information processing systems}, 30, 2017.
+
+\bibitem[Chung et~al.(2022)Chung, Hou, Longpre, Zoph, Tay, Fedus, Li, Wang,
+  Dehghani, Brahma, et~al.]{chung2022scaling}
+H.~W. Chung, L.~Hou, S.~Longpre, B.~Zoph, Y.~Tay, W.~Fedus, E.~Li, X.~Wang,
+  M.~Dehghani, S.~Brahma, et~al.
+\newblock Scaling instruction-finetuned language models.
+\newblock \emph{arXiv preprint arXiv:2210.11416}, 2022.
+
+\bibitem[Dettmers and Zettlemoyer(2022)]{dettmers2022case}
+T.~Dettmers and L.~Zettlemoyer.
+\newblock The case for 4-bit precision: k-bit inference scaling laws.
+\newblock \emph{arXiv preprint arXiv:2212.09720}, 2022.
+
+\bibitem[Dettmers et~al.(2022{\natexlab{a}})Dettmers, Lewis, Belkada, and
+  Zettlemoyer]{dettmers2022llm}
+T.~Dettmers, M.~Lewis, Y.~Belkada, and L.~Zettlemoyer.
+\newblock {LLM}.int8(): 8-bit matrix multiplication for transformers at scale.
+\newblock \emph{Advances in Neural Information Processing Systems 35: Annual
+  Conference on Neural Information Processing Systems 2022, NeurIPS 2022},
+  2022{\natexlab{a}}.
+
+\bibitem[Dettmers et~al.(2022{\natexlab{b}})Dettmers, Lewis, Shleifer, and
+  Zettlemoyer]{dettmers2022optimizers}
+T.~Dettmers, M.~Lewis, S.~Shleifer, and L.~Zettlemoyer.
+\newblock 8-bit optimizers via block-wise quantization.
+\newblock \emph{9th International Conference on Learning Representations,
+  ICLR}, 2022{\natexlab{b}}.
+
+\bibitem[Elo(1967)]{elo1967proposed}
+A.~E. Elo.
+\newblock The proposed uscf rating system. its development, theory, and
+  applications.
+\newblock \emph{Chess Life}, 22\penalty0 (8):\penalty0 242--247, 1967.
+
+\bibitem[Elo(1978)]{elo1978rating}
+A.~E. Elo.
+\newblock \emph{The rating of chessplayers, past and present}.
+\newblock Arco Pub., 1978.
+
+\bibitem[Frantar et~al.(2022)Frantar, Ashkboos, Hoefler, and
+  Alistarh]{frantar2022gptq}
+E.~Frantar, S.~Ashkboos, T.~Hoefler, and D.~Alistarh.
+\newblock Gptq: Accurate post-training quantization for generative pre-trained
+  transformers.
+\newblock \emph{arXiv preprint arXiv:2210.17323}, 2022.
+
+\bibitem[Fu et~al.(2023)Fu, Ng, Jiang, and Liu]{fu2023gptscore}
+J.~Fu, S.-K. Ng, Z.~Jiang, and P.~Liu.
+\newblock Gptscore: Evaluate as you desire.
+\newblock \emph{arXiv preprint arXiv:2302.04166}, 2023.
+
+\bibitem[Geng et~al.(2023)Geng, Gudibande, Liu, Wallace, Abbeel, Levine, and
+  Song]{koala_blogpost_2023}
+X.~Geng, A.~Gudibande, H.~Liu, E.~Wallace, P.~Abbeel, S.~Levine, and D.~Song.
+\newblock Koala: A dialogue model for academic research.
+\newblock Blog post, April 2023.
+\newblock URL \url{https://bair.berkeley.edu/blog/2023/04/03/koala/}.
+
+\bibitem[Glaese et~al.(2022)Glaese, McAleese, Tr{\k{e}}bacz, Aslanides, Firoiu,
+  Ewalds, Rauh, Weidinger, Chadwick, Thacker, et~al.]{glaese2022improving}
+A.~Glaese, N.~McAleese, M.~Tr{\k{e}}bacz, J.~Aslanides, V.~Firoiu, T.~Ewalds,
+  M.~Rauh, L.~Weidinger, M.~Chadwick, P.~Thacker, et~al.
+\newblock Improving alignment of dialogue agents via targeted human judgements.
+\newblock \emph{arXiv preprint arXiv:2209.14375}, 2022.
+
+\bibitem[Gururangan et~al.(2018)Gururangan, Swayamdipta, Levy, Schwartz,
+  Bowman, and Smith]{gururangan2018annotation}
+S.~Gururangan, S.~Swayamdipta, O.~Levy, R.~Schwartz, S.~R. Bowman, and N.~A.
+  Smith.
+\newblock Annotation artifacts in natural language inference data.
+\newblock \emph{arXiv preprint arXiv:1803.02324}, 2018.
+
+\bibitem[Henderson et~al.(2021)Henderson, Ruder,
+  et~al.]{henderson2021compacter}
+J.~Henderson, S.~Ruder, et~al.
+\newblock Compacter: Efficient low-rank hypercomplex adapter layers.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2021.
+
+\bibitem[Hendrycks et~al.(2020)Hendrycks, Burns, Basart, Zou, Mazeika, Song,
+  and Steinhardt]{hendrycksmeasuring}
+D.~Hendrycks, C.~Burns, S.~Basart, A.~Zou, M.~Mazeika, D.~Song, and
+  J.~Steinhardt.
+\newblock Measuring massive multitask language understanding.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Holtzman et~al.(2020)Holtzman, Buys, Du, Forbes, and
+  Choi]{holtzmancurious}
+A.~Holtzman, J.~Buys, L.~Du, M.~Forbes, and Y.~Choi.
+\newblock The curious case of neural text degeneration.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Honovich et~al.(2022)Honovich, Scialom, Levy, and
+  Schick]{honovich2022unnatural}
+O.~Honovich, T.~Scialom, O.~Levy, and T.~Schick.
+\newblock Unnatural instructions: Tuning language models with (almost) no human
+  labor.
+\newblock \emph{arXiv preprint arXiv:2212.09689}, 2022.
+
+\bibitem[Houlsby et~al.(2019)Houlsby, Giurgiu, Jastrzebski, Morrone,
+  De~Laroussilhe, Gesmundo, Attariyan, and Gelly]{houlsby2019parameter}
+N.~Houlsby, A.~Giurgiu, S.~Jastrzebski, B.~Morrone, Q.~De~Laroussilhe,
+  A.~Gesmundo, M.~Attariyan, and S.~Gelly.
+\newblock Parameter-efficient transfer learning for nlp.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  2790--2799. PMLR, 2019.
+
+\bibitem[Hu et~al.(2021)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and
+  Chen]{hu2021lora}
+E.~J. Hu, Y.~Shen, P.~Wallis, Z.~Allen-Zhu, Y.~Li, S.~Wang, L.~Wang, and
+  W.~Chen.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock \emph{arXiv preprint arXiv:2106.09685}, 2021.
+
+\bibitem[Iyer et~al.(2022)Iyer, Lin, Pasunuru, Mihaylov, Simig, Yu, Shuster,
+  Wang, Liu, Koura, et~al.]{iyer2022opt}
+S.~Iyer, X.~V. Lin, R.~Pasunuru, T.~Mihaylov, D.~Simig, P.~Yu, K.~Shuster,
+  T.~Wang, Q.~Liu, P.~S. Koura, et~al.
+\newblock Opt-iml: Scaling language model instruction meta learning through the
+  lens of generalization.
+\newblock \emph{arXiv preprint arXiv:2212.12017}, 2022.
+
+\bibitem[K{\"o}ksal et~al.(2023)K{\"o}ksal, Schick, Korhonen, and
+  Sch{\"u}tze]{koksal2023longform}
+A.~K{\"o}ksal, T.~Schick, A.~Korhonen, and H.~Sch{\"u}tze.
+\newblock Longform: Optimizing instruction tuning for long text generation with
+  corpus extraction.
+\newblock \emph{arXiv preprint arXiv:2304.08460}, 2023.
+
+\bibitem[K{\"o}pf et~al.(2023)K{\"o}pf, Kilcher, von R{\"u}tte, Anagnostidis,
+  Tam, Stevens, Barhoum, Duc, Stanley, Nagyfi, et~al.]{kopf2023openassistant}
+A.~K{\"o}pf, Y.~Kilcher, D.~von R{\"u}tte, S.~Anagnostidis, Z.-R. Tam,
+  K.~Stevens, A.~Barhoum, N.~M. Duc, O.~Stanley, R.~Nagyfi, et~al.
+\newblock Openassistant conversations--democratizing large language model
+  alignment.
+\newblock \emph{arXiv preprint arXiv:2304.07327}, 2023.
+
+\bibitem[LAION(2023)]{laion2023}
+LAION.
+\newblock Open-instruction-generalist dataset.
+\newblock \url{https://github.com/LAION-AI/Open-Instruction-Generalist}, 2023.
+
+\bibitem[Lester et~al.(2021)Lester, Al-Rfou, and Constant]{lester2021power}
+B.~Lester, R.~Al-Rfou, and N.~Constant.
+\newblock The power of scale for parameter-efficient prompt tuning.
+\newblock \emph{arXiv preprint arXiv:2104.08691}, 2021.
+
+\bibitem[Li and Liang(2021)]{li2021prefix}
+X.~L. Li and P.~Liang.
+\newblock Prefix-tuning: Optimizing continuous prompts for generation.
+\newblock \emph{arXiv preprint arXiv:2101.00190}, 2021.
+
+\bibitem[Liang et~al.(2022)Liang, Bommasani, Lee, Tsipras, Soylu, Yasunaga,
+  Zhang, Narayanan, Wu, Kumar, et~al.]{liang2022holistic}
+P.~Liang, R.~Bommasani, T.~Lee, D.~Tsipras, D.~Soylu, M.~Yasunaga, Y.~Zhang,
+  D.~Narayanan, Y.~Wu, A.~Kumar, et~al.
+\newblock Holistic evaluation of language models.
+\newblock \emph{arXiv preprint arXiv:2211.09110}, 2022.
+
+\bibitem[Liao et~al.(2021)Liao, Taori, Raji, and Schmidt]{liao2021we}
+T.~Liao, R.~Taori, I.~D. Raji, and L.~Schmidt.
+\newblock Are we learning yet? a meta review of evaluation failures across
+  machine learning.
+\newblock In \emph{Thirty-fifth Conference on Neural Information Processing
+  Systems Datasets and Benchmarks Track (Round 2)}, 2021.
+
+\bibitem[Liu et~al.(2022)Liu, Tam, Muqeeth, Mohta, Huang, Bansal, and
+  Raffel]{liu2022few}
+H.~Liu, D.~Tam, M.~Muqeeth, J.~Mohta, T.~Huang, M.~Bansal, and C.~A. Raffel.
+\newblock Few-shot parameter-efficient fine-tuning is better and cheaper than
+  in-context learning.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 1950--1965, 2022.
+
+\bibitem[Liu et~al.(2019)Liu, Ott, Goyal, Du, Joshi, Chen, Levy, Lewis,
+  Zettlemoyer, and Stoyanov]{liu2019roberta}
+Y.~Liu, M.~Ott, N.~Goyal, J.~Du, M.~Joshi, D.~Chen, O.~Levy, M.~Lewis,
+  L.~Zettlemoyer, and V.~Stoyanov.
+\newblock Roberta: A robustly optimized bert pretraining approach.
+\newblock \emph{arXiv preprint arXiv:1907.11692}, 2019.
+
+\bibitem[Longpre et~al.(2023)Longpre, Hou, Vu, Webson, Chung, Tay, Zhou, Le,
+  Zoph, Wei, et~al.]{longpre2023flan}
+S.~Longpre, L.~Hou, T.~Vu, A.~Webson, H.~W. Chung, Y.~Tay, D.~Zhou, Q.~V. Le,
+  B.~Zoph, J.~Wei, et~al.
+\newblock The flan collection: Designing data and methods for effective
+  instruction tuning.
+\newblock \emph{arXiv preprint arXiv:2301.13688}, 2023.
+
+\bibitem[Min et~al.(2021)Min, Lewis, Zettlemoyer, and
+  Hajishirzi]{min2021metaicl}
+S.~Min, M.~Lewis, L.~Zettlemoyer, and H.~Hajishirzi.
+\newblock Metaicl: Learning to learn in context.
+\newblock \emph{arXiv preprint arXiv:2110.15943}, 2021.
+
+\bibitem[Nematzadeh et~al.(2018)Nematzadeh, Burns, Grant, Gopnik, and
+  Griffiths]{nematzadeh2018evaluating}
+A.~Nematzadeh, K.~Burns, E.~Grant, A.~Gopnik, and T.~Griffiths.
+\newblock Evaluating theory of mind in question answering.
+\newblock In \emph{Proceedings of the 2018 Conference on Empirical Methods in
+  Natural Language Processing}, pages 2392--2400, 2018.
+
+\bibitem[OpenAI(2023)]{openai2023gpt}
+OpenAI.
+\newblock Gpt-4 technical report.
+\newblock \emph{arXiv}, 2023.
+
+\bibitem[Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin,
+  Zhang, Agarwal, Slama, Ray, et~al.]{ouyang2022training}
+L.~Ouyang, J.~Wu, X.~Jiang, D.~Almeida, C.~Wainwright, P.~Mishkin, C.~Zhang,
+  S.~Agarwal, K.~Slama, A.~Ray, et~al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 27730--27744, 2022.
+
+\bibitem[Park et~al.(2022)Park, Park, Kwon, Kim, Lee, and Lee]{park2022nuqmm}
+G.~Park, B.~Park, S.~J. Kwon, B.~Kim, Y.~Lee, and D.~Lee.
+\newblock nuqmm: Quantized matmul for efficient inference of large-scale
+  generative language models.
+\newblock \emph{arXiv preprint arXiv:2206.09557}, 2022.
+
+\bibitem[Peng et~al.(2023)Peng, Li, He, Galley, and Gao]{peng2023instruction}
+B.~Peng, C.~Li, P.~He, M.~Galley, and J.~Gao.
+\newblock Instruction tuning with gpt-4.
+\newblock \emph{arXiv preprint arXiv:2304.03277}, 2023.
+
+\bibitem[Poliak et~al.(2018)Poliak, Naradowsky, Haldar, Rudinger, and
+  Van~Durme]{poliak2018hypothesis}
+A.~Poliak, J.~Naradowsky, A.~Haldar, R.~Rudinger, and B.~Van~Durme.
+\newblock Hypothesis only baselines in natural language inference.
+\newblock In \emph{Proceedings of the Seventh Joint Conference on Lexical and
+  Computational Semantics}, pages 180--191, 2018.
+
+\bibitem[Pope et~al.(2022)Pope, Douglas, Chowdhery, Devlin, Bradbury, Levskaya,
+  Heek, Xiao, Agrawal, and Dean]{pope2022efficiently}
+R.~Pope, S.~Douglas, A.~Chowdhery, J.~Devlin, J.~Bradbury, A.~Levskaya,
+  J.~Heek, K.~Xiao, S.~Agrawal, and J.~Dean.
+\newblock Efficiently scaling transformer inference.
+\newblock \emph{arXiv preprint arXiv:2211.05102}, 2022.
+
+\bibitem[Qin and Eisner(2021)]{qin2021learning}
+G.~Qin and J.~Eisner.
+\newblock Learning how to ask: Querying lms with mixtures of soft prompts.
+\newblock \emph{arXiv preprint arXiv:2104.06599}, 2021.
+
+\bibitem[Raffel et~al.(2020)Raffel, Shazeer, Roberts, Lee, Narang, Matena,
+  Zhou, Li, and Liu]{t5}
+C.~Raffel, N.~Shazeer, A.~Roberts, K.~Lee, S.~Narang, M.~Matena, Y.~Zhou,
+  W.~Li, and P.~J. Liu.
+\newblock Exploring the limits of transfer learning with a unified text-to-text
+  transformer.
+\newblock \emph{J. Mach. Learn. Res.}, 21\penalty0 (1), jan 2020.
+\newblock ISSN 1532-4435.
+
+\bibitem[Sanh et~al.(2021)Sanh, Webson, Raffel, Bach, Sutawika, Alyafeai,
+  Chaffin, Stiegler, Scao, Raja, et~al.]{sanh2021multitask}
+V.~Sanh, A.~Webson, C.~Raffel, S.~H. Bach, L.~Sutawika, Z.~Alyafeai,
+  A.~Chaffin, A.~Stiegler, T.~L. Scao, A.~Raja, et~al.
+\newblock Multitask prompted training enables zero-shot task generalization.
+\newblock \emph{arXiv preprint arXiv:2110.08207}, 2021.
+
+\bibitem[Sap et~al.(2022)Sap, LeBras, Fried, and Choi]{sap2022neural}
+M.~Sap, R.~LeBras, D.~Fried, and Y.~Choi.
+\newblock Neural theory-of-mind? on the limits of social intelligence in large
+  lms.
+\newblock \emph{arXiv preprint arXiv:2210.13312}, 2022.
+
+\bibitem[Scao et~al.(2022)Scao, Fan, Akiki, Pavlick, Ili{\'c}, Hesslow,
+  Castagn{\'e}, Luccioni, Yvon, Gall{\'e}, et~al.]{scao2022bloom}
+T.~L. Scao, A.~Fan, C.~Akiki, E.~Pavlick, S.~Ili{\'c}, D.~Hesslow,
+  R.~Castagn{\'e}, A.~S. Luccioni, F.~Yvon, M.~Gall{\'e}, et~al.
+\newblock Bloom: A 176b-parameter open-access multilingual language model.
+\newblock \emph{arXiv preprint arXiv:2211.05100}, 2022.
+
+\bibitem[Shaphiro and Wilk(1965)]{shaphiro1965analysis}
+S.~Shaphiro and M.~Wilk.
+\newblock An analysis of variance test for normality.
+\newblock \emph{Biometrika}, 52\penalty0 (3):\penalty0 591--611, 1965.
+
+\bibitem[Sung et~al.(2021)Sung, Nair, and Raffel]{sung2021training}
+Y.-L. Sung, V.~Nair, and C.~A. Raffel.
+\newblock Training neural networks with fixed sparse masks.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  34:\penalty0 24193--24205, 2021.
+
+\bibitem[Taori et~al.(2023)Taori, Gulrajani, Zhang, Dubois, Li, Guestrin,
+  Liang, and Hashimoto]{alpaca}
+R.~Taori, I.~Gulrajani, T.~Zhang, Y.~Dubois, X.~Li, C.~Guestrin, P.~Liang, and
+  T.~B. Hashimoto.
+\newblock Stanford alpaca: An instruction-following llama model.
+\newblock \url{https://github.com/tatsu-lab/stanford_alpaca}, 2023.
+
+\bibitem[Thoppilan et~al.(2022)Thoppilan, De~Freitas, Hall, Shazeer,
+  Kulshreshtha, Cheng, Jin, Bos, Baker, Du, et~al.]{thoppilan2022lamda}
+R.~Thoppilan, D.~De~Freitas, J.~Hall, N.~Shazeer, A.~Kulshreshtha, H.-T. Cheng,
+  A.~Jin, T.~Bos, L.~Baker, Y.~Du, et~al.
+\newblock Lamda: Language models for dialog applications.
+\newblock \emph{arXiv preprint arXiv:2201.08239}, 2022.
+
+\bibitem[Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux,
+  Lacroix, Rozi{\`e}re, Goyal, Hambro, Azhar, et~al.]{touvron2023llama}
+H.~Touvron, T.~Lavril, G.~Izacard, X.~Martinet, M.-A. Lachaux, T.~Lacroix,
+  B.~Rozi{\`e}re, N.~Goyal, E.~Hambro, F.~Azhar, et~al.
+\newblock Llama: Open and efficient foundation language models.
+\newblock \emph{arXiv preprint arXiv:2302.13971}, 2023.
+
+\bibitem[Wang et~al.(2018)Wang, Singh, Michael, Hill, Levy, and
+  Bowman]{wang2018glue}
+A.~Wang, A.~Singh, J.~Michael, F.~Hill, O.~Levy, and S.~R. Bowman.
+\newblock Glue: A multi-task benchmark and analysis platform for natural
+  language understanding.
+\newblock \emph{arXiv preprint arXiv:1804.07461}, 2018.
+
+\bibitem[Wang et~al.(2022{\natexlab{a}})Wang, Kordi, Mishra, Liu, Smith,
+  Khashabi, and Hajishirzi]{wang2022self}
+Y.~Wang, Y.~Kordi, S.~Mishra, A.~Liu, N.~A. Smith, D.~Khashabi, and
+  H.~Hajishirzi.
+\newblock Self-instruct: Aligning language model with self generated
+  instructions.
+\newblock \emph{arXiv preprint arXiv:2212.10560}, 2022{\natexlab{a}}.
+
+\bibitem[Wang et~al.(2022{\natexlab{b}})Wang, Mishra, Alipoormolabashi, Kordi,
+  Mirzaei, Arunkumar, Ashok, Dhanasekaran, Naik, Stap,
+  et~al.]{supernaturalinstructions}
+Y.~Wang, S.~Mishra, P.~Alipoormolabashi, Y.~Kordi, A.~Mirzaei, A.~Arunkumar,
+  A.~Ashok, A.~S. Dhanasekaran, A.~Naik, D.~Stap, et~al.
+\newblock Super-naturalinstructions:generalization via declarative instructions
+  on 1600+ tasks.
+\newblock In \emph{EMNLP}, 2022{\natexlab{b}}.
+
+\bibitem[Wang et~al.(2022{\natexlab{c}})Wang, Mishra, Alipoormolabashi, Kordi,
+  Mirzaei, Naik, Ashok, Dhanasekaran, Arunkumar, Stap, et~al.]{wang2022super}
+Y.~Wang, S.~Mishra, P.~Alipoormolabashi, Y.~Kordi, A.~Mirzaei, A.~Naik,
+  A.~Ashok, A.~S. Dhanasekaran, A.~Arunkumar, D.~Stap, et~al.
+\newblock Super-naturalinstructions: Generalization via declarative
+  instructions on 1600+ nlp tasks.
+\newblock In \emph{Proceedings of the 2022 Conference on Empirical Methods in
+  Natural Language Processing}, pages 5085--5109, 2022{\natexlab{c}}.
+
+\bibitem[Wei et~al.(2021)Wei, Bosma, Zhao, Guu, Yu, Lester, Du, Dai, and
+  Le]{wei2021finetuned}
+J.~Wei, M.~Bosma, V.~Y. Zhao, K.~Guu, A.~W. Yu, B.~Lester, N.~Du, A.~M. Dai,
+  and Q.~V. Le.
+\newblock Finetuned language models are zero-shot learners.
+\newblock \emph{arXiv preprint arXiv:2109.01652}, 2021.
+
+\bibitem[Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Xia, Chi, Le, Zhou,
+  et~al.]{weichain}
+J.~Wei, X.~Wang, D.~Schuurmans, M.~Bosma, F.~Xia, E.~H. Chi, Q.~V. Le, D.~Zhou,
+  et~al.
+\newblock Chain-of-thought prompting elicits reasoning in large language
+  models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[Wolf et~al.(2019)Wolf, Debut, Sanh, Chaumond, Delangue, Moi, Cistac,
+  Rault, Louf, Funtowicz, et~al.]{wolf2019huggingface}
+T.~Wolf, L.~Debut, V.~Sanh, J.~Chaumond, C.~Delangue, A.~Moi, P.~Cistac,
+  T.~Rault, R.~Louf, M.~Funtowicz, et~al.
+\newblock Huggingface's transformers: State-of-the-art natural language
+  processing.
+\newblock \emph{arXiv preprint arXiv:1910.03771}, 2019.
+
+\bibitem[Wortsman et~al.(2023)Wortsman, Dettmers, Zettlemoyer, Morcos, Farhadi,
+  and Schmidt]{wortsman2023stable}
+M.~Wortsman, T.~Dettmers, L.~Zettlemoyer, A.~Morcos, A.~Farhadi, and
+  L.~Schmidt.
+\newblock Stable and low-precision training for large-scale vision-language
+  models.
+\newblock \emph{arXiv preprint arXiv:2304.13013}, 2023.
+
+\bibitem[Xiao et~al.(2022)Xiao, Lin, Seznec, Demouth, and
+  Han]{xiao2022smoothquant}
+G.~Xiao, J.~Lin, M.~Seznec, J.~Demouth, and S.~Han.
+\newblock Smoothquant: Accurate and efficient post-training quantization for
+  large language models.
+\newblock \emph{arXiv preprint arXiv:2211.10438}, 2022.
+
+\bibitem[Xie et~al.(2022)Xie, Wu, Shi, Zhong, Scholak, Yasunaga, Wu, Zhong,
+  Yin, Wang, et~al.]{xie2022unifiedskg}
+T.~Xie, C.~H. Wu, P.~Shi, R.~Zhong, T.~Scholak, M.~Yasunaga, C.-S. Wu,
+  M.~Zhong, P.~Yin, S.~I. Wang, et~al.
+\newblock Unifiedskg: Unifying and multi-tasking structured knowledge grounding
+  with text-to-text language models.
+\newblock \emph{arXiv preprint arXiv:2201.05966}, 2022.
+
+\bibitem[Yang et~al.(2018)Yang, Qi, Zhang, Bengio, Cohen, Salakhutdinov, and
+  Manning]{yang2018hotpotqa}
+Z.~Yang, P.~Qi, S.~Zhang, Y.~Bengio, W.~Cohen, R.~Salakhutdinov, and C.~D.
+  Manning.
+\newblock Hotpotqa: A dataset for diverse, explainable multi-hop question
+  answering.
+\newblock In \emph{Proceedings of the 2018 Conference on Empirical Methods in
+  Natural Language Processing}, pages 2369--2380, 2018.
+
+\bibitem[Yao et~al.(2022)Yao, Aminabadi, Zhang, Wu, Li, and
+  He]{yao2022zeroquant}
+Z.~Yao, R.~Y. Aminabadi, M.~Zhang, X.~Wu, C.~Li, and Y.~He.
+\newblock Zeroquant: Efficient and affordable post-training quantization for
+  large-scale transformers.
+\newblock \emph{arXiv preprint arXiv:2206.01861}, 2022.
+
+\bibitem[Zaken et~al.(2021)Zaken, Ravfogel, and Goldberg]{zaken2021bitfit}
+E.~B. Zaken, S.~Ravfogel, and Y.~Goldberg.
+\newblock Bitfit: Simple parameter-efficient fine-tuning for transformer-based
+  masked language-models.
+\newblock \emph{arXiv preprint arXiv:2106.10199}, 2021.
+
+\bibitem[Zeng et~al.(2022)Zeng, Liu, Du, Wang, Lai, Ding, Yang, Xu, Zheng, Xia,
+  et~al.]{zeng2022glm}
+A.~Zeng, X.~Liu, Z.~Du, Z.~Wang, H.~Lai, M.~Ding, Z.~Yang, Y.~Xu, W.~Zheng,
+  X.~Xia, et~al.
+\newblock Glm-130b: An open bilingual pre-trained model.
+\newblock \emph{arXiv preprint arXiv:2210.02414}, 2022.
+
+\bibitem[Zhang et~al.(2022)Zhang, Roller, Goyal, Artetxe, Chen, Chen, Dewan,
+  Diab, Li, Lin, et~al.]{zhang2022opt}
+S.~Zhang, S.~Roller, N.~Goyal, M.~Artetxe, M.~Chen, S.~Chen, C.~Dewan, M.~Diab,
+  X.~Li, X.~V. Lin, et~al.
+\newblock Opt: Open pre-trained transformer language models.
+\newblock \emph{arXiv preprint arXiv:2205.01068}, 2022.
+
+\bibitem[Zhong et~al.(2021)Zhong, Lee, Zhang, and Klein]{zhong2021adapting}
+R.~Zhong, K.~Lee, Z.~Zhang, and D.~Klein.
+\newblock Adapting language models for zero-shot learning by meta-tuning on
+  dataset and prompt collections.
+\newblock \emph{arXiv preprint arXiv:2104.04670}, 2021.
+
+\end{thebibliography}

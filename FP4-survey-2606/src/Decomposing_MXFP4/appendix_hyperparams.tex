@@ -1,0 +1,156 @@
+%==============================================================================
+\section{Training hyperparameters (MoE)}
+\label{app:hyperparams}
+%==============================================================================
+
+We list every hyperparameter explicitly set in our MoE training script
+\texttt{train\_moe\_w4a4\_aqn\_rht\_sr.sh}. All other knobs use the
+verl-VeRL defaults.
+
+\subsection*{GRPO}
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item Advantage estimator: \texttt{grpo}.
+  \item \texttt{rollout.n} (rollouts per prompt): $2$.
+  \item \texttt{train\_batch\_size} (prompts): $64$.
+  \item \texttt{ppo\_mini\_batch\_size} (prompts): $32$.
+  \item \texttt{ppo\_micro\_batch\_size\_per\_gpu}: $1$ (training and inference).
+  \item \texttt{use\_dynamic\_bsz}: \texttt{True};
+        \texttt{ppo\_max\_token\_len\_per\_gpu} $= 2048$.
+  \item \texttt{max\_prompt\_length}: $1024$;
+        \texttt{max\_response\_length}: $1024$.
+  \item KL: \texttt{algorithm.use\_kl\_in\_reward=False},
+        \texttt{algorithm.kl\_ctrl.kl\_coef=0.0};
+        \texttt{actor.use\_kl\_loss=False}.
+  \item PPO clip (token-level, asymmetric):
+        $\epsilon_{\rm low}{=}0.2$,
+        $\epsilon_{\rm high}{=}0.28$ (DAPO-style clip-higher),
+        dual-clip $c{=}10.0$;
+        \texttt{loss\_type=ppo\_clip}.
+  \item Token-level Truncated Importance Sampling
+        (TIS)~\citep{yao2025tis}:
+        \texttt{rollout\_is=token},
+        \texttt{rollout\_is\_threshold=2.0},
+        \texttt{tis\_strategy=fixed},
+        \texttt{bypass\_mode=false}.
+  \item \texttt{loss\_agg\_mode=token-mean};
+        \texttt{entropy\_coeff=0}.
+  \item Reward: rule-based GSM8K grader (verl built-in,
+        \texttt{reward\_model.enable=False} since rewards are computed
+        from the dataset's ground-truth field).
+  \item Optimizer:
+        \texttt{lr=1e-6},
+        \texttt{lr\_warmup\_steps=10},
+        \texttt{lr\_decay\_style=constant},
+        \texttt{weight\_decay=0.1},
+        \texttt{clip\_grad=1.0}.
+  \item \texttt{trainer.total\_epochs=1};
+        \texttt{trainer.val\_before\_train=True};
+        \texttt{trainer.test\_freq=10};
+        \texttt{trainer.save\_freq=300}.
+  \item Single seed per configuration; statistical significance
+        limitation acknowledged in Section~\ref{sec:limitations}.
+\end{itemize}
+
+\subsection*{Rollout}
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item Engine: vLLM (\texttt{rollout.name=vllm});
+        \texttt{enforce\_eager=True}; \texttt{free\_cache\_engine=True};
+        \texttt{enable\_chunked\_prefill=True};
+        \texttt{max\_num\_batched\_tokens=8192}.
+  \item \texttt{tensor\_model\_parallel\_size=8} for inference.
+  \item \texttt{gpu\_memory\_utilization=0.75}.
+  \item Training rollout: \texttt{temperature=1.0},
+        \texttt{top\_p=1.0}, \texttt{top\_k=-1}.
+  \item Validation rollout (\texttt{val\_kwargs}):
+        \texttt{temperature=1.0}, \texttt{top\_p=1.0},
+        \texttt{top\_k=-1}, \texttt{do\_sample=True}, \texttt{n=1}.
+  \item \texttt{calculate\_log\_probs=True};
+        \texttt{enable\_rollout\_routing\_replay=True} (MoE router
+        cached from rollout to actor).
+\end{itemize}
+
+\subsection*{Quantization (MXFP4 W4A4)}
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item Format: MXFP4 (E2M1 grid + E8M0 power-of-two block scale)
+        \citep{rouhani2023ocp}; W4A4 — both weight and activation
+        tensors entering each matmul are quantized; gradients remain
+        BF16.
+  \item Block size: $32$ along the input axis of each Linear.
+  \item Quantizer path: native CUDA kernel
+        (\texttt{actor.force\_py=False}); inference uses the same
+        kernel via \texttt{rollout.prequant\_format=mxfp4}.
+\end{itemize}
+
+\subsection*{Corrections}
+
+\paragraph{Macro Block Scaling (MBS)}~\citep{chhugani2026mxfp4}.
+Macro-block size $128$ ($= 4$ contiguous MXFP4 sub-blocks of $32$);
+$8$-bit mantissa correction (E0M8, $256$ levels) per macro-block;
+applied identically to weights on both OF passes when MBS$+$OF is
+enabled.
+
+\paragraph{Outlier Fallback (OF)}~\citep{zhang2025fallback}.
+Two-pass residual MXFP4 QDQ with $\alpha = 1.0$:
+$q_1 = \mathrm{MXFP4}(\bw)$,
+$q_2 = \mathrm{MXFP4}(\bw - q_1)$,
+output $q_1 + q_2$.
+
+\paragraph{Adaptive Quantization Noise (AQN)} ~\cite{huang2025qerl}.
+Per-rollout Gaussian additive noise injection on weights with
+exponentially decaying magnitude:
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item \texttt{trainer.aqn.enabled=True}.
+  \item \texttt{sigma\_start=0.01}.
+  \item \texttt{sigma\_end=0.001}.
+  \item \texttt{num\_stages=10}.
+  \item \texttt{target\_patterns=['layernorm']}.
+  \item \texttt{target\_multipliers.post\_attention\_layernorm=1.414}
+        (i.e.\ $\sqrt{2}$, compensating for the magnitude doubling at
+        the residual-stream branch).
+\end{itemize}
+
+\subsection*{System / parallelism}
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item Model: \texttt{Qwen3-30B-A3B-Base}.
+  \item Backend: Megatron-Core (via verl-VeRL,
+        \texttt{config-name=ppo\_megatron\_trainer}); custom
+        \texttt{layers.py} (the ACS replacement) provides MXFP4 + RHT
+        + SR for attention matmuls; \texttt{te\_grouped\_quant\_patch.py}
+        provides MXFP4 for grouped MoE GEMMs.
+  \item Parallelism (training): \texttt{TP=1}, \texttt{PP=1},
+        \texttt{VPP=null}, \texttt{CP=1}, \texttt{EP=8},
+        \texttt{ETP=1}.
+  \item Megatron MoE knobs: \texttt{moe\_grouped\_gemm=True},
+        \texttt{moe\_token\_dispatcher\_type=flex},
+        \texttt{moe\_router\_dtype=fp32},
+        \texttt{moe\_enable\_deepep=True},
+        \texttt{moe\_permute\_fusion=False}.
+  \item Memory: \texttt{param\_offload=True},
+        \texttt{grad\_offload=True},
+        \texttt{optimizer\_offload=True}
+        (\texttt{optimizer\_offload\_fraction=1.0});
+        \texttt{use\_precision\_aware\_optimizer=True};
+        gradient checkpointing enabled.
+  \item Checkpointing: \texttt{use\_mbridge=True},
+        \texttt{use\_dist\_checkpointing=False}.
+  \item Distributed setup: \texttt{trainer.n\_gpus\_per\_node=8},
+        \texttt{trainer.nnodes=1}.
+  \item Router replay: \texttt{router\_replay.mode=R3} (replay rollout
+        routing decisions during the actor update).
+  \item LoRA: disabled (\texttt{lora.rank=0}; full-parameter training).
+\end{itemize}
+
+\subsection*{Data}
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item Training: GSM8K \texttt{train.parquet} ($7{,}473$ problems).
+  \item Validation: GSM8K \texttt{test.parquet} ($1{,}319$ problems).
+  \item Preprocessing: parquet via \texttt{verl.data\_preprocess.gsm8k};
+        prompt key \texttt{prompt}; truncation mode \texttt{error}
+        (longer-than-budget prompts abort the job rather than silently
+        truncate).
+\end{itemize}

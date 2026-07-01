@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FP4 on Post-train — 精度、探索与 Hopper 落地</title>
+    <meta name="description" content="把 4-bit 浮点推进 RL post-train：从 QLoRA 到 QeRL、Decomposing MXFP4 与 Hopper 落地">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+    <style>
+        /* ============================================
+           TOKENS
+           ============================================ */
+        :root {
+            --bg: #ffffff;
+            --bg-warm: #faf8f5;
+            --bg-code: #f5f3ef;
+            --bg-aside: #f8f6f2;
+            --bg-figure: #fafafa;
+
+            --border: #e8e4dc;
+            --border-light: #f0ece5;
+            --border-accent: #c8a870;
+
+            --ink: #1a1e28;
+            --ink-secondary: #4a4f5c;
+            --ink-tertiary: #7c8291;
+            --ink-faint: #a5aab6;
+            --accent: #9a7b4f;
+            --accent-light: #c8a870;
+            --accent-bg: rgba(200, 168, 112, 0.07);
+
+            --red: #b85450;
+            --green: #5a8a5e;
+            --blue: #4a7aab;
+            --teal: #3f7e7a;
+
+            --font-serif: "Source Serif 4", "Noto Sans SC", Georgia, serif;
+            --font-sans: "Noto Sans SC", -apple-system, "Segoe UI", sans-serif;
+            --font-mono: "IBM Plex Mono", "Noto Sans SC", monospace;
+
+            --measure: 1152px;
+            --wide: 1152px;
+            --gutter: max(24px, calc((100vw - var(--measure)) / 2));
+        }
+
+        /* ============================================
+           RESET
+           ============================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            font-size: 17px;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            color: var(--ink-secondary);
+            background: var(--bg);
+            line-height: 1.82;
+        }
+
+        ::selection {
+            background: rgba(200, 168, 112, 0.22);
+        }
+
+        /* ============================================
+           TYPOGRAPHY
+           ============================================ */
+        h1, h2, h3, h4 {
+            font-family: var(--font-serif);
+            color: var(--ink);
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            margin: 3.2rem 0 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin: 2rem 0 0.6rem;
+        }
+
+        h4 {
+            font-size: 0.98rem;
+            margin: 1.4rem 0 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1.1rem;
+        }
+
+        p:last-child { margin-bottom: 0; }
+
+        a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-decoration-color: rgba(154, 123, 79, 0.3);
+            text-underline-offset: 3px;
+            transition: text-decoration-color 0.15s ease;
+        }
+        a:hover {
+            text-decoration-color: var(--accent);
+        }
+
+        em { font-style: italic; }
+
+        strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            background: var(--bg-code);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: var(--ink);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2.5rem 0;
+        }
+
+        /* ============================================
+           LAYOUT
+           ============================================ */
+        .article {
+            max-width: var(--measure);
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        /* --- Header --- */
+        .article-header {
+            padding: 80px 28px 56px;
+            max-width: var(--measure);
+            margin: 0 auto;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .article-header .kicker {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 20px;
+        }
+
+        .article-header h1 {
+            margin-bottom: 16px;
+        }
+
+        .article-header .subtitle {
+            font-size: 1.08rem;
+            color: var(--ink-tertiary);
+            line-height: 1.7;
+            max-width: 620px;
+        }
+
+        .article-header .byline {
+            margin-top: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            color: var(--ink-faint);
+            letter-spacing: 0.02em;
+        }
+
+        .article-header .byline .sep {
+            color: var(--border-accent);
+            margin: 0 6px;
+        }
+
+        .article-header .abstract {
+            margin-top: 28px;
+            padding: 20px 24px;
+            background: var(--bg-aside);
+            border-left: 3px solid var(--accent-light);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.92rem;
+            line-height: 1.78;
+            color: var(--ink-secondary);
+        }
+
+        .article-header .abstract .abstract-label {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .article-header .abstract p {
+            margin: 0;
+        }
+
+        .article-header .abstract p + p {
+            margin-top: 10px;
+        }
+
+        /* --- Body --- */
+        .article-body {
+            padding: 48px 28px 80px;
+            max-width: var(--measure);
+            margin: 0 auto;
+        }
+
+        /* ============================================
+           ASIDE (margin note / callout)
+           ============================================ */
+        .aside {
+            background: var(--bg-aside);
+            border-left: 3px solid var(--accent-light);
+            padding: 18px 22px;
+            margin: 1.6rem 0;
+            font-size: 0.9rem;
+            line-height: 1.72;
+            color: var(--ink-secondary);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .aside p:last-child { margin-bottom: 0; }
+
+        .aside.subtle {
+            background: transparent;
+            border-left-color: var(--border);
+            color: var(--ink-tertiary);
+        }
+
+        .aside.warn {
+            border-left-color: var(--red);
+            background: rgba(184, 84, 80, 0.05);
+        }
+
+        /* ============================================
+           FORMULA
+           ============================================ */
+        .formula-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border-light);
+            padding: 20px 24px;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .formula-block .katex-display {
+            margin: 0.4em 0;
+        }
+
+        .formula-note {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--ink-tertiary);
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           FIGURES & IMAGES
+           ============================================ */
+        figure {
+            margin: 1.8rem 0;
+        }
+
+        figure img {
+            width: 100%;
+            display: block;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-figure);
+        }
+
+        figcaption {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: var(--ink-tertiary);
+            line-height: 1.55;
+        }
+
+        .fig-row {
+            display: grid;
+            gap: 16px;
+            margin: 1.8rem 0;
+        }
+        .fig-row.cols-2 { grid-template-columns: 1fr 1fr; }
+        .fig-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+        .fig-row figure { margin: 0; }
+
+        /* placeholder figure: dashed box signalling an image to be filled in */
+        .fig-placeholder {
+            border: 1px dashed var(--border-accent);
+            background: var(--bg-warm);
+            border-radius: 4px;
+            padding: 28px 24px;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .fig-placeholder .ph-alt {
+            font-size: 0.78rem;
+            color: var(--ink-tertiary);
+            line-height: 1.6;
+            font-family: var(--font-mono);
+        }
+        .fig-placeholder .ph-tag {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* ============================================
+           SVG DIAGRAM WRAP
+           ============================================ */
+        .diagram-wrap {
+            margin: 1.6rem 0;
+            background: var(--bg-warm);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 22px 24px 14px;
+        }
+        .diagram-wrap svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .diagram-wrap .caption {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            color: var(--ink-tertiary);
+            line-height: 1.55;
+        }
+
+        /* ============================================
+           TABLES
+           ============================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border-light);
+            line-height: 1.55;
+            vertical-align: top;
+        }
+
+        th {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--ink-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom-color: var(--border);
+        }
+
+        td {
+            color: var(--ink-secondary);
+        }
+
+        td.num, th.num {
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pos { color: var(--green); font-weight: 600; }
+        .neg { color: var(--red); font-weight: 600; }
+
+        /* ============================================
+           LISTS
+           ============================================ */
+        ul, ol {
+            padding-left: 1.4em;
+            margin: 0.8rem 0 1.2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.72;
+        }
+
+        li::marker {
+            color: var(--ink-faint);
+        }
+
+        /* ============================================
+           QUADRANT / MATRIX (grid)
+           ============================================ */
+        .matrix {
+            display: grid;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+        .matrix.cols-3 { grid-template-columns: 1.1fr 1fr 1fr; }
+        .matrix.cols-4 { grid-template-columns: 0.9fr 1fr 1fr 1fr; }
+
+        .matrix .cell {
+            background: var(--bg);
+            padding: 16px 18px;
+        }
+        .matrix .cell.head {
+            background: var(--bg-warm);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--ink-tertiary);
+        }
+        .matrix .cell .role {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .matrix .cell h4 {
+            font-size: 0.92rem;
+            margin: 0 0 6px;
+        }
+        .matrix .cell p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: 0;
+            color: var(--ink-secondary);
+        }
+        .matrix .cell.dom { background: rgba(200,168,112,0.10); }
+        .matrix .cell.dom .role { color: var(--accent); }
+
+        /* ============================================
+           COMPARISON COLUMNS
+           ============================================ */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 1.5rem 0;
+        }
+        .comparison .col {
+            border-top: 2px solid var(--border);
+            padding-top: 16px;
+        }
+        .comparison .col h4 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .comparison .col p {
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+
+        /* ============================================
+           TAG ROW
+           ============================================ */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .tags .tag {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--accent);
+            background: var(--accent-bg);
+            border: 1px solid rgba(200, 168, 112, 0.18);
+            padding: 4px 10px;
+            border-radius: 3px;
+        }
+
+        /* ============================================
+           SUMMARY BOX
+           ============================================ */
+        .summary-box {
+            background: var(--bg-warm);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 30px;
+            margin: 2rem 0;
+        }
+        .summary-box h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        .summary-box ol, .summary-box ul { margin-bottom: 0; }
+        .summary-box li { margin-bottom: 10px; }
+        .summary-box li strong { display: inline; }
+        .summary-box .one-liner {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+            font-family: var(--font-serif);
+            font-size: 1.02rem;
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1.65;
+        }
+
+        /* ============================================
+           TABLE OF CONTENTS (side)
+           ============================================ */
+        .toc-rail {
+            position: fixed;
+            top: 80px;
+            right: max(20px, calc((100vw - var(--wide)) / 2 - 210px));
+            width: 200px;
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+        .toc-rail .toc-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ink-faint);
+            margin-bottom: 12px;
+        }
+        .toc-rail ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .toc-rail li { margin-bottom: 0; }
+        .toc-rail a {
+            display: block;
+            padding: 4px 0;
+            font-size: 0.72rem;
+            color: var(--ink-faint);
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            padding-left: 12px;
+            transition: all 0.15s ease;
+            line-height: 1.5;
+        }
+        .toc-rail a:hover { color: var(--ink-secondary); }
+        .toc-rail a.active {
+            color: var(--accent);
+            border-left-color: var(--accent-light);
+        }
+
+        /* ============================================
+           READING PROGRESS
+           ============================================ */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            z-index: 100;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-light);
+            transition: width 80ms linear;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 1380px) {
+            .toc-rail { display: none; }
+        }
+
+        @media (max-width: 820px) {
+            html { font-size: 16px; }
+            .article-header { padding: 56px 20px 40px; }
+            .article-body { padding: 36px 20px 60px; }
+            h1 { font-size: 1.7rem; }
+            h2 { font-size: 1.25rem; }
+            .fig-row.cols-2, .fig-row.cols-3 { grid-template-columns: 1fr; }
+            .matrix.cols-3, .matrix.cols-4 { grid-template-columns: 1fr; }
+            .comparison { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .progress-bar, .toc-rail { display: none !important; }
+            body { color: #222; }
+            h1, h2, h3, h4, strong { color: #111; }
+            .aside { border-left-color: #999; background: #f5f5f5; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+
+<!-- Side TOC -->
+<nav class="toc-rail" id="tocRail">
+    <div class="toc-label">目录</div>
+    <ul id="tocList">
+        <li><a href="#framing">从 QLoRA 讲起</a></li>
+        <li><a href="#explore">噪声当探索：SFT 到 RL 的反转</a></li>
+        <li><a href="#format">MXFP4 与 NVFP4</a></li>
+        <li><a href="#decomp">把 MXFP4 误差拆成三块</a></li>
+        <li><a href="#pathway">三块误差各打一条 RL 通路</a></li>
+        <li><a href="#knobs">三个旋钮：MBS / OF / AQN</a></li>
+        <li><a href="#hopper">Hopper 没有原生 FP4 怎么办</a></li>
+        <li><a href="#synthesis">拼起来看</a></li>
+    </ul>
+</nav>
+
+<!-- Header -->
+<header class="article-header">
+    <div class="kicker">Paper Share / FP4 on Post-train</div>
+    <h1>FP4 on Post-train：精度、探索与 Hopper 落地</h1>
+    <!-- <p class="subtitle">把 4-bit 浮点推进 RL post-train——误差来自哪、噪声能不能当探索用、没原生 FP4 的卡怎么跑</p> -->
+    <p class="byline">2026-07-01<span class="sep">·</span>QLoRA<span class="sep">·</span>QeRL<span class="sep">·</span>Decomposing MXFP4<span class="sep">·</span>Practical FP4 on Hopper</p>
+    <!-- <div class="abstract">
+        <div class="abstract-label">摘要</div>
+        <p>RL post-train 的算力瓶颈在 rollout，显存和带宽比 FLOPs 更先顶到墙。FP4 浮点承诺同时给 $4\times$ 显存、带宽和算力，是天然解法，但直接把 BF16 换成 MXFP4 会掉 20+ 个点。这条线从 QLoRA 起步——它用 NF4 + LoRA 证明 SFT 里 4-bit 微调能追平 16-bit；到 RL 场景结论翻转，量化噪声反而帮探索，NVFP4+LoRA 超过 16-bit LoRA</p>
+        <p>进一步把 MXFP4 误差拆成 scale bias / deadzone / grid noise 三块，各打一条 RL 失效通路，用 MBS+OF+AQN 在 dense 追平、MoE 反超 BF16；工程上，没原生 FP4 的 Hopper 用"FP4 存传 + FP8 算"的位级转换在 671B 上拿到 14.8% 显存、12.5% 吞吐。本分享沿精度、探索、硬件三条线把这些工作串起来</p>
+    </div> -->
+</header>
+
+<!-- Body -->
+<article class="article-body">
+
+    <!-- ==================== FRAMING ==================== -->
+    <section id="framing">
+    <h2>从 QLoRA 开始</h2>
+
+    <p><a href="https://arxiv.org/abs/2305.14314">QLoRA</a>（2023）是 4-bit post-train 的先驱。每个linear层拆成两个分支：
+        
+    <ul>
+        <li>主分支：冻结的预训练权重，<strong>存成 4-bit NF4、用时反量化成 BF16 算</strong>；</li>
+        <li>LoRA 分支：可训的低秩 adapter，<strong>全程 BF16</strong></li>
+    </ul>
+
+    <h3>NF4：为正态权重设计的数据类型</h3>
+
+    <p>预训练权重近似零均值正态，NF4 直接把 $N(0,1)$ 的等概率分位数当格点，信息论上对正态权重最优</p>
+
+    <div class="diagram-wrap">
+        <svg viewBox="0 0 720 240" role="img" aria-label="NF4 与 E2M1 正半轴格点对比：E2M1 在 0 附近间距 0.5、顶部间距 2；NF4 在 0 附近间距 0.08、分布更均匀">
+            <!-- E2M1 line -->
+            <text x="40" y="58" fill="#1a1e28" font-size="12" font-family="Source Serif 4" font-weight="600">E2M1（后来的 MXFP4 / NVFP4）</text>
+            <line x1="60" y1="92" x2="660" y2="92" stroke="#7c8291" stroke-width="1.2"/>
+            <g stroke="#4a7aab" stroke-width="1.6">
+                <line x1="60"  y1="86" x2="60"  y2="98"/>
+                <line x1="110" y1="86" x2="110" y2="98"/>
+                <line x1="160" y1="86" x2="160" y2="98"/>
+                <line x1="210" y1="86" x2="210" y2="98"/>
+                <line x1="260" y1="86" x2="260" y2="98"/>
+                <line x1="360" y1="86" x2="360" y2="98"/>
+                <line x1="460" y1="86" x2="460" y2="98"/>
+                <line x1="660" y1="86" x2="660" y2="98"/>
+            </g>
+            <g fill="#7c8291" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">
+                <text x="60"  y="114">0</text>
+                <text x="110" y="114">0.5</text>
+                <text x="160" y="114">1</text>
+                <text x="260" y="114">2</text>
+                <text x="460" y="114">4</text>
+                <text x="660" y="114">6</text>
+            </g>
+            <text x="660" y="78" fill="#4a7aab" font-size="10" font-family="IBM Plex Mono" text-anchor="end">0 附近间距 0.5，顶部间距 2</text>
+
+            <!-- NF4 line -->
+            <text x="40" y="158" fill="#1a1e28" font-size="12" font-family="Source Serif 4" font-weight="600">NF4（QLoRA，正态分位数）</text>
+            <line x1="60" y1="192" x2="660" y2="192" stroke="#7c8291" stroke-width="1.2"/>
+            <g stroke="#9a7b4f" stroke-width="1.6">
+                <line x1="60"  y1="186" x2="60"  y2="198"/>
+                <line x1="108" y1="186" x2="108" y2="198"/>
+                <line x1="156" y1="186" x2="156" y2="198"/>
+                <line x1="210" y1="186" x2="210" y2="198"/>
+                <line x1="264" y1="186" x2="264" y2="198"/>
+                <line x1="324" y1="186" x2="324" y2="198"/>
+                <line x1="396" y1="186" x2="396" y2="198"/>
+                <line x1="492" y1="186" x2="492" y2="198"/>
+                <line x1="660" y1="186" x2="660" y2="198"/>
+            </g>
+            <g fill="#7c8291" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">
+                <text x="60"  y="214">0</text>
+                <text x="108" y="214">.08</text>
+                <text x="210" y="214">.25</text>
+                <text x="396" y="214">.56</text>
+                <text x="660" y="214">1.0</text>
+            </g>
+            <text x="660" y="178" fill="#9a7b4f" font-size="10" font-family="IBM Plex Mono" text-anchor="end">0 附近间距 0.08，分布更均匀</text>
+        </svg>
+        <!-- <div class="caption">NF4 在 0 附近密得多，整体也更均匀——为正态权重抠精度；E2M1 是固定浮点格点，0 附近粗、大值稀疏</div> -->
+    </div>
+
+    <p>不同dtype对比结果</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>4-bit 数据类型</th>
+                <th class="num">Pile 平均 PPL ↓</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Int4</td><td class="num">34.34</td><td>均匀整数网格</td></tr>
+            <tr><td>Float4 (E2M1)</td><td class="num">31.07</td><td>MXFP4 / NVFP4 用的格点，硬件友好</td></tr>
+            <tr><td>Float4 (E3M0)</td><td class="num">29.48</td><td>更多指数位</td></tr>
+            <tr><td><strong>NF4</strong></td><td class="num"><strong>27.41</strong></td><td>正态分位数格点，硬件不友好</td></tr>
+        </tbody>
+    </table>
+    <!-- <p style="font-size:0.82rem;color:var(--ink-tertiary);margin-top:-0.8rem">数据来自 QLoRA，OPT/BLOOM/LLaMA/Pythia 125M–13B 平均</p> -->
+
+    <h3>其他技术细节</h3>
+    <ul>
+        <li><strong>Double quantization</strong>：把一层 block-wise quantization 的 scale 再量化一次，减少显存占用</li>
+        <li><strong>Paged optimizer</strong>：optimizer states 放在 NVIDIA unified memory，方便做offload</li>
+    </ul>
+
+    <h3>实验结果</h3>
+    <ul>
+        <li>单张 48GB GPU 上微调Llama-65B；单张 24GB GPU 上微调Llama-33B</li>
+        <li>训练时间：9,209 条样本，3.3 epochs；Guanaco-65B 单卡约 24h，Guanaco-33B 单张 24GB GPU 小于 12h</li>
+        <!-- <li>RL 场景下 NF4 不占速度便宜：QeRL 对比里 QLoRA 端到端训练约为 LoRA 的 0.7-0.9x</li> -->
+    </ul>
+
+    <!-- <p>实验上，QLoRA 的结论不是“4-bit 一定更好”，而是 NF4 + LoRA 能把 SFT 里的量化损失基本补回来；同样 4-bit 下，硬件友好的 FP4 明显弱一点</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>对比设置</th>
+                <th class="num">16-bit / BF16</th>
+                <th class="num">QLoRA NF4 + DQ</th>
+                <th>结论</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>T5-3B，Super-NaturalInstructions RougeL ↑</td><td class="num">54.3 full / 55.4 LoRA</td><td class="num">55.3</td><td>追平 16-bit LoRA</td></tr>
+            <tr><td>T5-11B，Super-NaturalInstructions RougeL ↑</td><td class="num">62.0 full / 60.7 LoRA</td><td class="num">60.9</td><td>和 16-bit LoRA 同档</td></tr>
+            <tr><td>LLaMA 7B-65B，Alpaca/FLAN v2 后 5-shot MMLU ↑</td><td class="num">53.0</td><td class="num">53.1</td><td>NF4+DQ 恢复 BF16 LoRA；FP4 均值 52.2，约低 0.9 pp</td></tr>
+            <tr><td>Guanaco-65B，Vicuna 相对 ChatGPT 分数 ↑</td><td class="num">-</td><td class="num">99.3%</td><td>41GB 权重 footprint，24h 单卡微调级别</td></tr>
+        </tbody>
+    </table> -->
+
+    <!-- <p>QLoRA 的结论：要保精度，数据类型得精心设计把噪声压到最小，NF4 &gt; E2M1 &gt; Int4。但这是 SFT 视角——RL 场景下结论会反过来，这点后面会看到</p> -->
+
+    <!-- <p>直接把 BF16 换成硬件 FP4（MXFP4）做 RL 会掉得很惨，Qwen2.5-3B 上 GSM8K 直接掉 21.9 pp。这背后有三个问题：</p>
+
+    <ul>
+        <li><strong>精度</strong>：FP4 误差由什么构成，各打在哪条 RL 通路上</li>
+        <li><strong>探索</strong>：噪声是不是真能帮 RL，怎么控制它</li>
+        <li><strong>工程</strong>：今天的卡大多没原生 FP4 tensor core，怎么把带宽和显存收益真吃下来</li>
+    </ul>
+
+    <div class="aside subtle">
+        <p>涉及的工作按出场顺序：起源 <a href="https://arxiv.org/abs/2305.14314">QLoRA</a>（NF4 + LoRA，SFT 范式）；RL 里翻转结论的 <a href="https://arxiv.org/abs/2510.11696">QeRL</a>（NVFP4 + LoRA + AQN）；把误差拆开讲清楚的 <a href="https://arxiv.org/abs/2605.20402">Decomposing MXFP4</a>（MBS+OF+AQN，全参数更新）；工程落地 <a href="https://arxiv.org/abs/2603.02731">Practical FP4 on Hopper</a>（FP4 存传 + FP8 算）。QeRL 的 AQN 被 Decomposing MXFP4 直接沿用</p>
+    </div> -->
+    </section>
+
+    <!-- ==================== EXPLORATION ==================== -->
+    <section id="explore">
+    <h2>量化噪声当探索用：从 SFT 到 RL 的反转</h2>
+
+    <p><a href="https://arxiv.org/abs/2510.11696">QeRL</a> 直接继承 QLoRA 的范式，但把 NF4 换成 NVFP4，场景从 SFT 搬到 RL</p>
+    <p>实现路径也还是 PEFT：forward 用 NVFP4 weight-only 主干，activation 和 LoRA 保持 BF16，kernel 是 Marlin 的 NVFP4 × BF16</p>
+    <p> 但QeRL 在 Qwen2.5-7B + GSM8K 上发现：<strong>NVFP4+LoRA 比 16-bit LoRA 还高 1.7 pp</strong>，其机制正是 grid noise 的 temperature 效应</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>QeRL 效率设置</th>
+                <th>硬件 / 输入</th>
+                <th>结果</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>GRPO speed test</td><td>single H100-80GB，input 256 token，completion 上限 2048</td><td>7B: 15.2→5.9GB，E2E 1.5×/1.4×/1.2×；14B: 29.6→10.6GB，E2E 1.4×/1.2×/1.2×（bs=2/4/8）</td></tr>
+            <tr><td>最终训练</td><td>8×H100，GSM8K 训练 3B/7B，BigMath 训练 7B/14B/32B</td><td>checkpoint 在 500–1000 steps 评估；论文同时强调 32B RL 可落到 single H100-80GB</td></tr>
+        </tbody>
+    </table>
+
+    <div class="comparison">
+        <div class="col">
+            <h4>SFT 里的量化（QLoRA）</h4>
+            <p>目标是忠实模仿数据分布，噪声是纯损失；用 NF4 这种最优数据类型把噪声压到最小，才能追平 16-bit，不追平就是失败</p>
+        </div>
+        <div class="col">
+            <h4>RL 里的量化（QeRL）</h4>
+            <p>目标是发现高 reward 轨迹，噪声抬高 entropy → 更多样探索 → 更快找到好策略，和 parameter noise 一脉相承；噪声从损失变成了增益</p>
+        </div>
+    </div>
+
+    <figure>
+        <img src="images/qerl-performance.png" alt="QeRL 在 Qwen2.5-7B 上的 rollout、端到端训练速度和 GSM8K/MATH500 准确率对比">
+        <figcaption>NVFP4+LoRA 同时提高 rollout/E2E 速度，并在 GSM8K 上接近 full training</figcaption>
+    </figure>
+
+    <figure>
+        <img src="images/qerl-entropy-reward.png" alt="QeRL 对量化探索机制的示意：量化提高策略熵，RL 中 reward 上升更快，而 SFT 中 loss 更高">
+        <figcaption>同一个量化噪声，在 RL 里是探索，在 SFT 里是拟合误差</figcaption>
+    </figure>
+
+    <h3>三种 FP4 都涨，NVFP4 最好</h3>
+
+    <p>对比 NF4 / MXFP4 / NVFP4，量化都涨、NVFP4 收敛最好。和分解一致：NVFP4 的 E4M3 scale + per-tensor FP32 兜底天然压低 scale bias，剩下更接近纯 grid noise</p>
+
+    <figure>
+        <img src="images/qerl-fp4-reward.png" alt="QeRL 中 NF4、MXFP4、NVFP4 在 DAPO 和 GRPO 下的 accuracy reward 曲线对比">
+        <figcaption>三种 4-bit LoRA reward 都能涨，NVFP4 后期最稳，NF4 波动更大</figcaption>
+    </figure>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Qwen2.5-7B / GSM8K</th>
+                <th class="num">训练方式</th>
+                <th class="num">Accuracy ↑</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>BF16</td><td class="num">LoRA</td><td class="num">88.1</td></tr>
+            <tr><td>NF4</td><td class="num">LoRA</td><td class="num">85.0</td></tr>
+            <tr><td>MXFP4</td><td class="num">LoRA</td><td class="num">86.4</td></tr>
+            <tr><td>NVFP4</td><td class="num">LoRA</td><td class="num">88.5</td></tr>
+            <tr><td><strong>NVFP4</strong></td><td class="num"><strong>LoRA + AQN</strong></td><td class="num"><strong>90.8</strong></td></tr>
+            <tr><td>BF16</td><td class="num">Full</td><td class="num">91.2</td></tr>
+        </tbody>
+    </table>
+
+    <h3>问题：噪声是静态的</h3>
+
+    <p>量化噪声是确定性的，训练全程恒定，不像 parameter noise 能随阶段切换。早期 entropy 高帮探索是好事，但<strong>后期还顶着高 entropy 不退会阻止收敛</strong>。Decomposing MXFP4 实验里，MXFP4 baseline 的 entropy 在 step 50 就掉到 0.35（过早收敛，scale bias 把梯度打崩），AQN+MBS 能维持 0.61</p>
+
+    <h3>AQN：把静态噪声改成可调度探索</h3>
+
+    <p>QeRL 提出 Adaptive Quantization Noise：每次 rollout 前给权重加高斯噪声 $\epsilon \sim \mathcal{N}(0, \sigma^2 I)$，$\sigma$ 按指数退火：</p>
+
+    <div class="formula-block">
+        $$\sigma(k) = \sigma_{\mathrm{start}} \cdot \left(\frac{\sigma_{\mathrm{end}}}{\sigma_{\mathrm{start}}}\right)^{\frac{k-1}{K-1}}$$
+        <div class="formula-note">训练分成 $K$ 段，早期 $\sigma_{\mathrm{AQN}} \gg \sigma_{\mathrm{grid}}$ 做大开探索，后期 $\sigma_{\mathrm{AQN}} \to 0$ 让 grid floor 接管。QeRL 用 $\sigma_{\mathrm{start}}=1\text{e-}2$，$\sigma_{\mathrm{end}}=5\text{e-}4$，$K=10$；Decomposing MXFP4 用 $1\%\to0.1\%$</div>
+    </div>
+
+    <h3>噪声塞进 RMSNorm，零参数开销</h3>
+
+    <p>直接给量化层加噪声向量会破 NVFP4×BF16 kernel 兼容性。QeRL 利用 $\mathbf{X}(\mathbf{Z}_{\mathrm{noisy}} + \hat{\mathbf{W}}) = \mathbf{X}\mathbf{Z}_{\mathrm{noisy}} + \mathbf{X}\hat{\mathbf{W}}$，把加性噪声 $\mathbf{Z}_{\mathrm{noisy}}$ 吸进 RMSNorm 的 scale $\mathbf{w}$（$\mathbf{w}_{\mathrm{noise}} = \mathbf{Z}_{\mathrm{noise}} + \mathbf{w}$），等价于 row-wise 乘性噪声作用在权重上。Q/K/V 共享一个、gate/up 共享另一个，零参数开销且不破坏 kernel</p>
+
+    <figure>
+        <img src="images/qerl-noise-merge.png" alt="把噪声向量合并进 RMSNorm 权重，并共享给 QKV 和 FFN 投影">
+        <figcaption>噪声合并进 RMSNorm，保持 NVFP4 kernel 路径不变</figcaption>
+    </figure>
+
+    <div class="aside">
+        <p><strong>QeRL → Decomposing MXFP4 的承接</strong>：AQN 是 QeRL 发明的，Decomposing MXFP4 沿用并给出理论解释——AQN 调度的对象就是 grid floor。关键前提：先把 scale bias（MBS）和 deadzone（OF）清掉，剩下才接近纯 grid noise，AQN 才能 train through；否则 scale bias 那种 block-correlated 结构噪声会污染受控探索。这也是 AQN+MBS 超加性（MBS +0.9、AQN +0.4、合 +2.0）的原因</p>
+    </div>
+    </section>
+
+    <!-- ==================== FORMAT PRIMER ==================== -->
+    <section id="format">
+    <h2>MXFP4 与 NVFP4</h2>
+
+    <p>QLoRA 之后，硬件侧的两种 4-bit 浮点是 MXFP4（OCP 标准）和 NVFP4（NVIDIA）。两者<strong>共用 E2M1 元素</strong>，差别只在 block 粒度和 scale 上：</p>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>格式</th>
+                <th>block size</th>
+                <th>block scale</th>
+                <th>额外 scale</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>MXFP4</strong>（OCP）</td>
+                <td >32</td>
+                <td>E8M0（power-of-two）</td>
+                <td>无</td>
+            </tr>
+            <tr>
+                <td><strong>NVFP4</strong>（NVIDIA）</td>
+                <td >16</td>
+                <td>E4M3（FP8）</td>
+                <td>per-tensor FP32 global scale</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- <p>NVFP4 的 E4M3 是真正的 FP8，加 per-tensor FP32 兜底，动态范围保得好但每权重多一倍元数据。QeRL 选 NVFP4 为更细 scale + Blackwell kernel 速度；Decomposing MXFP4 选 MXFP4 是为拆解最朴素的 OCP 格式，把 E8M0 的缺陷单独拎出来用 MBS 补</p> -->
+
+    </section>
+
+    <!-- ==================== DECOMPOSITION ==================== -->
+    <section id="decomp">
+    <h2>把 MXFP4 误差拆成三块</h2>
+
+    <p><a href="https://arxiv.org/abs/2605.20402">Decomposing MXFP4 Quantization Error </a>论文中，将MXFP4的量化误差 $e = Q(x) - x$ 拆成：</p>
+
+    <div class="formula-block">
+        $$e_{b,i} = \underbrace{Q(x_{b,i}) - Q^*(x_{b,i})}_{e^{\mathrm{scale}}} + \underbrace{[Q^*(x_{b,i}) - x_{b,i}]\,\mathbf{1}_{\mathcal{D}_b}(i)}_{e^{\mathrm{DZ}}} + \underbrace{[Q^*(x_{b,i}) - x_{b,i}]\,\mathbf{1}_{\mathcal{D}_b^c}(i)}_{e^{\mathrm{grid}}}$$
+        <!-- <div class="formula-note">$\mathcal{D}_b$ 是 deadzone（$|x| < m_b/24$，约占 9% 元素被抹零）。因为 $\mathbf{1}_{\mathcal{D}_b} + \mathbf{1}_{\mathcal{D}_b^c} = 1$，分解是<strong>精确</strong>的：$\mathbf{e} = \mathbf{e}^{\mathrm{scale}} + \mathbf{e}^{\mathrm{DZ}} + \mathbf{e}^{\mathrm{grid}}$</div> -->
+    </div>
+
+    <p>其中：</p>
+    <ul>
+        <li><strong>scale bias</strong>：E8M0 只有幂次，$s_b$ 一定比理想 $s_b^*$大，平均 ~44% 偏差，是 scale 量化本身引入的</li>
+        <li><strong>deadzone truncation</strong>：$|x| < m_b/24$ 的值直接被抹零，约 9% 权重被剪掉，是<strong>信息丢失</strong>不是噪声</li>
+        <li><strong>grid noise</strong>：E2M1 网格太粗（只有 15 个格点），非 deadzone 元素 round-to-nearest 带来的零均值噪声</li>
+    </ul>
+
+    <h3>一个精确的 MSE 恒等式</h3>
+
+    <!-- <p>展开 $\|\mathbf{e}\|^2$ 有三个交叉项，两个被<strong>精确消掉</strong>：deadzone 与另两块支集不交，且 ceiling rounding 使 $s_b \geq s_b^*$，deadzone 元素在两个 scale 下都映射到 0，故 $e^{\mathrm{scale}}$ 在 deadzone 上恒为 0。只剩一个交叉项：</p> -->
+
+    <div class="formula-block">
+        $$\|\mathbf{e}\|^2 = \|\mathbf{e}^{\mathrm{scale}}\|^2 + \|\mathbf{e}^{\mathrm{DZ}}\|^2 + \|\mathbf{e}^{\mathrm{grid}}\|^2 + 2\langle \mathbf{e}^{\mathrm{scale}}, \mathbf{e}^{\mathrm{grid}}\rangle$$
+        <!-- <div class="formula-note">实测 scale 与 grid <strong>反相关</strong> $\cos \approx -0.66$：$s_b \geq s_b^*$ 使 $Q$ 用更粗的 grid，$Q^*$ 向上取的地方 $Q$ 倾向取同点或更低点，符号系统性相反。该常数在 18,876 个权重 tensor 上高度稳定，像是格式本身的属性</div> -->
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th class="num">$\|\mathbf{e}^{\mathrm{scale}}\|^2 / \|\mathbf{e}\|^2$</th>
+                <th class="num">$\|\mathbf{e}^{\mathrm{DZ}}\|^2 / \|\mathbf{e}\|^2$</th>
+                <th class="num">$\|\mathbf{e}^{\mathrm{grid}}\|^2 / \|\mathbf{e}\|^2$</th>
+                <th class="num">交叉项</th>
+                <th class="num">$\cos$</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Qwen2.5-3B (dense)</td>
+                <td class="num">1.725</td>
+                <td class="num">0.026</td>
+                <td class="num">0.703</td>
+                <td class="num">−1.454</td>
+                <td class="num">−0.657</td>
+            </tr>
+            <tr>
+                <td>Qwen3-30B-A3B (MoE)</td>
+                <td class="num">1.726</td>
+                <td class="num">0.022</td>
+                <td class="num">0.712</td>
+                <td class="num">−1.460</td>
+                <td class="num">−0.658</td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- <p style="font-size:0.82rem;color:var(--ink-tertiary);margin-top:-0.8rem">三块范数加起来 ~2.46 $\|\mathbf{e}\|^2$，超过总量，正是被 −1.46 的交叉项抵消回去</p> -->
+
+    <figure>
+        <img src="images/decomp-error.png" alt="不同层类型下 scale、deadzone、grid 和 scale-grid 交叉项的误差分解">
+        <figcaption>真实权重实测结果：各层类型的误差结构高度一致，scale 与 grid 的负交叉项是总误差没有爆掉的原因</figcaption>
+    </figure>
+    </section>
+
+    <!-- ==================== PATHWAY ==================== -->
+    <section id="pathway">
+    <h2>三块误差各打一条 RL 通路</h2>
+
+    <p>RL post-train 有三条通路：policy gradient 精度、rollout 质量、exploration-exploitation 平衡。三块误差对三条通路都有扰动，但各自的<strong>数学结构</strong>使每块在一条通路上有支配性效应。完整的 $3\times 3$ 矩阵如下，对角线是支配效应：</p>
+
+    <div class="matrix cols-4">
+        <div class="cell head"></div>
+        <div class="cell head">gradient 精度</div>
+        <div class="cell head">rollout 质量</div>
+        <div class="cell head">exploration</div>
+
+        <div class="cell head"><strong>scale bias</strong></div>
+        <div class="cell dom">
+            <div class="role">支配 · multiplicative</div>
+            <p>反向 STE 链式把 $\gamma_b$ 逐层乘起来，无 LayerNorm 归一化，$L$ 层后梯度量级指数漂移</p>
+        </div>
+        <div class="cell"><p>前向每层 $O(\gamma-1)\approx 0.5$ 扰动，但 LayerNorm 在层间重置，不累积</p></div>
+        <div class="cell"><p>非零均值（$\mathbb{E}[\gamma-1]\approx 0.44$），更像 bias / mode shift 而非噪声</p></div>
+
+        <div class="cell head"><strong>deadzone</strong></div>
+        <div class="cell"><p>STE 把 $Q$ 当恒等，梯度穿过 deadzone 如同原值还在，反向几乎不可见</p></div>
+        <div class="cell dom">
+            <div class="role">支配 · pruning</div>
+            <p>前向确定性抹零 9% 权重，降低有效秩，rollout 更平淡、reward 均值低方差大</p>
+        </div>
+        <div class="cell"><p>系统性收缩（$e^{DZ}=-x$，总朝零），去容量而非加噪声，entropy 略升是副产物</p></div>
+
+        <div class="cell head"><strong>grid noise</strong></div>
+        <div class="cell"><p>零均值前向噪声 → 零均值梯度噪声，只加方差不加 bias，和 mini-batch 随机性同量级</p></div>
+        <div class="cell"><p>整条 response 上 i.i.d. 扰动 $O(1/\sqrt{T})$ 平均掉，reward 质量影响小</p></div>
+        <div class="cell dom">
+            <div class="role">支配 · temperature</div>
+            <p>零均值 + dense，等于给 logit 加噪声，不移动 mode 只展宽分布，抬高有效温度</p>
+        </div>
+    </div>
+
+    <h3>scale bias 为什么是梯度问题</h3>
+
+    <p>前向有 LayerNorm 每层重置幅度，scale bias 不累积；反向 STE 把 $Q$ 当恒等，链式法则把每层 $\gamma_b = s_b/s_b^*$ 一路乘下去，无归一化。梯度量级对数比按层累加：</p>
+
+    <div class="formula-block">
+        $$\log \frac{\|\hat{\nabla}\|}{\|\nabla_{\mathrm{true}}\|} \approx \sum_{l=1}^L \delta_{b(l)},\qquad \delta_b = \lceil \log_2 s_b^*\rceil - \log_2 s_b^* \sim \mathrm{Uniform}[0,1)$$
+        <div class="formula-note">按公式，Qwen2.5-3B（$L=36$）std $=\sqrt 3 \approx 1.73$；48 层 MoE std $=2.0$，实测 1.97 完美吻合</div>
+    </div>
+
+
+    <h3>deadzone 为什么是 rollout 问题</h3>
+
+    <p>deadzone 是确定性剪枝（$e^{DZ}=-x$，总朝零），不是随机扰动。它降权重有效秩（Eckart-Young：小奇异值对 element-wise thresholding 更敏感），rollout 变"笨"——reward 均值低方差大，advantage $\hat A_i$ 更噪。反向 STE 把 deadzone 当不存在、梯度照流，所以<strong>前向全损、反向无感</strong>，纯粹打 rollout 质量</p>
+
+    <h3>grid noise 为什么是探索问题</h3>
+
+    <p>grid noise 是三块里<strong>唯一 dense 且近似零均值</strong>的。零均值扰动 logit 不移动分布的 mode，只展宽它，数学上等价于温度缩放：</p>
+
+    <div class="formula-block">
+        $$T_{\mathrm{eff}} \approx \sqrt{1 + \frac{2\sigma_\eta^2}{\mathrm{Var}(\Delta\ell)}} > 1,\qquad \mathcal{H}[\pi_{Q(\theta)}] > \mathcal{H}[\pi_\theta]$$
+        <!-- <div class="formula-note">$\sigma_\eta^2 \propto \sum_l \sigma_{\delta,l}^2(\mathrm{grid})$ 逐层累积。平方根形式来自 probit-logit 高斯卷积恒等式：把"加性 logit 噪声下的 softmax"匹配到"确定性温度缩放的 softmax"。"1+" 保证 $T_{\mathrm{eff}}\ge 1$——零均值 grid noise 只能展宽、不能锐化 policy</div> -->
+    </div>
+
+    <p>这一条是连接 QeRL 的桥梁：grid noise 抬高 entropy = 帮探索。但注意它是<strong>恒定</strong>的，训练全程不退火，会把 entropy 顶在高位下不来——这正是 AQN 要解决的事</p>
+    </section>
+
+    <!-- ==================== KNOBS ==================== -->
+    <section id="knobs">
+    <h2>三个旋钮：MBS / OF / AQN</h2>
+
+    <p>Decomposing MXFP4 的修正对应三块误差：MBS 压 scale bias、OF 恢复 deadzone、AQN 在剩下的 grid floor 上做受控探索。前两个是静态误差修正（QDQ 模拟，原为推理设计、这里搬到训练），AQN 是训练配方</p>
+
+    <h3>MBS：给 E8M0 补 8 位尾数</h3>
+
+    <p>E8M0 零尾数是 scale bias 的根。MBS（Macro Block Scaling）在更粗的 macro-block（128 元素 = 4 个 MXFP4 block）上算一个 8 位尾数修正 $m_{\mathrm{MBS}} \in [0,1)$（E0M8，256 级），只存这一字节、每 128 元素一存，开销 &lt; 0.1 bit/element。QDQ 里包成 prescale-quantize-postscale：</p>
+
+    <div class="formula-block">
+        $$\hat{x}_i = \frac{1}{1+m_{\mathrm{MBS}}}\, Q\!\big((1+m_{\mathrm{MBS}})\, x_i\big)$$
+        <div class="formula-note">prescale 把输入分布挪到让幂次 scale $s_b$ 更贴近理想 $s_b^*$，postscale 还原量级。硬件 GEMM 里 prescale/postscale 融进 tile epilogue，几乎零开销。$\mathrm{Var}(\gamma)$ 缩小 $(256)^{-2} \approx 1.5\times 10^{-5}$</div>
+    </div>
+
+    <h3>OF：两趟残差恢复 deadzone</h3>
+
+    <p>deadzone 是信息丢失，调 scale 救不回来。OF（Outlier Fallback）做两趟量化：第一趟 outlier 准确但小值进 deadzone，第二趟量化残差（动态范围小，之前被抹的值现在能表示）：</p>
+
+    <div class="formula-block">
+        $$\hat{\mathbf{x}}_1 = Q(\mathbf{x}),\quad \hat{\mathbf{x}}_2 = Q(\mathbf{x} - \hat{\mathbf{x}}_1),\quad \hat{\mathbf{x}}_{\mathrm{OF}} = \hat{\mathbf{x}}_1 + \alpha\,\hat{\mathbf{x}}_2$$
+        <div class="formula-note">deadzone 率从 9% 降到 2%。$\alpha=0.5$ 不是拍脑袋：隔离实验（lr=0、固定 prompt）里 rollout 与训练 policy 的 KL 随 $\alpha$ 呈 U 形，$\alpha=0.5$ 是最小 drift 点——半强度残差最好对齐 rollout 伪量化 grid 与训练 grid。$\alpha=1$ 比 $\alpha=0.5$ 在 GSM8K 上低 ~1 pp</div>
+    </div>
+
+    <h3>结果：dense 追平、MoE 反超</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Condition (MoE, Qwen3-30B-A3B)</th>
+                <th>AQN</th>
+                <th>MBS</th>
+                <th>OF</th>
+                <th class="num">GSM8K (%)</th>
+                <th class="num">Gap</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>BF16 baseline</td><td></td><td></td><td></td><td class="num">91.51</td><td class="num">—</td></tr>
+            <tr><td>MXFP4 baseline</td><td></td><td></td><td></td><td class="num">88.8</td><td class="num neg">−2.7</td></tr>
+            <tr><td>+MBS</td><td></td><td>✓</td><td></td><td class="num">90.1</td><td class="num neg">−1.4</td></tr>
+            <tr><td>+OF</td><td></td><td></td><td>✓</td><td class="num">90.3</td><td class="num neg">−1.2</td></tr>
+            <tr><td>+AQN+MBS</td><td>✓</td><td>✓</td><td></td><td class="num">90.5</td><td class="num neg">−1.0</td></tr>
+            <tr><td>+MBS+OF</td><td></td><td>✓</td><td>✓</td><td class="num">91.1</td><td class="num neg">−0.4</td></tr>
+            <tr><td><strong>+AQN+MBS+OF</strong></td><td>✓</td><td>✓</td><td>✓</td><td class="num"><strong>92.49</strong></td><td class="num pos"><strong>+1.0</strong></td></tr>
+        </tbody>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Condition (Dense, Qwen2.5-3B)</th>
+                <th>MBS</th>
+                <th>AQN</th>
+                <th>OF</th>
+                <th class="num">GSM8K (%)</th>
+                <th class="num">Gap</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>BF16 baseline</td><td></td><td></td><td></td><td class="num">82.0</td><td class="num">—</td></tr>
+            <tr><td>MXFP4 baseline</td><td></td><td></td><td></td><td class="num">60.1</td><td class="num neg">−21.9</td></tr>
+            <tr><td>+MBS</td><td>✓</td><td></td><td></td><td class="num">75.2</td><td class="num neg">−6.8</td></tr>
+            <tr><td>+OF</td><td></td><td></td><td>✓</td><td class="num">77.6</td><td class="num neg">−4.4</td></tr>
+            <tr><td>+MBS+OF</td><td>✓</td><td></td><td>✓</td><td class="num">80.8</td><td class="num neg">−1.2</td></tr>
+            <tr><td><strong>+MBS+AQN+OF</strong></td><td>✓</td><td>✓</td><td>✓</td><td class="num"><strong>81.3</strong></td><td class="num neg"><strong>−0.7</strong></td></tr>
+        </tbody>
+    </table>
+
+    <figure>
+        <img src="images/decomp-ablation.png" alt="MoE 和 Dense 上 MBS、OF、AQN 的 GSM8K ablation 结果">
+        <figcaption>MoE full stack 反超 BF16，dense 基本追平；dense 上 OF 是主力修正</figcaption>
+    </figure>
+
+    <h3>Dense vs MoE：OF 的作用天差地别</h3>
+
+    <p>最值得记的非平凡结论：OF 在 dense 上 +17.5 pp（救命），在 MoE 上只 +1.5 pp（锦上添花）。原因是 <strong>MoE 的 expert routing 本身就是 deadzone 的天然纠错码</strong>——某个 expert 的小权重被剪了，其他 expert 能补上；dense 没有这种冗余，deadzone 损失全吃下去。分解预测了这个不对称，实验坐实</p>
+
+    <figure>
+        <img src="images/decomp-training-dynamics.png" alt="MoE 在 GSM8K 上的 policy entropy 和 gradient norm 训练曲线">
+        <figcaption>修正为什么有效：baseline 的 entropy 过早塌陷、梯度消失；AQN 把 grid floor 调度成受控探索维持 entropy，MBS 保住梯度量级不让 scale bias 把它打崩</figcaption>
+    </figure>
+
+    <div class="aside">
+        <p><strong>TIS 阈值也得跟着调</strong>：dense 用 TIS=5、MoE 用 TIS=2。dense 在 TIS=2 下，量化让 rollout policy 偏离训练 policy 太远，importance ratio 全挤到 clip 边界，学习信号被清零，MBS+OF 直接训崩。scale bias 是梯度通路问题，量化扰动增大 $\rho_i$ 方差，更紧的 TIS clip 会放大梯度 bias</p>
+    </div>
+
+    <h3>AQN 的 $\sigma$ 要配 grid noise 量级</h3>
+
+    <p>在 dense MBS+OF 上扫 $\sigma_{\mathrm{start}}$：0.1% 太弱（71.2%）、2% 略过（80.1%）、1% 最优（81.3%）。最优 $\sigma_{\mathrm{start}}$ 应与 per-element grid noise 量级相当，MXFP4 上约权重量级的 1%。这值要 per-model 调，目前没有自适应规则，是论文承认的局限</p>
+    </section>
+
+    <!-- ==================== HOPPER ==================== -->
+    <section id="hopper">
+    <h2>Hopper 没有原生 FP4 怎么办</h2>
+
+    <p>对应论文是 <a href="https://arxiv.org/abs/2603.02731">Practical FP4 Training for Large-Scale MoE Models on Hopper GPUs</a>（arXiv:2603.02731）。它解决的不是 Blackwell 原生 FP4 compute，而是在 Hopper 上把 MXFP4 用到 activation memory 和 expert-parallel communication</p>
+
+    <p>Hopper 没有 FP4 tensor core，论文的做法不是硬算 FP4，而是<strong>FP4 存储/通信 + FP8 计算</strong>：forward 激活缓存和 expert-parallel A2A 用 MXFP4 压带宽，GEMM 仍走 Hopper 原生 FP8 tensor core，MoE combine 阶段保留 BF16 accumulation</p>
+
+    <p>先确认覆盖范围：不是所有 linear / MoE 都是 forward FP4，更不是 FP4 GEMM。论文明确所有 forward/backward GEMM 都是 FP8；MXFP4 只承担 forward activation cache 和 A2A dispatch payload。671B 主结果主要量化 MLP 和 shared MoE expert activations；236B 对照里还报告了扩到 entire MoE 的显存收益；attention 里的 standard dense projections 强插 FP4 反而有额外开销</p>
+
+    <figure>
+        <img src="images/hopper-loss.png" alt="Practical FP4 on Hopper 中 BF16、FP8、MXFP4 在 16B 模型 160B token 训练上的 loss 曲线对比">
+        <figcaption>精度不是只看吞吐：16B 模型训到 160B token，MXFP4 loss 基本贴住 BF16/FP8；相对 BF16 的最终 loss deviation 为 FP8 +0.29%、MXFP4 +0.61%</figcaption>
+    </figure>
+
+    <div class="diagram-wrap">
+        <svg viewBox="0 0 760 260" role="img" aria-label="Hopper 上 MXFP4 hybrid precision 的简化流程：forward 用 FP4 存储和通信、FP8 GEMM，backward 保持 FP8">
+            <defs>
+                <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#4a7aab"/>
+                </marker>
+                <marker id="arrow-gold" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#9a7b4f"/>
+                </marker>
+            </defs>
+            <text x="380" y="28" fill="#1a1e28" font-size="14" font-family="Source Serif 4" font-weight="600" text-anchor="middle">Hopper: FP4 for storage/communication, FP8 for compute</text>
+
+            <text x="42" y="84" fill="#9a7b4f" font-size="12" font-family="IBM Plex Mono" font-weight="600">FORWARD</text>
+            <g font-family="IBM Plex Mono" font-size="11">
+                <rect x="120" y="60" width="100" height="44" rx="5" fill="#fff" stroke="#4a7aab" stroke-width="1.4"/>
+                <text x="170" y="86" fill="#1a1e28" text-anchor="middle">BF16 act</text>
+                <line x1="220" y1="82" x2="270" y2="82" stroke="#9a7b4f" stroke-width="1.6" marker-end="url(#arrow-gold)"/>
+                <rect x="270" y="60" width="116" height="44" rx="5" fill="rgba(154,123,79,0.13)" stroke="#9a7b4f" stroke-width="1.5"/>
+                <text x="328" y="78" fill="#1a1e28" text-anchor="middle">quant + pack</text>
+                <text x="328" y="93" fill="#7c8291" font-size="9" text-anchor="middle">MXFP4</text>
+                <line x1="386" y1="82" x2="436" y2="82" stroke="#9a7b4f" stroke-width="1.6" marker-end="url(#arrow-gold)"/>
+                <rect x="436" y="60" width="108" height="44" rx="5" fill="rgba(154,123,79,0.18)" stroke="#9a7b4f" stroke-width="1.5"/>
+                <text x="490" y="78" fill="#1a1e28" text-anchor="middle">FP4 cache</text>
+                <text x="490" y="93" fill="#7c8291" font-size="9" text-anchor="middle">A2A payload ~1/2</text>
+                <line x1="544" y1="82" x2="594" y2="82" stroke="#4a7aab" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+                <rect x="594" y="60" width="110" height="44" rx="5" fill="rgba(74,122,171,0.14)" stroke="#4a7aab" stroke-width="1.5"/>
+                <text x="649" y="78" fill="#1a1e28" text-anchor="middle">FP8 GEMM</text>
+                <text x="649" y="93" fill="#7c8291" font-size="9" text-anchor="middle">Tensor Core</text>
+            </g>
+
+            <text x="42" y="172" fill="#4a7aab" font-size="12" font-family="IBM Plex Mono" font-weight="600">BACKWARD</text>
+            <g font-family="IBM Plex Mono" font-size="11">
+                <rect x="120" y="148" width="120" height="44" rx="5" fill="rgba(74,122,171,0.12)" stroke="#4a7aab" stroke-width="1.4"/>
+                <text x="180" y="166" fill="#1a1e28" text-anchor="middle">FP8 grad</text>
+                <text x="180" y="181" fill="#7c8291" font-size="9" text-anchor="middle">no FP4 dequant tax</text>
+                <line x1="240" y1="170" x2="302" y2="170" stroke="#4a7aab" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+                <rect x="302" y="148" width="126" height="44" rx="5" fill="rgba(74,122,171,0.12)" stroke="#4a7aab" stroke-width="1.4"/>
+                <text x="365" y="166" fill="#1a1e28" text-anchor="middle">A2A in FP8</text>
+                <text x="365" y="181" fill="#7c8291" font-size="9" text-anchor="middle">profiled faster</text>
+                <line x1="428" y1="170" x2="490" y2="170" stroke="#4a7aab" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+                <rect x="490" y="148" width="130" height="44" rx="5" fill="rgba(74,122,171,0.12)" stroke="#4a7aab" stroke-width="1.4"/>
+                <text x="555" y="166" fill="#1a1e28" text-anchor="middle">FP8 GEMM</text>
+                <text x="555" y="181" fill="#7c8291" font-size="9" text-anchor="middle">standard path</text>
+            </g>
+
+            <text x="380" y="230" fill="#7c8291" font-size="11" font-family="Noto Sans SC" text-anchor="middle">核心是不追求 FP4 compute，而是先把 activation cache 和 expert-parallel communication 的带宽/显存吃下来</text>
+        </svg>
+        <div class="caption">简化版 dataflow：forward 激进用 FP4 存/传，compute 仍是 FP8；backward 保持 FP8，因为 FP4 dequant 开销不划算</div>
+    </div>
+
+    <h3>关键工程点</h3>
+
+    <ul>
+        <li>直接做 FP4→FP8 位级转换，绕开 FP4→BF16→FP8 的中间访存和额外舍入</li>
+        <li>forward FP4 激活缓存和 A2A 通信，payload 约减半；backward 保守回 FP8，因为 FP4 dequant 开销超过梯度通信收益</li>
+        <li>把 dequant、transpose、requant 融进 layout-aware CUDA kernel，避免多次 global memory 读写</li>
+    </ul>
+
+    <h3>671B 上的硬数字</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>重算范围 (671B MoE)</th>
+                <th class="num">BF16 TGS</th>
+                <th class="num">BF16 Mem</th>
+                <th class="num">FP8 TGS</th>
+                <th class="num">FP8 Mem</th>
+                <th class="num">MXFP4 TGS</th>
+                <th class="num">MXFP4 Mem</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Attn+LN+MoE Experts</td>
+                <td class="num">1122</td>
+                <td class="num">68.3%</td>
+                <td class="num">1157</td>
+                <td class="num">74.2%</td>
+                <td class="num">1156</td>
+                <td class="num pos"><strong>59.4%</strong></td>
+            </tr>
+            <tr>
+                <td>Attn+LN+MLP</td>
+                <td class="num">OOM</td>
+                <td class="num">—</td>
+                <td class="num">OOM</td>
+                <td class="num">—</td>
+                <td class="num">1248</td>
+                <td class="num">60.6%</td>
+            </tr>
+            <tr>
+                <td>MLA Up Proj Only</td>
+                <td class="num">OOM</td>
+                <td class="num">—</td>
+                <td class="num">OOM</td>
+                <td class="num">—</td>
+                <td class="num pos"><strong>1302</strong></td>
+                <td class="num">70.1%</td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="font-size:0.82rem;color:var(--ink-tertiary);margin-top:-0.8rem">256×H100，DeepSeek-V3 架构（MLA + MoE）。TGS = tokens/GPU/s</p>
+
+    <p>关键不是单点加速，而是<strong>显存让出重算空间</strong>。671B 受 memory wall，BF16/FP8 被迫全重算 expert 层；MXFP4 把 MLP 和 shared expert 激活压成 FP4，峰值显存降 ~15%，于是能跳过这些层重算。少做的重算比 FP4 dequant 更值，净涨 146 TGS（1157→1302，+12.5%）；BF16/FP8 在更激进重算下直接 OOM，MXFP4 还能跑。收敛：16B 160B token，MXFP4 相对 BF16 loss 偏差 +0.61%（FP8 +0.29%），无发散</p>
+
+    <div class="aside">
+        <p><strong>为什么 backward 不用 FP4</strong>：profile 发现 backward FP4 dequant 开销超过梯度通信省下的。forward 激活量大、缓存和 A2A 吃带宽，FP4 收益盖过 dequant；backward 梯度通信量小，dequant 反成瓶颈。这种非对称是 end-to-end profile 出来的，不是先验</p>
+    </div>
+    </section>
+
+    <!-- ==================== SYNTHESIS ==================== -->
+    <section id="synthesis">
+    <h2>拼起来看</h2>
+
+    <p>这条线的主结论很简单：SFT 里量化噪声要压低，RL 里一部分噪声可以当探索用；但必须知道是哪一部分。Decomposing MXFP4 把误差拆开后，scale bias 用 MBS 修、deadzone 用 OF 修，剩下的 grid noise 才适合交给 AQN 调度</p>
+
+    <p>工程上，Hopper 没有原生 FP4 也能先吃到存储和通信收益：FP4 只负责存/传，FP8 继续负责算。这个路径不等于 Blackwell 原生 FP4 compute，但对今天的 H100/H800 训练很现实</p>
+
+    <h3>还需要小心的点</h3>
+
+    <ul>
+        <li><strong>长 CoT 仍危险</strong>：短 GSM8K 能恢复甚至反超，长 DAPO-MATH 会因早期 token 分叉而误差累积，作者建议长 CoT 先看 W4A8</li>
+        <li><strong>AQN 还要调参</strong>：$\sigma$ 最优值约等于 grid noise 量级，但现在没有自适应规则</li>
+        <li><strong>Blackwell 会改工程账，不改误差结构</strong>：原生 FP4 tensor core 会消掉 Hopper 的 dequant 负担，但 scale bias / deadzone / grid floor 仍然存在</li>
+    </ul>
+
+    <div class="summary-box">
+        <h3>一句话各篇</h3>
+        <ol>
+            <li><strong>QLoRA</strong>：NF4 + LoRA 证明 SFT 可以 4-bit 存储、BF16 计算、单卡训 65B</li>
+            <li><strong>QeRL</strong>：把同一范式搬到 RL，发现 NVFP4 噪声能抬 entropy、帮探索，AQN 负责退火</li>
+            <li><strong>Decomposing MXFP4</strong>：把误差拆成 scale bias / deadzone / grid noise，分别对应 MBS / OF / AQN</li>
+            <li><strong>Practical FP4 on Hopper</strong>：H100/H800 上先用 FP4 存/传、FP8 算，671B 显存 −14.8%、吞吐 +12.5%</li>
+        </ol>
+        <div class="one-liner">
+            FP4 post-train 的关键不是“4-bit 越低越好”，而是知道哪些误差要修、哪些噪声能用、哪些硬件路径现在真能跑
+        </div>
+    </div>
+
+    <div class="aside subtle">
+        <p>原文按时间顺序：<a href="https://arxiv.org/abs/2305.14314">QLoRA (2305.14314, 2023)</a> · <a href="https://arxiv.org/abs/2510.11696">QeRL (2510.11696, 2025)</a> · <a href="https://arxiv.org/abs/2603.02731">Practical FP4 on Hopper (2603.02731)</a> · <a href="https://arxiv.org/abs/2605.20402">Decomposing MXFP4 (2605.20402)</a>。同目录 <a href="survey_list.md">survey_list.md</a> 收了 2026 H1 更宽的 FP4 进展速览</p>
+    </div>
+    </section>
+
+</article>
+
+<script>
+    /* --- Reading progress --- */
+    const fill = document.getElementById('progressFill');
+    window.addEventListener('scroll', () => {
+        const s = window.scrollY;
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        fill.style.width = h > 0 ? (s / h * 100) + '%' : '0%';
+    }, { passive: true });
+
+    /* --- TOC active tracking --- */
+    const tocLinks = document.querySelectorAll('#tocList a');
+    const sectionEls = [];
+    tocLinks.forEach(a => {
+        const id = a.getAttribute('href').slice(1);
+        const el = document.getElementById(id);
+        if (el) sectionEls.push({ el, a });
+    });
+
+    const tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                tocLinks.forEach(a => a.classList.remove('active'));
+                const match = sectionEls.find(s => s.el === entry.target);
+                if (match) match.a.classList.add('active');
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '-60px 0px -55% 0px' });
+
+    sectionEls.forEach(s => tocObserver.observe(s.el));
+</script>
+</body>
+</html>

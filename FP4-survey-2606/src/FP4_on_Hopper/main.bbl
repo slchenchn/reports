@@ -1,0 +1,97 @@
+\begin{thebibliography}{17}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Chmiel et~al.(2025)Chmiel, Fishman, Banner, and Soudry]{chmiel2025fp4wayfullyquantized}
+Chmiel, B., Fishman, M., Banner, R., and Soudry, D.
+\newblock Fp4 all the way: Fully quantized training of llms, 2025.
+\newblock URL \url{https://arxiv.org/abs/2505.19115}.
+
+\bibitem[{DeepSeek-AI Team}(2025)]{deepgemm2025}
+{DeepSeek-AI Team}.
+\newblock Deepgemm: clean and efficient fp8 gemm kernels with fine-grained scaling.
+\newblock \url{https://github.com/deepseek-ai/DeepGEMM}, 2025.
+
+\bibitem[KimiTeam(2025)]{kimik22025}
+KimiTeam.
+\newblock Kimi k2: Open agentic intelligence, 2025.
+\newblock URL \url{https://arxiv.org/abs/2507.20534}.
+
+\bibitem[Lepikhin et~al.(2021)Lepikhin, Lee, Xu, Chen, Firat, Huang, Krikun, Shazeer, and Chen]{gshard2021}
+Lepikhin, D., Lee, H., Xu, Y., Chen, D., Firat, O., Huang, Y., Krikun, M., Shazeer, N., and Chen, Z.
+\newblock {\{}GS{\}}hard: Scaling giant models with conditional computation and automatic sharding.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+\newblock URL \url{https://openreview.net/forum?id=qrwe7XHTmYb}.
+
+\bibitem[Mishra et~al.(2025)Mishra, Stosic, Layton, and Micikevicius]{mxfp8recipe}
+Mishra, A., Stosic, D., Layton, S., and Micikevicius, P.
+\newblock Recipes for pre-training llms with mxfp8, 2025.
+\newblock URL \url{https://arxiv.org/abs/2506.08027}.
+
+\bibitem[Mixtral.AI(2024)]{mixtral2024}
+Mixtral.AI.
+\newblock Mixtral of experts, 2024.
+\newblock URL \url{https://arxiv.org/abs/2401.04088}.
+
+\bibitem[NVIDIA(2025{\natexlab{a}})]{gb200_specs}
+NVIDIA.
+\newblock Nvidia gb200 nvl72.
+\newblock \url{https://www.nvidia.com/en-us/data-center/gb200-nvl72/}, 2025{\natexlab{a}}.
+\newblock Accessed January 2026.
+
+\bibitem[NVIDIA(2025{\natexlab{b}})]{nvfp4training2025}
+NVIDIA.
+\newblock Pretraining large language models with nvfp4, 2025{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2509.25149}.
+
+\bibitem[{Open Compute Project}(2023)]{ocp_mx_specification}
+{Open Compute Project}.
+\newblock Ocp microscaling formats (mx) specification version 1.0, 2023.
+
+\bibitem[OpenAI(2025)]{gptoss2025}
+OpenAI.
+\newblock gpt-oss-120b \& gpt-oss-20b model card, 2025.
+\newblock URL \url{https://arxiv.org/abs/2508.10925}.
+
+\bibitem[Peng et~al.(2023)Peng, Wu, Wei, Zhao, Yang, Liu, Xiong, Yang, Ni, Hu, et~al.]{peng2023fp8}
+Peng, H., Wu, K., Wei, Y., Zhao, G., Yang, Y., Liu, Z., Xiong, Y., Yang, Z., Ni, B., Hu, J., et~al.
+\newblock Fp8-lm: Training fp8 large language models.
+\newblock \emph{arXiv preprint arXiv:2310.18313}, 2023.
+
+\bibitem[Rouhani et~al.(2023)]{micro_quant_arxiv}
+Rouhani, B.~D. et~al.
+\newblock Microscaling data formats for deep learning, 2023.
+\newblock URL \url{https://arxiv.org/abs/2310.10537}.
+
+\bibitem[Tseng et~al.(2025)Tseng, Yu, and Park]{mxfp4training2025}
+Tseng, A., Yu, T., and Park, Y.
+\newblock Training {LLM}s with {MXFP}4.
+\newblock In \emph{The 28th International Conference on Artificial Intelligence and Statistics}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=a8z5Q0WSPL}.
+
+\bibitem[Wang et~al.(2025)Wang, Su, Hu, Wang, and Sun]{fp8flowmoe2025}
+Wang, F., Su, Z., Hu, X., Wang, C., and Sun, M.
+\newblock Fp8-flow-moe: A casting-free fp8 recipe without double quantization error, 2025.
+\newblock URL \url{https://arxiv.org/abs/2511.02302}.
+
+\bibitem[{Wikipedia contributors}(2026)]{ieee754_floating_point}
+{Wikipedia contributors}.
+\newblock Floating-point arithmetic.
+\newblock \url{https://en.wikipedia.org/wiki/Floating-point_arithmetic}, 2026.
+
+\bibitem[Zhao et~al.(2025{\natexlab{a}})Zhao, Deng, Ruan, Dai, Gao, Li, Zhang, Huang, Zhou, Ma, Liang, He, Wang, Liu, and Wei]{deepseekv3}
+Zhao, C., Deng, C., Ruan, C., Dai, D., Gao, H., Li, J., Zhang, L., Huang, P., Zhou, S., Ma, S., Liang, W., He, Y., Wang, Y., Liu, Y., and Wei, Y.
+\newblock Insights into deepseek-v3: Scaling challenges and reflections on hardware for ai architectures.
+\newblock In \emph{Proceedings of the 52nd Annual International Symposium on Computer Architecture}, SIGARCH ’25, pp.\  1731–1745. ACM, June 2025{\natexlab{a}}.
+\newblock \doi{10.1145/3695053.3731412}.
+\newblock URL \url{http://dx.doi.org/10.1145/3695053.3731412}.
+
+\bibitem[Zhao et~al.(2025{\natexlab{b}})Zhao, Zhou, Zhang, Deng, Xu, Liu, Yu, Li, and Zhao]{deepep2025}
+Zhao, C., Zhou, S., Zhang, L., Deng, C., Xu, Z., Liu, Y., Yu, K., Li, J., and Zhao, L.
+\newblock Deepep: an efficient expert-parallel communication library.
+\newblock \url{https://github.com/deepseek-ai/DeepEP}, 2025{\natexlab{b}}.
+
+\end{thebibliography}

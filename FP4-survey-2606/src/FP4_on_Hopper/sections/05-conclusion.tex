@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+%We presented a software-emulated MXFP4 training framework that enables FP4-level activation and communication efficiency on Hopper GPUs without native 4-bit Tensor Core support. Key enablers include direct FP4-to-FP8 bitwise conversion, scaling-aware layout transforms, and fused CUDA kernels that minimize casting and memory traffic. On 671B MoE model, our method reduces peak memory, increases throughput, and matches the convergence with FP8. Overall, our results show that FP4 efficiency can be practically realized on widely deployed Hopper hardware.
+% through careful software--hardware co-design.
+
+We present a software-emulated MXFP4 training framework that enables FP4-level activation and communication efficiency on Hopper GPUs without native 4-bit Tensor Core support. Key enablers include direct FP4-to-FP8 bitwise conversion, scaling-aware layout transformations, and fused CUDA kernels that minimize casting overhead and memory traffic. On a 671B MoE model, our method reduces peak memory usage, increases training throughput, and achieves convergence comparable to FP8. Overall, these results demonstrate that FP4 efficiency can be practically realized on widely deployed Hopper hardware.
+

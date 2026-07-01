@@ -1,0 +1,17 @@
+\section{Preliminary}
+\paragraph{Model Quantization}
+
+Integer quantization requires mapping float-point weights distributed within the interval $[\mathbf{W}_{\mathrm{min}}, \mathbf{W}_{\mathrm{max}}]$ to an integer range of $2^N$, where $N$ is the target bit-width. Given a tensor $\mathbf{W}\in \mathbb{R}^{d\times k}$, this process is defined as:
+\begin{equation} \label{eq:int_quantization}
+    \tilde{\mathbf{W}} = \operatorname{Round}(\frac{\mathbf{W}}{s_{\mathbf{w}}}), s_{\mathbf{w}} = \dfrac{\mathbf{W}_\mathrm{max} - \mathbf{W}_\mathrm{min}}{q_{max}}
+\end{equation}
+where $\tilde{\mathbf{W}}$ represents the quantized weight matrix, $s_{\mathbf{W}}$ is the scaling factor, and $q_{max}$ defines the compressed range. For integer quantization, $q_{max} = 2^N - 1$. In contrast, for the floating-point quantization, such as FP4 format, $q_{max} = 6$, achieved using a 1-bit mantissa and a 2-bit exponent (E2M1). 4-bit NormalFloat (NF4) is a new data type~\citep{qlora}, designed for normally distributed weights. Recently, the latest Blackwell GPU architecture~\citep{nvidia2024blackwell} introduces hardware support for the advanced FP4 format, MXFP4~\citep{ocp2023microscaling} and NVFP4~\citep{nvidia2024blackwell}. MXFP4 adopts a shared FP8 (E8M0) scaling factor across parameter blocks of 32 elements, while NVFP4 employs an FP8 (E4M3) scaling factor with smaller parameter blocks of 16 elements, enabling finer-grained scaling adjustments compared to MXFP4. Both formats are seamlessly integrated into NVIDIA’s Hopper~\citep{noauthor_nvidia_nodate} and Blackwell~\citep{nvidia2024blackwell} GPUs.
+
+\paragraph{Low-rank Adaptation}
+
+LoRA~\citep{lora} is motivated by the observation that weight updates in large pre-trained models often lie in a low-dimensional subspace. Instead of directly fine-tuning all parameters, LoRA introduces a low-rank decomposition to model these updates efficiently:
+\begin{equation}
+    \mathbf{W} + \Delta \mathbf{W} = \mathbf{W} + \mathbf{B}\mathbf{A}
+\end{equation}
+where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and $\mathbf{A}\in \mathbb{R}^{r \times k}$, with the rank $r \ll \min(d, k)$. In this setup, the original weight matrix $W$ is kept frozen, and only the low-rank matrices $\mathbf{A}$ and $\mathbf{B}$ are optimized during training. This formulation drastically reduces the number of trainable parameters and lowers both memory and computational cost, while retaining the expressivity required for domain adaptation. Within self-attention modules, LoRA is generally applied to the attention and  feed-forward projection matrices ($\mathbf{W}_q, \mathbf{W}_k, \mathbf{W}_v, \mathbf{W}_o, \mathbf{W}_{gate}, \mathbf{W}_{up}, \mathbf{W}_{down}$), as these layers are the most critical in LLMs. Other related works are discussed in Appendix~\ref{related}.
+

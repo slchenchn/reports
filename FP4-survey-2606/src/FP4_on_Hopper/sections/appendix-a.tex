@@ -1,0 +1,14 @@
+\section{Appendix: Code and Implementation Notes}
+\label{sec:appendix-code}
+
+%We provide the full implementation and system integration instructions as supplementary material. 
+We provide the full implementation and system integration instructions at \href{https://github.com/anonymous-git-2026/MXFP4-Hopper}{github}. 
+The codebase enables MXFP4-based training on Hopper-class GPUs and includes:
+
+\begin{itemize}
+\item \textbf{\texttt{Custom Kernels}}: Low-level CUDA implementations for MXFP4 quantization, dequantization, and format conversion.
+\item \textbf{\texttt{Framework Modifications}}: Patches for Megatron-LM (v0.15.0rc7), NVIDIA Transformer Engine (v2.8), and DeepEP (v1.2.1) to support FP4-aware training and communication.
+\item \textbf{\texttt{Usage Guide}}: Build and integration instructions to reproduce the results in the main paper.
+\end{itemize}
+
+Please refer to the supplementary README file for a detailed breakdown of repository structure and usage.

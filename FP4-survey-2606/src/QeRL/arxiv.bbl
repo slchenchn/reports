@@ -1,0 +1,408 @@
+\begin{thebibliography}{79}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Albalak et~al.(2025)Albalak, Phung, Lile, Rafailov, Gandhi, Castricato, Singh, Blagden, Xiang, Mahan, et~al.]{albalak2025big}
+Alon Albalak, Duy Phung, Nathan Lile, Rafael Rafailov, Kanishk Gandhi, Louis Castricato, Anikait Singh, Chase Blagden, Violet Xiang, Dakota Mahan, et~al.
+\newblock Big-math: A large-scale, high-quality math dataset for reinforcement learning in language models.
+\newblock \emph{arXiv preprint arXiv:2502.17387}, 2025.
+
+\bibitem[An et~al.(2022)An, Li, Lin, Liu, Chen, Fu, Chen, Zheng, and Lou]{input-tuning}
+Shengnan An, Yifei Li, Zeqi Lin, Qian Liu, Bei Chen, Qiang Fu, Weizhu Chen, Nanning Zheng, and Jian{-}Guang Lou.
+\newblock Input-tuning: Adapting unfamiliar inputs to frozen pretrained models.
+\newblock \emph{CoRR}, abs/2203.03131, 2022.
+
+\bibitem[Castro et~al.(2025)Castro, Panferov, Tabesh, Sieberling, Chen, Nikdan, Ashkboos, and Alistarh]{castro2025quartet}
+Roberto~L Castro, Andrei Panferov, Soroush Tabesh, Oliver Sieberling, Jiale Chen, Mahdi Nikdan, Saleh Ashkboos, and Dan Alistarh.
+\newblock Quartet: Native fp4 training can be optimal for large language models.
+\newblock \emph{arXiv preprint arXiv:2505.14669}, 2025.
+
+\bibitem[Chen et~al.(2024{\natexlab{a}})Chen, Shao, Xu, Wang, Gao, Zhang, Qiao, and Luo]{chen2024efficientqat}
+Mengzhao Chen, Wenqi Shao, Peng Xu, Jiahao Wang, Peng Gao, Kaipeng Zhang, Yu~Qiao, and Ping Luo.
+\newblock Efficientqat: Efficient quantization-aware training for large language models.
+\newblock \emph{arXiv preprint arXiv:2407.11062}, 2024{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2016)Chen, Xu, Zhang, and Guestrin]{chen2016training}
+Tianqi Chen, Bing Xu, Chiyuan Zhang, and Carlos Guestrin.
+\newblock Training deep nets with sublinear memory cost.
+\newblock \emph{arXiv preprint arXiv:1604.06174}, 2016.
+
+\bibitem[Chen et~al.(2024{\natexlab{b}})Chen, Qian, Tang, Lai, Liu, Han, and Jia]{longlora}
+Yukang Chen, Shengju Qian, Haotian Tang, Xin Lai, Zhijian Liu, Song Han, and Jiaya Jia.
+\newblock Longlora: Efficient fine-tuning of long-context large language models.
+\newblock In \emph{ICLR}, 2024{\natexlab{b}}.
+
+\bibitem[Chen et~al.(2025{\natexlab{a}})Chen, Huang, Shi, Hu, Ye, Zhu, Liu, Molchanov, Kautz, Qi, et~al.]{chen2025scaling}
+Yukang Chen, Wei Huang, Baifeng Shi, Qinghao Hu, Hanrong Ye, Ligeng Zhu, Zhijian Liu, Pavlo Molchanov, Jan Kautz, Xiaojuan Qi, et~al.
+\newblock Scaling rl to long videos.
+\newblock \emph{arXiv preprint arXiv:2507.07966}, 2025{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2025{\natexlab{b}})Chen, Maguluri, and Zubeldia]{chen2025concentration}
+Zaiwei Chen, Siva~Theja Maguluri, and Martin Zubeldia.
+\newblock Concentration of contractive stochastic approximation: Additive and multiplicative noise.
+\newblock \emph{The Annals of Applied Probability}, 35\penalty0 (2):\penalty0 1298--1352, 2025{\natexlab{b}}.
+
+\bibitem[Cheng et~al.(2025)Cheng, Huang, Zhu, Dai, Zhao, Zhang, and Wei]{cheng2025reasoning}
+Daixuan Cheng, Shaohan Huang, Xuekai Zhu, Bo~Dai, Wayne~Xin Zhao, Zhenliang Zhang, and Furu Wei.
+\newblock Reasoning with exploration: An entropy perspective.
+\newblock \emph{arXiv preprint arXiv:2506.14758}, 2025.
+
+\bibitem[Chmiel et~al.(2025)Chmiel, Fishman, Banner, and Soudry]{chmiel2025fp4}
+Brian Chmiel, Maxim Fishman, Ron Banner, and Daniel Soudry.
+\newblock Fp4 all the way: Fully quantized training of llms.
+\newblock \emph{arXiv preprint arXiv:2505.19115}, 2025.
+
+\bibitem[Chu et~al.(2025)Chu, Zhai, Yang, Tong, Xie, Schuurmans, Le, Levine, and Ma]{sft-rl-study}
+Tianzhe Chu, Yuexiang Zhai, Jihan Yang, Shengbang Tong, Saining Xie, Dale Schuurmans, Quoc~V. Le, Sergey Levine, and Yi~Ma.
+\newblock {SFT} memorizes, {RL} generalizes: {A} comparative study of foundation model post-training.
+\newblock \emph{CoRR}, abs/2501.17161, 2025.
+
+\bibitem[Cobbe et~al.(2021)Cobbe, Kosaraju, Bavarian, Chen, Jun, Kaiser, Plappert, Tworek, Hilton, Nakano, et~al.]{cobbe2021training}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, et~al.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv preprint arXiv:2110.14168}, 2021.
+
+\bibitem[Cui et~al.(2025)Cui, Zhang, Chen, Yuan, Wang, Zuo, Li, Fan, Chen, Chen, et~al.]{cui2025entropy}
+Ganqu Cui, Yuchen Zhang, Jiacheng Chen, Lifan Yuan, Zhi Wang, Yuxin Zuo, Haozhan Li, Yuchen Fan, Huayu Chen, Weize Chen, et~al.
+\newblock The entropy mechanism of reinforcement learning for reasoning language models.
+\newblock \emph{arXiv preprint arXiv:2505.22617}, 2025.
+
+\bibitem[DeepSeek{-}AI(2025)]{deepseek-r1}
+DeepSeek{-}AI.
+\newblock Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning.
+\newblock \emph{CoRR}, abs/2501.12948, 2025.
+
+\bibitem[Dettmers et~al.(2022)Dettmers, Lewis, Belkada, and Zettlemoyer]{dettmers2022gpt3}
+Tim Dettmers, Mike Lewis, Younes Belkada, and Luke Zettlemoyer.
+\newblock Gpt3. int8 (): 8-bit matrix multiplication for transformers at scale.
+\newblock \emph{NeurIPS}, 35:\penalty0 30318--30332, 2022.
+
+\bibitem[Dettmers et~al.(2023{\natexlab{a}})Dettmers, Pagnoni, Holtzman, and Zettlemoyer]{qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer.
+\newblock Qlora: Efficient finetuning of quantized llms.
+\newblock In \emph{NeurIPS}, 2023{\natexlab{a}}.
+
+\bibitem[Dettmers et~al.(2023{\natexlab{b}})Dettmers, Svirschevski, Egiazarian, Kuznedelev, Frantar, Ashkboos, Borzunov, Hoefler, and Alistarh]{dettmers2023spqr}
+Tim Dettmers, Ruslan Svirschevski, Vage Egiazarian, Denis Kuznedelev, Elias Frantar, Saleh Ashkboos, Alexander Borzunov, Torsten Hoefler, and Dan Alistarh.
+\newblock Spqr: A sparse-quantized representation for near-lossless llm weight compression.
+\newblock \emph{arXiv preprint arXiv:2306.03078}, 2023{\natexlab{b}}.
+
+\bibitem[Eberhard et~al.(2023)Eberhard, Hollenstein, Pinneri, and Martius]{eberhard2023pink}
+Onno Eberhard, Jakob Hollenstein, Cristina Pinneri, and Georg Martius.
+\newblock Pink noise is all you need: Colored noise exploration in deep reinforcement learning.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+
+\bibitem[Egashira et~al.(2024)Egashira, Vero, Staab, He, and Vechev]{egashira2024exploiting}
+Kazuki Egashira, Mark Vero, Robin Staab, Jingxuan He, and Martin Vechev.
+\newblock Exploiting llm quantization.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37:\penalty0 41709--41732, 2024.
+
+\bibitem[Engstrom et~al.(2019)Engstrom, Ilyas, Santurkar, Tsipras, Janoos, Rudolph, and Madry]{engstrom2019implementation}
+Logan Engstrom, Andrew Ilyas, Shibani Santurkar, Dimitris Tsipras, Firdaus Janoos, Larry Rudolph, and Aleksander Madry.
+\newblock Implementation matters in deep rl: A case study on ppo and trpo.
+\newblock In \emph{International conference on learning representations}, 2019.
+
+\bibitem[Eysenbach \& Levine(2021)Eysenbach and Levine]{eysenbach2021maximum}
+Benjamin Eysenbach and Sergey Levine.
+\newblock Maximum entropy rl (provably) solves some robust rl problems.
+\newblock \emph{arXiv preprint arXiv:2103.06257}, 2021.
+
+\bibitem[Fan et~al.(2020)Fan, Stock, Graham, Grave, Gribonval, Jegou, and Joulin]{fan2020training}
+Angela Fan, Pierre Stock, Benjamin Graham, Edouard Grave, R{\'e}mi Gribonval, Herve Jegou, and Armand Joulin.
+\newblock Training with quantization noise for extreme model compression.
+\newblock \emph{arXiv preprint arXiv:2004.07320}, 2020.
+
+\bibitem[Fortunato et~al.(2018)Fortunato, Azar, Piot, Menick, Hessel, Osband, Graves, Mnih, Munos, Hassabis, Pietquin, Blundell, and Legg]{fortunato2018noisy}
+Meire Fortunato, Mohammad~Gheshlaghi Azar, Bilal Piot, Jacob Menick, Matteo Hessel, Ian Osband, Alex Graves, Volodymyr Mnih, Remi Munos, Demis Hassabis, Olivier Pietquin, Charles Blundell, and Shane Legg.
+\newblock Noisy networks for exploration.
+\newblock In \emph{International Conference on Learning Representations}, 2018.
+\newblock URL \url{https://openreview.net/forum?id=rywHCPkAW}.
+
+\bibitem[Fox et~al.(2015)Fox, Pakman, and Tishby]{fox2015taming}
+Roy Fox, Ari Pakman, and Naftali Tishby.
+\newblock Taming the noise in reinforcement learning via soft updates.
+\newblock \emph{arXiv preprint arXiv:1512.08562}, 2015.
+
+\bibitem[Frantar et~al.(2022)Frantar, Ashkboos, Hoefler, and Alistarh]{frantar2022gptq}
+Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and Dan Alistarh.
+\newblock Gptq: Accurate post-training quantization for generative pre-trained transformers.
+\newblock \emph{arXiv preprint arXiv:2210.17323}, 2022.
+
+\bibitem[Frantar et~al.(2024)Frantar, Castro, Chen, Hoefler, and Alistarh]{frantar2024marlin}
+Elias Frantar, Roberto~L Castro, Jiale Chen, Torsten Hoefler, and Dan Alistarh.
+\newblock Marlin: Mixed-precision auto-regressive parallel inference on large language models.
+\newblock \emph{arXiv preprint arXiv:2408.11743}, 2024.
+
+\bibitem[Grattafiori et~al.(2024)Grattafiori, Dubey, Jauhri, Pandey, Kadian, Al-Dahle, Letman, Mathur, Schelten, Vaughan, et~al.]{grattafiori2024llama}
+Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et~al.
+\newblock The llama 3 herd of models.
+\newblock \emph{arXiv preprint arXiv:2407.21783}, 2024.
+
+\bibitem[Guha et~al.(2025)Guha, Marten, Keh, Raoof, Smyrnis, Bansal, Nezhurina, Mercat, Vu, Sprague, et~al.]{guha2025openthoughts}
+Etash Guha, Ryan Marten, Sedrick Keh, Negin Raoof, Georgios Smyrnis, Hritik Bansal, Marianna Nezhurina, Jean Mercat, Trung Vu, Zayne Sprague, et~al.
+\newblock Openthoughts: Data recipes for reasoning models.
+\newblock \emph{arXiv preprint arXiv:2506.04178}, 2025.
+
+\bibitem[Guo et~al.(2023)Guo, Greengard, Xing, and Kim]{guo2023lq}
+Han Guo, Philip Greengard, Eric~P Xing, and Yoon Kim.
+\newblock Lq-lora: Low-rank plus quantized matrix decomposition for efficient language model finetuning.
+\newblock \emph{arXiv preprint arXiv:2311.12023}, 2023.
+
+\bibitem[Hassani et~al.(2024)Hassani, Razavi{-}Far, Saif, and Lin]{sample-efficiency}
+Hossein Hassani, Roozbeh Razavi{-}Far, Mehrdad Saif, and Liang Lin.
+\newblock Towards sample-efficiency and generalization of transfer and inverse reinforcement learning: {A} comprehensive literature review.
+\newblock \emph{CoRR}, abs/2411.10268, 2024.
+
+\bibitem[Higuera et~al.(2018)Higuera, Meger, and Dudek]{higuera2018synthesizing}
+Juan Camilo~Gamboa Higuera, David Meger, and Gregory Dudek.
+\newblock Synthesizing neural network controllers with probabilistic model-based reinforcement learning.
+\newblock In \emph{2018 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)}, pp.\  2538--2544. IEEE, 2018.
+
+\bibitem[Hsu et~al.(2025)Hsu, Dai, Kothapalli, Song, Tang, Zhu, Shimizu, Sahni, Ning, Chen, and Wang]{hsu2025ligerkernel}
+Pin-Lun Hsu, Yun Dai, Vignesh Kothapalli, Qingquan Song, Shao Tang, Siyu Zhu, Steven Shimizu, Shivam Sahni, Haowen Ning, Yanning Chen, and Zhipeng Wang.
+\newblock Liger-kernel: Efficient triton kernels for {LLM} training.
+\newblock In \emph{Championing Open-source DEvelopment in ML Workshop @ ICML25}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=36SjAIT42G}.
+
+\bibitem[Hu et~al.(2022)Hu, Shen, Wallis, Allen{-}Zhu, Li, Wang, Wang, and Chen]{lora}
+Edward~J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen{-}Zhu, Yuanzhi Li, Shean Wang, Lu~Wang, and Weizhu Chen.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock In \emph{ICLR}, 2022.
+
+\bibitem[Huang et~al.(2024{\natexlab{a}})Huang, Liao, Liu, He, Tan, Zhang, Li, Liu, and Qi]{huang2024mixture}
+Wei Huang, Yue Liao, Jianhui Liu, Ruifei He, Haoru Tan, Shiming Zhang, Hongsheng Li, Si~Liu, and Xiaojuan Qi.
+\newblock Mixture compressor for mixture-of-experts llms gains more.
+\newblock \emph{arXiv preprint arXiv:2410.06270}, 2024{\natexlab{a}}.
+
+\bibitem[Huang et~al.(2024{\natexlab{b}})Huang, Liu, Qin, Li, Zhang, Liu, Magno, and Qi]{huang2024billm}
+Wei Huang, Yangdong Liu, Haotong Qin, Ying Li, Shiming Zhang, Xianglong Liu, Michele Magno, and Xiaojuan Qi.
+\newblock Billm: Pushing the limit of post-training quantization for llms.
+\newblock \emph{arXiv preprint arXiv:2402.04291}, 2024{\natexlab{b}}.
+
+\bibitem[Huang et~al.(2024{\natexlab{c}})Huang, Qin, Liu, Li, Liu, Benini, Magno, and Qi]{huang2024slim}
+Wei Huang, Haotong Qin, Yangdong Liu, Yawei Li, Xianglong Liu, Luca Benini, Michele Magno, and Xiaojuan Qi.
+\newblock Slim-llm: Salience-driven mixed-precision quantization for large language models.
+\newblock \emph{arXiv preprint arXiv:2405.14917}, 2024{\natexlab{c}}.
+
+\bibitem[Huang et~al.(2024{\natexlab{d}})Huang, Zou, Li, Liu, Zheng, Chern, Xia, Qin, Yuan, and Liu]{o1-replication}
+Zhen Huang, Haoyang Zou, Xuefeng Li, Yixiu Liu, Yuxiang Zheng, Ethan Chern, Shijie Xia, Yiwei Qin, Weizhe Yuan, and Pengfei Liu.
+\newblock {O1} replication journey - part 2: Surpassing o1-preview through simple distillation, big progress or bitter lesson?
+\newblock \emph{CoRR}, abs/2411.16489, 2024{\natexlab{d}}.
+
+\bibitem[Lambert et~al.(2024)Lambert, Morrison, Pyatkin, Huang, Ivison, Brahman, Miranda, Liu, Dziri, Lyu, Gu, Malik, Graf, Hwang, Yang, Bras, Tafjord, Wilhelm, Soldaini, Smith, Wang, Dasigi, and Hajishirzi]{tulu-3}
+Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze Brahman, Lester James~V. Miranda, Alisa Liu, Nouha Dziri, Shane Lyu, Yuling Gu, Saumya Malik, Victoria Graf, Jena~D. Hwang, Jiangjiang Yang, Ronan~Le Bras, Oyvind Tafjord, Chris Wilhelm, Luca Soldaini, Noah~A. Smith, Yizhong Wang, Pradeep Dasigi, and Hannaneh Hajishirzi.
+\newblock T{\"{u}}lu 3: Pushing frontiers in open language model post-training.
+\newblock \emph{CoRR}, abs/2411.15124, 2024.
+
+\bibitem[Lee et~al.(2024)Lee, Park, Kim, Kim, Oh, Oh, and Choi]{lee2024amxfp4}
+Janghwan Lee, Jiwoong Park, Jinseok Kim, Yongjik Kim, Jungju Oh, Jinwook Oh, and Jungwook Choi.
+\newblock Amxfp4: Taming activation outliers with asymmetric microscaling floating-point for 4-bit llm inference.
+\newblock \emph{arXiv preprint arXiv:2411.09909}, 2024.
+
+\bibitem[Lester et~al.(2021)Lester, Al{-}Rfou, and Constant]{prompt-tuning}
+Brian Lester, Rami Al{-}Rfou, and Noah Constant.
+\newblock The power of scale for parameter-efficient prompt tuning.
+\newblock In Marie{-}Francine Moens, Xuanjing Huang, Lucia Specia, and Scott~Wen{-}tau Yih (eds.), \emph{EMNLP}, pp.\  3045--3059, 2021.
+
+\bibitem[Li et~al.(2024)Li, Beeching, Tunstall, Lipkin, Soletskyi, Huang, Rasul, Yu, Jiang, Shen, et~al.]{li2024numinamath}
+Jia Li, Edward Beeching, Lewis Tunstall, Ben Lipkin, Roman Soletskyi, Shengyi Huang, Kashif Rasul, Longhui Yu, Albert~Q Jiang, Ziju Shen, et~al.
+\newblock Numinamath: The largest public dataset in ai4maths with 860k pairs of competition math problems and solutions.
+\newblock \emph{Hugging Face repository}, 13\penalty0 (9):\penalty0 9, 2024.
+
+\bibitem[Li \& Liang(2021)Li and Liang]{prefix-tuning}
+Xiang~Lisa Li and Percy Liang.
+\newblock Prefix-tuning: Optimizing continuous prompts for generation.
+\newblock In Chengqing Zong, Fei Xia, Wenjie Li, and Roberto Navigli (eds.), \emph{ACL}, pp.\  4582--4597, 2021.
+
+\bibitem[Liao \& Monz(2024)Liao and Monz]{liao2024apiq}
+Baohao Liao and Christof Monz.
+\newblock Apiq: Finetuning of 2-bit quantized large language model.
+\newblock \emph{arXiv preprint arXiv:2402.05147}, 2024.
+
+\bibitem[Lightman et~al.(2023)Lightman, Kosaraju, Burda, Edwards, Baker, Lee, Leike, Schulman, Sutskever, and Cobbe]{lightman2023let}
+Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harrison Edwards, Bowen Baker, Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe.
+\newblock Let's verify step by step.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2023.
+
+\bibitem[Lin et~al.(2024)Lin, Tang, Tang, Yang, Chen, Wang, Xiao, Dang, Gan, and Han]{lin2024awq}
+Ji~Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-Ming Chen, Wei-Chen Wang, Guangxuan Xiao, Xingyu Dang, Chuang Gan, and Song Han.
+\newblock Awq: Activation-aware weight quantization for on-device llm compression and acceleration.
+\newblock \emph{Proceedings of Machine Learning and Systems}, 6:\penalty0 87--100, 2024.
+
+\bibitem[Liu et~al.(2022)Liu, Tam, Muqeeth, Mohta, Huang, Bansal, and Raffel]{ia-3}
+Haokun Liu, Derek Tam, Mohammed Muqeeth, Jay Mohta, Tenghao Huang, Mohit Bansal, and Colin Raffel.
+\newblock Few-shot parameter-efficient fine-tuning is better and cheaper than in-context learning.
+\newblock In \emph{NeurIPS}, 2022.
+
+\bibitem[Liu et~al.(2025{\natexlab{a}})Liu, Yao, Zhang, Dong, Shang, and Gao]{liu2025flashrl}
+Liyuan Liu, Feng Yao, Dinghuai Zhang, Chengyu Dong, Jingbo Shang, and Jianfeng Gao.
+\newblock Flashrl: 8bit rollouts, full power rl, 2025{\natexlab{a}}.
+\newblock URL \url{https://fengyao.notion.site/flash-rl}.
+
+\bibitem[Liu et~al.(2024)Liu, Wang, Yin, Molchanov, Wang, Cheng, and Chen]{dora}
+Shih{-}Yang Liu, Chien{-}Yi Wang, Hongxu Yin, Pavlo Molchanov, Yu{-}Chiang~Frank Wang, Kwang{-}Ting Cheng, and Min{-}Hung Chen.
+\newblock Dora: Weight-decomposed low-rank adaptation.
+\newblock In \emph{ICML}, 2024.
+
+\bibitem[Liu et~al.(2025{\natexlab{b}})Liu, Ni, Wu, Du, Dou, Wang, Pang, and Shieh]{liu2025noisyrollout}
+Xiangyan Liu, Jinjie Ni, Zijian Wu, Chao Du, Longxu Dou, Haonan Wang, Tianyu Pang, and Michael~Qizhe Shieh.
+\newblock Noisyrollout: Reinforcing visual reasoning with data augmentation.
+\newblock \emph{arXiv preprint arXiv:2504.13055}, 2025{\natexlab{b}}.
+
+\bibitem[Liu et~al.(2023)Liu, Oguz, Zhao, Chang, Stock, Mehdad, Shi, Krishnamoorthi, and Chandra]{liu2023llm}
+Zechun Liu, Barlas Oguz, Changsheng Zhao, Ernie Chang, Pierre Stock, Yashar Mehdad, Yangyang Shi, Raghuraman Krishnamoorthi, and Vikas Chandra.
+\newblock Llm-qat: Data-free quantization aware training for large language models.
+\newblock \emph{arXiv preprint arXiv:2305.17888}, 2023.
+
+\bibitem[Min et~al.(2024)Min, Chen, Jiang, Chen, Deng, Hu, Tang, Wang, Cheng, Song, Zhao, Liu, Wang, and Wen]{slow-thinking}
+Yingqian Min, Zhipeng Chen, Jinhao Jiang, Jie Chen, Jia Deng, Yiwen Hu, Yiru Tang, Jiapeng Wang, Xiaoxue Cheng, Huatong Song, Wayne~Xin Zhao, Zheng Liu, Zhongyuan Wang, and Ji{-}Rong Wen.
+\newblock Imitate, explore, and self-improve: {A} reproduction report on slow-thinking reasoning systems.
+\newblock \emph{CoRR}, abs/2412.09413, 2024.
+
+\bibitem[NVIDIA(2023)]{noauthor_nvidia_nodate}
+NVIDIA.
+\newblock Nvidia h100 tensor core {GPU} architecture overview.
+\newblock https://resources.nvidia.com/en-us-tensor-core, 2023.
+
+\bibitem[NVIDIA(2024)]{nvidia2024blackwell}
+NVIDIA.
+\newblock Nvidia blackwell architecture technical brief.
+\newblock \url{https://resources.nvidia.com/en-us-blackwell-architecture}, 2024.
+\newblock Accessed: 2025-05-13.
+
+\bibitem[{OpenAI}(2025)]{openai2025gpt5}
+{OpenAI}.
+\newblock Introducing {GPT-5}.
+\newblock \url{https://openai.com/index/introducing-gpt-5/}, aug 2025.
+\newblock Accessed: 2025-09-21.
+
+\bibitem[Osband et~al.(2016)Osband, Blundell, Pritzel, and Van~Roy]{osband2016deep}
+Ian Osband, Charles Blundell, Alexander Pritzel, and Benjamin Van~Roy.
+\newblock Deep exploration via bootstrapped dqn.
+\newblock \emph{Advances in neural information processing systems}, 29, 2016.
+
+\bibitem[Pang \& Jiang(2021)Pang and Jiang]{pang2021robust}
+Bo~Pang and Zhong-Ping Jiang.
+\newblock Robust reinforcement learning for stochastic linear quadratic control with multiplicative noise.
+\newblock \emph{Trends in Nonlinear and Adaptive Control: A Tribute to Laurent Praly for his 65th Birthday}, pp.\  249--277, 2021.
+
+\bibitem[Plappert et~al.(2017)Plappert, Houthooft, Dhariwal, Sidor, Chen, Chen, Asfour, Abbeel, and Andrychowicz]{plappert2017parameter}
+Matthias Plappert, Rein Houthooft, Prafulla Dhariwal, Szymon Sidor, Richard~Y Chen, Xi~Chen, Tamim Asfour, Pieter Abbeel, and Marcin Andrychowicz.
+\newblock Parameter space noise for exploration.
+\newblock \emph{arXiv preprint arXiv:1706.01905}, 2017.
+
+\bibitem[Project(2023)]{ocp2023microscaling}
+Open~Compute Project.
+\newblock Ocp microscaling formats (mx) specification version 1.0.
+\newblock \url{https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf}, 2023.
+\newblock Accessed: 2023-09-13.
+
+\bibitem[Schulman et~al.(2015)Schulman, Moritz, Levine, Jordan, and Abbeel]{schulman2015high}
+John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, and Pieter Abbeel.
+\newblock High-dimensional continuous control using generalized advantage estimation.
+\newblock \emph{arXiv preprint arXiv:1506.02438}, 2015.
+
+\bibitem[Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and Klimov]{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem[Shang et~al.(2023)Shang, Yuan, Wu, and Dong]{shang2023pb}
+Yuzhang Shang, Zhihang Yuan, Qiang Wu, and Zhen Dong.
+\newblock Pb-llm: Partially binarized large language models.
+\newblock \emph{arXiv preprint arXiv:2310.00034}, 2023.
+
+\bibitem[Shao et~al.(2023)Shao, Chen, Zhang, Xu, Zhao, Li, Zhang, Gao, Qiao, and Luo]{shao2023omniquant}
+Wenqi Shao, Mengzhao Chen, Zhaoyang Zhang, Peng Xu, Lirui Zhao, Zhiqian Li, Kaipeng Zhang, Peng Gao, Yu~Qiao, and Ping Luo.
+\newblock Omniquant: Omnidirectionally calibrated quantization for large language models.
+\newblock \emph{arXiv preprint arXiv:2308.13137}, 2023.
+
+\bibitem[Shao et~al.(2024)Shao, Wang, Zhu, Xu, Song, Zhang, Li, Wu, and Guo]{grpo}
+Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y.~K. Li, Y.~Wu, and Daya Guo.
+\newblock Deepseekmath: Pushing the limits of mathematical reasoning in open language models.
+\newblock \emph{CoRR}, abs/2402.03300, 2024.
+
+\bibitem[Sheng et~al.(2025)Sheng, Zhang, Ye, Wu, Zhang, Zhang, Peng, Lin, and Wu]{hybridflow}
+Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru~Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu.
+\newblock Hybridflow: {A} flexible and efficient {RLHF} framework.
+\newblock In \emph{EuroSys}, pp.\  1279--1297, 2025.
+
+\bibitem[Sui et~al.(2025)Sui, Chuang, Wang, Zhang, Zhang, Yuan, Liu, Wen, Zhong, Chen, and Hu]{survey-efficient-reasoning}
+Yang Sui, Yu{-}Neng Chuang, Guanchu Wang, Jiamu Zhang, Tianyi Zhang, Jiayi Yuan, Hongyi Liu, Andrew Wen, Shaochen Zhong, Hanjie Chen, and Xia~Ben Hu.
+\newblock Stop overthinking: {A} survey on efficient reasoning for large language models.
+\newblock \emph{CoRR}, abs/2503.16419, 2025.
+
+\bibitem[Sung et~al.(2021)Sung, Nair, and Raffel]{fisher-mask}
+Yi{-}Lin Sung, Varun Nair, and Colin Raffel.
+\newblock Training neural networks with fixed sparse masks.
+\newblock In \emph{NeurIPS}, pp.\  24193--24205, 2021.
+
+\bibitem[Team(2024)]{team2024qwen2}
+Qwen Team.
+\newblock Qwen2 technical report.
+\newblock \emph{arXiv preprint arXiv:2407.10671}, 2024.
+
+\bibitem[Tseng et~al.(2024)Tseng, Chee, Sun, Kuleshov, and De~Sa]{tseng2024quip}
+Albert Tseng, Jerry Chee, Qingyao Sun, Volodymyr Kuleshov, and Christopher De~Sa.
+\newblock Quip\#: Even better llm quantization with hadamard incoherence and lattice codebooks.
+\newblock \emph{arXiv preprint arXiv:2402.04396}, 2024.
+
+\bibitem[Tseng et~al.(2025)Tseng, Yu, and Park]{tseng2025training}
+Albert Tseng, Tao Yu, and Youngsuk Park.
+\newblock Training llms with mxfp4.
+\newblock \emph{arXiv preprint arXiv:2502.20586}, 2025.
+
+\bibitem[Wang et~al.(2025)Wang, Asilis, Akg{\"{u}}l, Bilgin, Liu, and Neiswanger]{tina}
+Shangshang Wang, Julian Asilis, {\"{O}}mer~Faruk Akg{\"{u}}l, Enes~Burak Bilgin, Ollie Liu, and Willie Neiswanger.
+\newblock Tina: Tiny reasoning models via lora.
+\newblock \emph{CoRR}, abs/2504.15777, 2025.
+
+\bibitem[Xiao et~al.(2023)Xiao, Lin, Seznec, Wu, Demouth, and Han]{xiao2023smoothquant}
+Guangxuan Xiao, Ji~Lin, Mickael Seznec, Hao Wu, Julien Demouth, and Song Han.
+\newblock Smoothquant: Accurate and efficient post-training quantization for large language models.
+\newblock In \emph{International Conference on Machine Learning}, pp.\  38087--38099. PMLR, 2023.
+
+\bibitem[Xu et~al.(2025)Xu, Hao, Zong, Wang, Zhang, Wang, Lan, Gong, Ouyang, Meng, Shao, Yan, Yang, Song, Ren, Hu, Li, Feng, Gao, and Li]{survey-reinforced-reasoning}
+Fengli Xu, Qianyue Hao, Zefang Zong, Jingwei Wang, Yunke Zhang, Jingyi Wang, Xiaochong Lan, Jiahui Gong, Tianjian Ouyang, Fanjin Meng, Chenyang Shao, Yuwei Yan, Qinglong Yang, Yiwen Song, Sijian Ren, Xinyuan Hu, Yu~Li, Jie Feng, Chen Gao, and Yong Li.
+\newblock Towards large reasoning models: {A} survey of reinforced reasoning with large language models.
+\newblock \emph{CoRR}, abs/2501.09686, 2025.
+
+\bibitem[Yang et~al.(2021)Yang, Zhuang, and Pan]{yang2021multiple}
+Yi~Yang, Yueting Zhuang, and Yunhe Pan.
+\newblock Multiple knowledge representation for big data artificial intelligence: framework, applications, and case studies.
+\newblock \emph{Frontiers of Information Technology \& Electronic Engineering}, 22\penalty0 (12):\penalty0 1551--1558, 2021.
+
+\bibitem[Yu et~al.(2025)Yu, Zhang, Zhu, Yuan, Zuo, Yue, Fan, Liu, Liu, Liu, Lin, Lin, Ma, Sheng, Tong, Zhang, Zhang, Zhang, Zhu, Zhu, Chen, Chen, Wang, Yu, Dai, Song, Wei, Zhou, Liu, Ma, Zhang, Yan, Qiao, Wu, and Wang]{dapo}
+Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu~Yue, Tiantian Fan, Gaohong Liu, Lingjun Liu, Xin Liu, Haibin Lin, Zhiqi Lin, Bole Ma, Guangming Sheng, Yuxuan Tong, Chi Zhang, Mofan Zhang, Wang Zhang, Hang Zhu, Jinhua Zhu, Jiaze Chen, Jiangjie Chen, Chengyi Wang, Hongli Yu, Weinan Dai, Yuxuan Song, Xiangpeng Wei, Hao Zhou, Jingjing Liu, Wei{-}Ying Ma, Ya{-}Qin Zhang, Lin Yan, Mu~Qiao, Yonghui Wu, and Mingxuan Wang.
+\newblock {DAPO:} an open-source {LLM} reinforcement learning system at scale.
+\newblock \emph{CoRR}, abs/2503.14476, 2025.
+
+\bibitem[Zaken et~al.(2022)Zaken, Goldberg, and Ravfogel]{bitfit}
+Elad~Ben Zaken, Yoav Goldberg, and Shauli Ravfogel.
+\newblock Bitfit: Simple parameter-efficient fine-tuning for transformer-based masked language-models.
+\newblock In \emph{ACL}, pp.\  1--9, 2022.
+
+\bibitem[Zhang \& Sennrich(2019)Zhang and Sennrich]{zhang2019root}
+Biao Zhang and Rico Sennrich.
+\newblock Root mean square layer normalization.
+\newblock \emph{Advances in neural information processing systems}, 32, 2019.
+
+\bibitem[Zhang et~al.(2025{\natexlab{a}})Zhang, Wang, and Cao]{zhang2025reinforcement}
+Hanfang Zhang, Bing-Chang Wang, and Ying Cao.
+\newblock Reinforcement learning solutions to stochastic multi-agent graphical games with multiplicative noise.
+\newblock \emph{IEEE Transactions on Circuits and Systems I: Regular Papers}, 2025{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2025{\natexlab{b}})Zhang, Wei, Zhang, Xu, Huang, Wang, Jiang, Zhu, and Chen]{zhang2025sageattention3}
+Jintao Zhang, Jia Wei, Pengle Zhang, Xiaoming Xu, Haofeng Huang, Haoxu Wang, Kai Jiang, Jun Zhu, and Jianfei Chen.
+\newblock Sageattention3: Microscaling fp4 attention for inference and an exploration of 8-bit training.
+\newblock \emph{arXiv preprint arXiv:2505.11594}, 2025{\natexlab{b}}.
+
+\bibitem[Zheng et~al.(2025)Zheng, Liu, Li, Chen, Yu, Gao, Dang, Liu, Men, Yang, Zhou, and Lin]{gspo}
+Chujie Zheng, Shixuan Liu, Mingze Li, Xiong{-}Hui Chen, Bowen Yu, Chang Gao, Kai Dang, Yuqiong Liu, Rui Men, An~Yang, Jingren Zhou, and Junyang Lin.
+\newblock Group sequence policy optimization.
+\newblock \emph{CoRR}, abs/2507.18071, 2025.
+
+\end{thebibliography}
