@@ -36,6 +36,29 @@
       box-sizing: border-box;
     }
 
+    .back-index {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      background: rgba(250, 248, 241, 0.9);
+      color: var(--text-primary);
+      font: 600 0.78rem/1 var(--font-body);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 26px rgba(26, 26, 26, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .back-index:hover {
+      border-color: var(--line);
+    }
+
     /* ===========================================
        VIEWPORT FITTING: MANDATORY BASE STYLES
        Include this ENTIRE file in every presentation.
@@ -1147,6 +1170,7 @@
   </style>
 </head>
 <body>
+  <a class="back-index" href="../index.html">← 返回索引</a>
   <div class="progress-bar" aria-hidden="true"></div>
   <nav class="nav-dots" aria-label="Slide navigation"></nav>
   <div class="keyboard-hint" aria-hidden="true">↑ ↓ / Space / Swipe</div>
