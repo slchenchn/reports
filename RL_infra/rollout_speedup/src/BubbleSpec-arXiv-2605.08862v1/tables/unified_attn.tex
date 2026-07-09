@@ -1,0 +1,16 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Ablation study on unified attention using Qwen3-1.7B.}
+\label{tab:unified_attn}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Method} & \textbf{Rollout time} & \textbf{Dec. Time/Step} \\ \midrule
+BubbleSpec & 167.6s & 10.48ms \\
+BubbleSpec w/o. unified attention & 294.9s & 18.44ms \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

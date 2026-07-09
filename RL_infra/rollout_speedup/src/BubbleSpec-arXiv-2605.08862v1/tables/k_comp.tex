@@ -1,0 +1,19 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Ablation study on the number of samples per pre-generated prompt.}
+\label{tab:k_comp}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tabular}{@{}ccclcc@{}}
+\toprule
+\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Samples\\ Per Prompt\end{tabular}}} & \multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Rollout\\ Time(s)\end{tabular}}} & \multicolumn{2}{c}{\multirow{2}{*}{\textbf{Max. Dec. Steps}}} & \multicolumn{2}{c}{\textbf{Draft Response Length}} \\ \cmidrule(l){5-6} 
+ &  & \multicolumn{2}{c}{} & \textbf{Avg.} & \textbf{Max.} \\ \midrule
+4 & 183.8 & \multicolumn{2}{c}{17455} & 6889 & 27880 \\
+16 & 167.6 & \multicolumn{2}{c}{15908} & 4169 & 24029 \\
+32 & 184.4 & \multicolumn{2}{c}{18028} & 2960 & 18028 \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

@@ -1,0 +1,16 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Latency of attention operators in speculative decoding.}
+\label{tab:attn_latency}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}clccc@{}}
+\toprule
+\multicolumn{2}{c}{\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Normal Attention w/o.\\ Speculative Queries\end{tabular}}}} & \multicolumn{2}{c}{\textbf{Batch Split Attention}} & \multirow{2}{*}{\textbf{Unified Attention}} \\ \cmidrule(lr){3-4}
+\multicolumn{2}{c}{} & \textbf{Prefill} & \textbf{Decode} &  \\ \midrule
+\multicolumn{2}{c}{0.372 ms} & 0.753 ms & 0.226 ms & 0.380 ms \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

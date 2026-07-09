@@ -1,0 +1,19 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{BubbleSpec performance on Qwen3-1.7B across different RL algorithms.}
+\label{tab:algo_comp}
+\resizebox{0.95\textwidth}{!}{%
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Rollout Time (s)}} & \multicolumn{2}{c}{\textbf{Decoding Steps}} & \multicolumn{2}{c}{\textbf{Response Length}} & \multicolumn{3}{c}{\textbf{Speculative Metrics}} \\ \cmidrule(l){3-9} 
+ &  & \textbf{Average} & \textbf{Maximum} & \textbf{Average} & \textbf{Maximum} & \textbf{Accept. Length} & \textbf{Draft Length} & \textbf{Accept. Rate} \\ \midrule
+SAPO & 167.6 & 2913 & 15908 & 6592 & 39685 & 2.15 & 3.84 & 29.4\% \\
+GRPO & 176.3 & 3032 & 17297 & 6844 & 39189 & 2.13 & 3.83 & 29.5\% \\
+GSPO & 174.4 & 3001 & 17742 & 6773 & 39580 & 2.14 & 3.83 & 29.8\% \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

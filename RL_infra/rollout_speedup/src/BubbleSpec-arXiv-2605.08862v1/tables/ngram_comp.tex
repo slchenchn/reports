@@ -1,0 +1,18 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Comparison between suffix decoding and n-gram decoding on Qwen3-1.7B}
+\label{tab:ngram_comp}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Rollout Time} \\ \textbf{(s})\end{tabular}} & \multirow{2}{*}{\textbf{Accept. Length}} & \multicolumn{2}{c}{\textbf{Decoding Steps}} \\ \cmidrule(l){4-5} 
+ &  &  & \textbf{Max.} & \textbf{Avg.} \\ \midrule
+Suffix Decoding & 167.6 & 2.15 & 15908 & 2913 \\
+N-gram Decoding & 305.9 & 1.83 & 24269 & 3854 \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

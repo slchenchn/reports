@@ -1,0 +1,10 @@
+\begin{abstract}
+Reinforcement Learning (RL) has become a cornerstone for improving the performance of Large Language Models (LLMs). However, its rollout phase constitutes a significant efficiency bottleneck, mainly arising from the long-tail bubbles across data parallel ranks, particularly in long-context scenarios where faster GPUs remain idle while waiting for stragglers. 
+Existing solutions, such as partial rollout or asynchronous RL, mitigate these bubbles by compromising the algorithm's strict synchronous nature.
+Instead, we propose \textbf{\model}, a novel framework that accelerates RL rollouts while strictly keeping the mathematical exactness. 
+Instead of attempting to eliminate bubbles, \model exploits them. 
+We exploit the idle time windows of faster ranks to pre-generate rollout results for subsequent steps, serving as drafts for speculative decoding. 
+Unlike prior speculative methods that rely on historical epoch similarity and warm-ups, \model is agnostic to dataset size and provides immediate acceleration from the onset of training. 
+Extensive evaluations demonstrate that \model reduces decoding steps by \textbf{$\sim$50\%} and increases rollout throughput by up to \textbf{1.8$\times$}. Critically, \model is seamlessly compatible with various RL frameworks and strategies as it sustains the strict synchronous property of RL algorithms.
+\end{abstract}
+

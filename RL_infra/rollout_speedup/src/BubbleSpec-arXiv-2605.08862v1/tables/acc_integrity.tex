@@ -1,0 +1,21 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Accuracy after RL training by BubbleSpec and Verl. Both BubbleSpec and Verl continue training after the SFT stage.}
+\label{tab:acc_integrity}
+\setlength{\tabcolsep}{1.5pt}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\multirow{2}{*}{\textbf{Model}} & \multicolumn{4}{c}{\textbf{Text (In-Domain)}} & \textbf{\begin{tabular}[c]{@{}c@{}}Vision (OOD)\end{tabular}} \\ \cmidrule(l){2-5}  \cmidrule(l){6-6}
+ & \textbf{AIME24} & \textbf{AIME25} & \textbf{MATH500} & \textbf{GSM8K} & \textbf{Geo3K} \\ \midrule
+Qwen2.5-VL-7B & 3.86 & 0.83 & 67.2 & 85.97 & 38.94 \\
++SFT & 76.77 & 59.89 & 95.4 & 91.74 & 47.92 \\
++BubbleSpec & 79.58 & 62.81 & 95.6 & 92.34 & 51.41 \\
++Verl & 80.72 & 63.43 & 95.8 & 91.96 & 48.25 \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

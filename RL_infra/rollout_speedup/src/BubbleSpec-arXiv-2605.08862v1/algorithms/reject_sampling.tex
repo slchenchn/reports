@@ -1,0 +1,46 @@
+\begin{algorithm}[t]
+\caption{BubbleSpec Rollout with Deterministic Draft Verification}
+\label{alg:bubblespec_rollout}
+\small
+\begin{algorithmic}[1]
+\REQUIRE Prompt $x_{1:m}$, target policy $\pi$, suffix tree $\mathcal{T}$, maximum generation length $L$
+\ENSURE Rollout $y$
+
+\STATE $y \leftarrow x_{1:m}$
+\WHILE{$|y| < L$ and not EOS}
+    \STATE Retrieve a draft block $\tilde{d} = (\tilde{x}_1,\dots,\tilde{x}_K)$ from $\mathcal{T}$ using prefix $y$
+    \IF{$\tilde{d}$ is empty}
+        \STATE Sample $x \sim \pi(\cdot \mid y)$
+        \STATE $y \leftarrow y \circ x$
+        \STATE \textbf{continue}
+    \ENDIF
+
+    \STATE $\textit{acceptedAll} \leftarrow \textbf{true}$
+    \FOR{$t = 1$ to $K$}
+        \STATE Let $p_t(\cdot)$ be the target decoding distribution under prefix $y$
+        \STATE $a \leftarrow \tilde{x}_t$
+        \STATE Accept $a$ with probability $p_t(a)$
+        \IF{accepted}
+            \STATE $y \leftarrow y \circ a$
+            \IF{$a$ is EOS}
+                \STATE \textbf{break}
+            \ENDIF
+        \ELSE
+            \STATE Sample $x \sim r_t(\cdot)$, where
+            \[
+            r_t(x)=\frac{p_t(x)\mathbf{1}[x\neq a]}{1-p_t(a)}
+            \]
+            \STATE $y \leftarrow y \circ x$
+            \STATE $\textit{acceptedAll} \leftarrow \textbf{false}$
+            \STATE \textbf{break}
+        \ENDIF
+    \ENDFOR
+
+    \IF{$\textit{acceptedAll}$ and last token is not EOS}
+        \STATE \textbf{continue} \COMMENT{retrieve a new draft block from the extended prefix}
+    \ENDIF
+\ENDWHILE
+\STATE \textbf{return} $y$
+\end{algorithmic}
+\end{algorithm}
+

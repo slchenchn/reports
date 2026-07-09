@@ -1,0 +1,18 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[htbp]
+\centering
+\caption{Comparison of BubbleSpec using inter-gpu vs. intra-gpu bubbles.}
+\label{tab:intra_bubble_comp}
+\resizebox{0.9\textwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Rollout Time (s)}} & \multicolumn{2}{c}{\textbf{Rollout Bubble Time (s)}} & \multicolumn{2}{c}{\textbf{Draft Response Length}} \\ \cmidrule(l){3-6} 
+ &  & \textbf{Average} & \textbf{Maximum} & \textbf{Average} & \textbf{Maximum} \\ \midrule
+BubbleSpec w/. Inter-GPU Bubble & 167.6 & 61.9 & 109.1 & 4169 & 24029 \\
+BubbleSpec w/. Intra-GPU Bubble & 232.8 & 89.1 & 162.5 & 4524 & 26067 \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

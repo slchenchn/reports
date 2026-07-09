@@ -1,0 +1,22 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[t!]
+\centering
+\caption{Details on next-step draft pre-generation.}
+\label{tab:draft_gen}
+\setlength{\tabcolsep}{4.5pt}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\multirow{2}{*}{\textbf{Model}} & \multicolumn{2}{c}{\textbf{Rollout Bubble Time (s)}} & \multicolumn{2}{c}{\textbf{Draft Response Length}} \\ 
+\cmidrule(l){2-3} \cmidrule(l){4-5} 
+
+ & \textbf{Average} & \textbf{Maximum} & \textbf{Average} & \textbf{Maximum} \\ \midrule
+Qwen3-1.7B & 61.9 & 109.1 & 4169 & 24029 \\
+Qwen3-4B & 91.1 & 164.7 & 4434 & 25188 \\
+\begin{tabular}[c]{@{}l@{}}Qwen2.5-VL-7B \end{tabular} & 157.7 & 283.2 & 6802 & 46824 \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

@@ -1,0 +1,4 @@
+\section{Conclusion}
+
+We presented \model, a framework designed to transform the inefficiency of rollout bubbles into a valuable computational resource for large-scale RL training. Unlike prior works that rely on relaxed synchronization or necessitate warm-up, \model proactively leverages idle GPU time for suffix-driven speculative decoding, providing consistent speedup throughout training. Empirical results validate that \model significantly reduces decoding steps and boosts throughput. Crucially, this acceleration is achieved without compromising the mathematical equivalence of the generation process, ensuring the RL training stability and model performance. 
+\model offers a robust, plug-and-play solution for accelerating long-context reasoning models. We hope this work inspires further research into utilizing idle computational cycles in synchronous training paradigms.

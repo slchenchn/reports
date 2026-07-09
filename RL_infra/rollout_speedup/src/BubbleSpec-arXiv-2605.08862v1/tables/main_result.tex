@@ -1,0 +1,68 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+
+
+% yuhang
+\begin{table*}[t!]
+\centering
+\caption{Main results on rollout efficiency and speculative decoding. }
+\label{tab:main_result}
+\resizebox{1.0\textwidth}{!}{%
+\begin{tabular}{@{}lclccccccc@{}}
+\toprule
+\multicolumn{1}{c}{\multirow{2}{*}{\textbf{Method}}} & \multicolumn{2}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Rollout Time}\\ \textbf{(s)}\end{tabular}}} & \multicolumn{2}{c}{\textbf{Decoding Steps}} & \multicolumn{2}{c}{\textbf{Response Length}} & \multicolumn{3}{c}{\textbf{Speculative Metrics}} \\ \cmidrule(l){4-10} 
+\multicolumn{1}{c}{} & \multicolumn{2}{c}{} & \textbf{Average} & \textbf{Maximum} &\textbf{Average} & \textbf{Maximum} & \textbf{Accept. Length} & \multicolumn{1}{l}{\textbf{Draft Length}} & \textbf{Accept. Rate} \\ \midrule
+\rowcolor{Blue!10}
+\multicolumn{10}{c}{\textbf{Qwen3-1.7B}} \\ \midrule
+Verl & \multicolumn{2}{c}{306.2} & 6741 & 39531 & 6741 & 39361 & N/A & N/A & N/A \\
+BubbleSpec & \multicolumn{2}{c}{167.6 \textbf{\textcolor{red}{(-45.2\%)}}} & 2913 \textbf{\textcolor{red}{(-56.8\%)}} & 15908 \textbf{\textcolor{red}{(-59.6\%)}} & 6592 & 39685 & 2.15 & 3.84 & 29.94\% \\ \midrule
+\rowcolor{Blue!10}
+\multicolumn{10}{c}{\textbf{Qwen3-4B}} \\ \midrule
+Verl & \multicolumn{2}{c}{399.6} & 6489 & 37910 & 6481 & 37910 & N/A & N/A & N/A \\
+BubbleSpec & \multicolumn{2}{c}{235.0 \textbf{\textcolor{red}{(-41.1\%)}}} & 2895 \textbf{\textcolor{red}{(-56.1\%)}} & 17616 \textbf{\textcolor{red}{(-53.5\%)}} & 6499 & 38577 & 2.09 & 3.81 & 28.6\% \\ \midrule
+\rowcolor{Blue!10}
+\multicolumn{10}{c}{\textbf{Qwen2.5-VL-7B}} \\ \midrule
+Verl & \multicolumn{2}{c}{571.9} & 9500 & 60509 & 9500 & 60509 & N/A & N/A & N/A \\
+BubbleSpec & \multicolumn{2}{c}{400.1 \textbf{\textcolor{red}{(-30.0\%)}}} & 4853 \textbf{\textcolor{red}{(-48.9\%)}} & 34027 \textbf{\textcolor{red}{(-43.8\%)}} & 9414 & 59912 & 1.81 & 3.73 & 21.7\% \\ \bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+% \begin{table*}[t!]
+%     \centering
+%     \caption{Main results on rollout efficiency and speculative decoding. }
+%     \label{tab:main_result}
+%     % Requires: \usepackage{xcolor}
+%     \setlength{\tabcolsep}{2.0pt} % default is 6pt; decrease to make columns tighter
+%     \resizebox{1.0\textwidth}{!}{%
+%     \begin{tabular}{@{}llccccccccc@{}}
+%     \toprule
+%     \multirow{2}{*}{\textbf{Model}} &
+%     \multirow{2}{*}{\textbf{Method}} &
+%     \multicolumn{2}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Rollout Time} \textbf{(s)}\end{tabular}}} &
+%     \multicolumn{2}{c}{\textbf{Decoding Steps}} &
+%     \multicolumn{2}{c}{\textbf{Response Length}} &
+%     \multicolumn{3}{c}{\textbf{Speculative Metrics}} \\
+%     \cmidrule(l){5-6}\cmidrule(l){7-8}\cmidrule(l){9-11}
+%     & & \multicolumn{2}{c}{} &
+%     \textbf{Average} & \textbf{Maximum} &
+%     \textbf{Average} & \textbf{Maximum} &
+%     \textbf{Accept. Length} & \textbf{Draft Length} & \textbf{Accept. Rate} \\
+%     \midrule
+
+%     \multirow{2}{*}{Qwen3-1.7B} & Verl       & \multicolumn{2}{c}{306.2} & 6741 & 39531 & 6741 & 39361 & N/A & N/A & N/A \\
+%                              & BubbleSpec & \multicolumn{2}{c}{167.6 \textbf{(\textcolor{red}{-45.2\%})}} & 2913 \textbf{(\textcolor{red}{-56.8\%})} & 15908 \textbf{(\textcolor{red}{-59.6\%})} & 6592 & 39685 & 2.15 & 3.84 & 29.94\% \\
+%     \midrule
+
+%     \multirow{2}{*}{Qwen3-4B}   & Verl       & \multicolumn{2}{c}{399.6} & 6489 & 37910 & 6481 & 37910 & N/A & N/A & N/A \\
+%                              & BubbleSpec & \multicolumn{2}{c}{235.0 \textbf{(\textcolor{red}{-41.1\%})}} & 2895 \textbf{(\textcolor{red}{-56.1\%})} & 17616 \textbf{(\textcolor{red}{-53.5\%})} & 6499 & 38577 & 2.09 & 3.81 & 28.6\% \\
+%     \midrule
+
+%     \multirow{2}{*}{Qwen2.5-VL-7B} & Verl       & \multicolumn{2}{c}{571.9} & 9500 & 60509 & 9500 & 60509 & N/A & N/A & N/A \\
+%                                  & BubbleSpec & \multicolumn{2}{c}{400.1 \textbf{(\textcolor{red}{-30.0\%})}} & 4853 \textbf{(\textcolor{red}{-48.9\%})} & 34027 \textbf{(\textcolor{red}{-43.8\%})} & 9414 & 59912 & 1.81 & 3.73 & 21.7\% \\
+%     \bottomrule
+%     \end{tabular}%
+%     }
+%     \end{table*}
