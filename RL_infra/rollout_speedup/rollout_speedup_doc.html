@@ -691,6 +691,7 @@
         <li><a href="#nemo">NVIDIA：EAGLE-3 进 NeMo-RL</a></li>
         <li><a href="#knobs">三个旋钮</a></li>
         <li><a href="#tlt">TLT：用 bubble 训练 drafter</a></li>
+        <li><a href="#tlt-drafter">Adaptive Drafter</a></li>
         <li><a href="#tlt-engine">随 batch 自适应 SD</a></li>
         <li><a href="#tlt-results">TLT 结果与口径</a></li>
         <li><a href="#selection">三条路线怎么选</a></li>
@@ -1242,40 +1243,59 @@
     <section id="tlt">
     <h2>TLT：bubble 不只能生成草稿，还能训练 drafter</h2>
 
-    <p><a href="https://arxiv.org/abs/2511.16665">Taming the Long-Tail（TLT）</a>和 BubbleSpec 盯上的是同一块长尾 bubble，用途不同：BubbleSpec 拿它生成草稿，TLT 拿它<strong>训练一个单层 EAGLE drafter</strong>——acceptance 比 model-free 高一截，训练又不占 RL step 的关键路径。实现在 VeRL + SGLang 上，<a href="https://github.com/mit-han-lab/fastrl">代码已开源（FastRL）</a></p>
+    <a href="https://arxiv.org/abs/2511.16665">Taming the Long-Tail（TLT）</a>和 BubbleSpec 盯上的是同一块长尾 bubble，用途不同：
+    <ul>
+        <li>BubbleSpec： 拿它生成草稿</li>
+        <li>TLT 拿它<strong>训练一个 EAGLE drafter</strong></li>
+        <!-- <li>实现在 VeRL + SGLang 上，<a href="https://github.com/mit-han-lab/fastrl">代码已开源（FastRL）</a></li> -->
+    </ul>
 
-    <p>整个系统就是给两个“在变”的东西各配一条自适应回路：</p>
+    <!-- <p>整个系统就是给两个“在变”的东西各配一条自适应回路：</p>
 
     <ul>
         <li><strong>policy 在变</strong>：每个 RL step 后固定 drafter 都会 stale 一点——Adaptive Drafter 在空闲 worker 上持续跟练</li>
         <li><strong>batch 在变</strong>：rollout 从大 batch 一路收缩到长尾小 batch，同一套 SD 配置不可能全程最优——Adaptive Rollout Engine 按当前 batch size 在线换挡</li>
-    </ul>
+    </ul> -->
 
     <figure>
         <img src="images/tlt-overview.png" alt="TLT 系统架构：上半部分 Adaptive Rollout Engine 维护 target 与 drafter CUDAGraph 池，由 BEG-MAB 根据 batch size 选择 tree drafting 和验证配置；下半部分 Adaptive Drafter 监控 worker 状态，在 rollout 长尾产生的 idle worker 上用在线 DataBuffer 训练单层 draft model">
         <figcaption>两条自适应回路：Spot Trainer 追 policy 分布，Adaptive SD Manager 追当前 batch size</figcaption>
     </figure>
+    </section>
+
+    <!-- ==================== TLT DRAFTER ==================== -->
+    <section id="tlt-drafter">
+    <h2>Adaptive Drafter：在 bubble 里持续跟练 policy</h2>
 
     <h3>单层 drafter：延迟由层数决定，不由参数量决定</h3>
 
-    <p>drafter 就是 target 的一层 decoder：Embedding 和 LM Head 直接共享 target 的权重并冻结，只训中间这一层，输入是 target hidden state 拼上 token embedding。不用现成小模型当 drafter 的理由很硬——Qwen2.5-0.5B 参数比 32B 少 64×，但仍有 24 层要串行跑；参数量相当的单层 drafter 比它快 <strong>2.4×</strong></p>
+    <p>drafter 就是 target 的一层 decoder：Embedding 和 LM Head 共享 target 权重并冻结，只训中间这一层，输入是 target hidden state 拼上 token embedding</p>
 
-    <p>训练数据也不额外花钱：RL 本来就要在 rollout 后跑 target / reference prefill 算 logprob 和 KL，TLT 把这趟 forward 的 hidden state 和 input embedding 缓存到 host memory，直接当 drafter 的训练数据。选 EAGLE-1 而不是 EAGLE-3 也是同一笔时间账：EAGLE-3 的 speedup 略高（2.55× vs 2.24×），但 training-time test 让单步训练开销涨 7×，bubble 里的时间预算装不下</p>
+    <ul>
+        <!-- <li><strong>为什么不用现成小模型</strong>：Qwen2.5-0.5B 参数比 32B 少 64×，但仍有 24 层要串行跑；参数量相当的单层 drafter 比它快 <strong>2.4×</strong></li> -->
+        <li><strong>训练数据不额外花钱</strong>：RL 本来就要在 rollout 后跑 target / reference prefill 算 logprob 和 KL，把这趟 forward 的 hidden state 缓存到 host memory，直接当训练数据</li>
+        <li><strong>为什么选 EAGLE-1 不选 EAGLE-3</strong>：EAGLE-3 的 speedup 略高（2.55× vs 2.24×），但 training-time test 让单步训练开销涨 7×，bubble 里的时间预算装不下</li>
+    </ul>
     <!-- 内部备注：训练目标可组合 hidden-state L1 + token CE；HASS 训练开销 3×、speedup 2.29×，同样因 training-time test 被排除。
          drafter warm-up 用 OpenThoughts2-1M 子集，RL 数据是 Eurus-2-RL 子集（math+code），GRPO、temperature 0.9、max 32K -->
 
     <h3>Spot Trainer：可抢占比峰值吞吐更重要</h3>
 
-    <p>drafter 训练被当作 spot task 调度：Worker Coordinator 以 rollout instance 为资源单位跟踪每个 worker 的 <code>BUSY → IDLE → TRAINING</code> 状态，空闲 worker 攒够阈值就组成 data-parallel group 开训；rollout 一结束立刻抢占，把卡还给主流程。进度靠 asynchronous checkpoint 保住——后台线程保存，且只落那一层可训练参数，不碰冻结的 embedding 和 LM Head</p>
+    <p>drafter 训练被当作可抢占的 spot task，塞进先完成 rollout 的空闲 worker：</p>
 
-    <p>只用先完成的短 response 训练会有长度偏差：drafter 永远见不到长序列。DataBuffer 跨 step 持久化，把上一 step 的长序列回灌进当前批次——样本旧一步，但实测和拿全量 response 训练效果相当</p>
+    <ul>
+        <li><strong>调度</strong>：Worker Coordinator 跟踪每个 worker 的状态，空闲 worker 攒够阈值就组成 DP group 开训；rollout 一结束立刻抢占，把卡还给主流程</li>
+        <li><strong>保进度</strong>：asynchronous checkpoint 后台保存、只保存那一层可训练参数，比同步全量保存快 <strong>9.2×</strong></li>
+        <li><strong>修数据偏差</strong>：只用先完成的短 response 训会有长度偏差，DataBuffer 把上一 step 的长序列回灌进当前批次。实测和全量训练效果相当</li>
+        <li><strong>训练账</strong>：sequence packing 提吞吐 2.2×；每 10 个 RL step 训一次就够，额外开销占 RL step 不到 1%</li>
+    </ul>
 
     <figure>
         <img src="images/tlt-spot-trainer.png" alt="TLT Spot Trainer 时间线：vanilla RL 串行执行 rollout、target/reference prefill 和 policy training；朴素 SpecRL 还要串行增加 drafter training；Spot Trainer 用当前 step 的 partial responses 与前一步 DataBuffer，在 rollout 尚未结束时重叠 drafter training">
         <figcaption>Spot Trainer 的收益来自把 drafter training 藏进长尾，而不是让训练本身消失</figcaption>
     </figure>
 
-    <table>
+    <!-- <table>
         <thead>
             <tr>
                 <th>Spot Trainer 的工程账</th>
@@ -1289,11 +1309,11 @@
             <tr><td>Stage transition overhead</td><td class="num">&lt;1%</td><td>额外权重更新与 optimizer offload 占 RL step 的比例</td></tr>
             <tr><td>实际更新频率</td><td class="num">每 10 steps</td><td>论文观察到不需要每个 RL step 都跟练</td></tr>
         </tbody>
-    </table>
+    </table> -->
 
-    <div class="aside">
+    <!-- <div class="aside">
         <p><strong>“免费 drafter”是关键路径口径，不是零成本</strong>：它仍然占用 bubble 里的 GPU、host buffer、checkpoint I/O 和一套调度逻辑。成立前提是长尾稳定存在——如果 bubble 不够大，能挤出的训练窗口和 drafter 新鲜度会一起缩水</p>
-    </div>
+    </div> -->
     <!-- 内部备注：Coordinator 是 rank 0 上的 ZeroMQ 中央进程，worker 走异步 request-reply；训练 session 用 leader-election 拉起，
          后到的 idle worker 加入同一 DP group。drafter 训练用 FSDP2，async checkpoint 走 PyTorch DCP -->
     </section>
