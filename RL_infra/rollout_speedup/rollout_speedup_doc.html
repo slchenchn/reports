@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!--
 写作指引：
-- 主题：RL post-train rollout 加速，speculative decoding 路线。两篇论文：
+- 主题：RL post-train rollout 加速，speculative decoding 路线。三篇论文：
   1) BubbleSpec (arXiv:2605.08862)：model-free，用 rollout 长尾 bubble 预生成下一步草稿，suffix tree + unified attention
   2) System-Integrated Speculative Decoding (arXiv:2604.26779, NVIDIA)：model-based，EAGLE-3/MTP 集成进 NeMo-RL + vLLM
-- 叙事主线：同步 RL 的 bubble → async / partial rollout 怎么消 bubble、为何用稳定性换吞吐 → 为什么选 lossless 的 spec decoding → 两条路线各自怎么把"步数减少"兑换成"时间减少" → 共同教训（acceptance length ≠ speedup）→ 选型
+  3) Taming the Long-Tail (arXiv:2511.16665v3, TLT)：用 bubble 在线训练单层 drafter，BEG-MAB 随 batch size 自适应选择 SD 策略
+- 叙事主线：同步 RL 的 bubble → async / partial rollout 怎么消 bubble、为何用稳定性换吞吐 → 为什么选 lossless 的 spec decoding → 三种系统设计怎么把"步数减少"兑换成"时间减少" → 共同教训（acceptance length ≠ speedup）→ 选型
 - 目标读者：做 RL infra / 推理优化的工程师，不需要科普 GRPO 和 spec decoding 的基本概念
 - 图片：论文原图已从 src/ 下的 PDF 转成 PNG（pymupdf, 200dpi）放在 images/；两张示意图（bubble 分类、unified attention）是手绘 SVG，
   对应论文原图 gpu_bubble.png / bubblespec-unified-attn.png 也在 images/ 里备用（做 slides 可直接取）
@@ -13,8 +14,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RL Rollout 加速 — Speculative Decoding 的两条路线</title>
-    <meta name="description" content="把 speculative decoding 搬进 RL rollout：BubbleSpec 用 bubble 换草稿，NVIDIA 把 EAGLE-3 塞进 NeMo-RL">
+    <title>RL Rollout 加速 — Speculative Decoding 的三种系统设计</title>
+    <meta name="description" content="把 speculative decoding 搬进 RL rollout：BubbleSpec 预生成草稿，NVIDIA 集成 EAGLE-3，TLT 用 bubble 在线训练并自适应调度 drafter">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -118,7 +119,7 @@
         h1 {
             font-size: 2.2rem;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            letter-spacing: 0;
             line-height: 1.25;
         }
 
@@ -643,7 +644,7 @@
         /* ============================================
            RESPONSIVE
            ============================================ */
-        @media (max-width: 1380px) {
+        @media (max-width: 1620px) {
             .toc-rail { display: none; }
         }
 
@@ -660,6 +661,7 @@
             .fig-row.cols-2, .fig-row.cols-3 { grid-template-columns: 1fr; }
             .matrix.cols-3, .matrix.cols-4 { grid-template-columns: 1fr; }
             .comparison { grid-template-columns: 1fr; }
+            table { display: block; overflow-x: auto; }
         }
 
         @media print {
@@ -688,15 +690,19 @@
         <li><a href="#bubblespec-results">BubbleSpec 结果</a></li>
         <li><a href="#nemo">NVIDIA：EAGLE-3 进 NeMo-RL</a></li>
         <li><a href="#knobs">三个旋钮</a></li>
+        <li><a href="#tlt">TLT：用 bubble 训练 drafter</a></li>
+        <li><a href="#tlt-engine">随 batch 自适应 SD</a></li>
+        <li><a href="#tlt-results">TLT 结果与口径</a></li>
+        <li><a href="#selection">三条路线怎么选</a></li>
     </ul>
 </nav>
 
 <!-- Header -->
 <header class="article-header">
     <div class="kicker">Paper Share / RL Rollout Speedup</div>
-    <h1>RL Rollout 加速：Speculative Decoding 的两条路线</h1>
-    <p class="subtitle">rollout 占 RL 训练 70%+，async 和低精度都改分布，spec decoding 是唯一的无损加速</p>
-    <p class="byline">2026-07-08<span class="sep">·</span>BubbleSpec<span class="sep">·</span>System-Integrated Spec Decoding (NVIDIA)</p>
+    <h1>RL Rollout 加速：Speculative Decoding 的三种系统设计</h1>
+    <p class="subtitle">同一个长尾 bubble，可以预生成草稿、训练 drafter，也可以作为切换 speculative decoding 的时机</p>
+    <p class="byline">2026-07-10<span class="sep">·</span>BubbleSpec<span class="sep">·</span>System-Integrated Spec Decoding<span class="sep">·</span>Taming the Long-Tail</p>
 </header>
 
 <!-- Body -->
@@ -882,7 +888,7 @@
     <p>本质上，这是<strong>用训练稳定性换系统效率</strong>。近期工作（<a href="https://arxiv.org/abs/2601.14243">Jet-RL</a>、<a href="https://richardli.xyz/rl-collapse">When Speed Kills Stability</a> 等）反复指出，这类 mismatch 会直接表现为训练不稳甚至塌缩</p>
 
     <!-- <div class="aside subtle">
-        <p>NVIDIA 论文给了一个干净的框架：learning speed = effectiveness × throughput。async、partial rollout、低精度 rollout 都是拿 effectiveness 换 throughput；后面两篇论文选另一条路——<strong>保持严格同步，用 spec decoding 做 lossless 加速</strong>，rejection sampling 按构造保住 rollout 分布</p>
+        <p>NVIDIA 论文给了一个干净的框架：learning speed = effectiveness × throughput。async、partial rollout、低精度 rollout 都是拿 effectiveness 换 throughput；后面三篇论文选另一条路——<strong>保持严格同步，用 spec decoding 做 lossless 加速</strong>，rejection sampling 按构造保住 rollout 分布</p>
     </div> -->
 
     <figure>
@@ -1231,6 +1237,217 @@
     <!-- 内部备注：online adaptation 复用 policy forward 的缓存所以边际成本低，"开着当保险"在这个实现里近乎免费；
          如果自己的栈要多跑一次 draft 前向，这笔账要重新算 -->
     </section>
+
+    <!-- ==================== TLT ==================== -->
+    <section id="tlt">
+    <h2>TLT：bubble 不只能生成草稿，还能训练 drafter</h2>
+
+    <p><a href="https://arxiv.org/abs/2511.16665">Taming the Long-Tail（TLT）</a>和 BubbleSpec 盯上的是同一块长尾 bubble，用途不同：BubbleSpec 拿它生成草稿，TLT 拿它<strong>训练一个单层 EAGLE drafter</strong>——acceptance 比 model-free 高一截，训练又不占 RL step 的关键路径。实现在 VeRL + SGLang 上，<a href="https://github.com/mit-han-lab/fastrl">代码已开源（FastRL）</a></p>
+
+    <p>整个系统就是给两个“在变”的东西各配一条自适应回路：</p>
+
+    <ul>
+        <li><strong>policy 在变</strong>：每个 RL step 后固定 drafter 都会 stale 一点——Adaptive Drafter 在空闲 worker 上持续跟练</li>
+        <li><strong>batch 在变</strong>：rollout 从大 batch 一路收缩到长尾小 batch，同一套 SD 配置不可能全程最优——Adaptive Rollout Engine 按当前 batch size 在线换挡</li>
+    </ul>
+
+    <figure>
+        <img src="images/tlt-overview.png" alt="TLT 系统架构：上半部分 Adaptive Rollout Engine 维护 target 与 drafter CUDAGraph 池，由 BEG-MAB 根据 batch size 选择 tree drafting 和验证配置；下半部分 Adaptive Drafter 监控 worker 状态，在 rollout 长尾产生的 idle worker 上用在线 DataBuffer 训练单层 draft model">
+        <figcaption>两条自适应回路：Spot Trainer 追 policy 分布，Adaptive SD Manager 追当前 batch size</figcaption>
+    </figure>
+
+    <h3>单层 drafter：延迟由层数决定，不由参数量决定</h3>
+
+    <p>drafter 就是 target 的一层 decoder：Embedding 和 LM Head 直接共享 target 的权重并冻结，只训中间这一层，输入是 target hidden state 拼上 token embedding。不用现成小模型当 drafter 的理由很硬——Qwen2.5-0.5B 参数比 32B 少 64×，但仍有 24 层要串行跑；参数量相当的单层 drafter 比它快 <strong>2.4×</strong></p>
+
+    <p>训练数据也不额外花钱：RL 本来就要在 rollout 后跑 target / reference prefill 算 logprob 和 KL，TLT 把这趟 forward 的 hidden state 和 input embedding 缓存到 host memory，直接当 drafter 的训练数据。选 EAGLE-1 而不是 EAGLE-3 也是同一笔时间账：EAGLE-3 的 speedup 略高（2.55× vs 2.24×），但 training-time test 让单步训练开销涨 7×，bubble 里的时间预算装不下</p>
+    <!-- 内部备注：训练目标可组合 hidden-state L1 + token CE；HASS 训练开销 3×、speedup 2.29×，同样因 training-time test 被排除。
+         drafter warm-up 用 OpenThoughts2-1M 子集，RL 数据是 Eurus-2-RL 子集（math+code），GRPO、temperature 0.9、max 32K -->
+
+    <h3>Spot Trainer：可抢占比峰值吞吐更重要</h3>
+
+    <p>drafter 训练被当作 spot task 调度：Worker Coordinator 以 rollout instance 为资源单位跟踪每个 worker 的 <code>BUSY → IDLE → TRAINING</code> 状态，空闲 worker 攒够阈值就组成 data-parallel group 开训；rollout 一结束立刻抢占，把卡还给主流程。进度靠 asynchronous checkpoint 保住——后台线程保存，且只落那一层可训练参数，不碰冻结的 embedding 和 LM Head</p>
+
+    <p>只用先完成的短 response 训练会有长度偏差：drafter 永远见不到长序列。DataBuffer 跨 step 持久化，把上一 step 的长序列回灌进当前批次——样本旧一步，但实测和拿全量 response 训练效果相当</p>
+
+    <figure>
+        <img src="images/tlt-spot-trainer.png" alt="TLT Spot Trainer 时间线：vanilla RL 串行执行 rollout、target/reference prefill 和 policy training；朴素 SpecRL 还要串行增加 drafter training；Spot Trainer 用当前 step 的 partial responses 与前一步 DataBuffer，在 rollout 尚未结束时重叠 drafter training">
+        <figcaption>Spot Trainer 的收益来自把 drafter training 藏进长尾，而不是让训练本身消失</figcaption>
+    </figure>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Spot Trainer 的工程账</th>
+                <th class="num">数字</th>
+                <th>含义</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Selective async checkpoint</td><td class="num pos">9.2×</td><td>后台保存且只落可训练参数，缩短抢占路径</td></tr>
+            <tr><td>Zero-padding sequence packing</td><td class="num pos">2.2×</td><td>短暂训练窗口不浪费在 padding token 上</td></tr>
+            <tr><td>Stage transition overhead</td><td class="num">&lt;1%</td><td>额外权重更新与 optimizer offload 占 RL step 的比例</td></tr>
+            <tr><td>实际更新频率</td><td class="num">每 10 steps</td><td>论文观察到不需要每个 RL step 都跟练</td></tr>
+        </tbody>
+    </table>
+
+    <div class="aside">
+        <p><strong>“免费 drafter”是关键路径口径，不是零成本</strong>：它仍然占用 bubble 里的 GPU、host buffer、checkpoint I/O 和一套调度逻辑。成立前提是长尾稳定存在——如果 bubble 不够大，能挤出的训练窗口和 drafter 新鲜度会一起缩水</p>
+    </div>
+    <!-- 内部备注：Coordinator 是 rank 0 上的 ZeroMQ 中央进程，worker 走异步 request-reply；训练 session 用 leader-election 拉起，
+         后到的 idle worker 加入同一 DP group。drafter 训练用 FSDP2，async checkpoint 走 PyTorch DCP -->
+    </section>
+
+    <!-- ==================== TLT ENGINE ==================== -->
+    <section id="tlt-engine">
+    <h2>Adaptive Rollout Engine：随 batch size 换挡</h2>
+
+    <p>TLT 的 SD 用 tree drafting，三个参数：<code>Draft_Depth</code> 定树深、<code>topK</code> 定分支宽度、<code>Tokens_to_Verify</code> 定 target 一次验证多少候选。麻烦在于最优配置随 batch size 移动。Adaptive Rollout Engine的做法：</p>
+
+    <ul>
+        <li><strong>粗开关</strong>：running requests 降到 <strong>32</strong> 以下才打开 SD，大 batch 阶段按普通 decode 跑；<strong>切换时需要做一次 reprefill</strong></li>
+        <li><strong>细调参</strong>：SD 打开后，由 BEG-MAB 按当前 batch size 在候选配置里在线选</li>
+        <li><strong>兜底</strong>：drafter 还没训好（最初几个 RL step）就退回 model-free 路线</li>
+    </ul>
+
+    <h3>BEG-MAB：Bucketed Epsilon-Greedy Multi-Armed Bandit</h3>
+
+    <p>每个 arm 是一组 <code>(Draft_Depth, topK, Tokens_to_Verify)</code>：</p>
+
+    <ul>
+        <li><strong>Bucketed</strong>：配置先按 Tokens_to_Verify 分组、映射到 batch-size 区间，batch 越大只允许 verify 越少的组</li>
+        <li><strong>Epsilon-Greedy</strong>：以概率 ε 随机探索、1-ε 利用。当前 batch 落在哪个区间，就只在那一组里选 arm，利用时取滑动窗口内 reward 中位数最高的一个</li>
+    </ul>
+
+    <!-- <p>reward 不用 acceptance，直接用本轮产出的 token 数除以耗时</p> -->
+
+    <!-- <div class="formula-block">
+        $$r_s = \frac{(\overline{a}+1)\,B}{t_{\mathrm{step}}}$$
+        <div class="formula-note">$\overline{a}$ 是平均接受的 draft token 数，$B$ 是当前 batch size；加 1 是 target 在首个不匹配位置给出的有效 token</div>
+    </div> -->
+
+    <!-- <p>不拿 acceptance 当 reward 是有实测依据的：Qwen2.5-32B（TP=4、batch 1）的 grid search 里，acceptance 最大点在 depth 16 / verify 128（9.78），speedup 最大点却在 depth 12 / verify 64（3.66×）——树画得更深更宽，接受的 token 确实更多，draft 和 verify 的开销涨得更快</p> -->
+
+    <!-- <figure>
+        <img src="images/tlt-sd-heatmap.png" alt="TLT speculative decoding 参数热力图：左图 acceptance length 随 draft depth 和 tokens to verify 增大而上升，最高 9.78；右图 speedup 的最优点是 draft depth 12、verify 64 的 3.66 倍，说明 acceptance 最大值与实际吞吐最优点不同">
+        <figcaption>第三次出现同一个教训：acceptance length 是中间指标，不能替代 wall-clock</figcaption>
+    </figure> -->
+
+    <h3>多策略 CUDAGraph 的内存账</h3>
+
+    <p>换挡的前提是每套配置都有预捕获的 CUDAGraph，而 graph 显存随策略数线性涨：4 个候选策略朴素捕获要 30.39 GB，KV cache 的空间直接被挤掉。TLT 用三层去重压回 10.69 GB：</p>
+
+    <ul>
+        <li>batch size 分桶：比如bs=7，结果用了bs=8的graph，所以实际上需要 padding</li>
+        <li>target 和 drafter 的 graph 拆开捕获</li>
+        <li>参数相同的 graph 跨策略合并</li>
+    </ul>
+    <!-- 内部备注：heatmap 在 temperature=0、topK=8、CUDAGraph 开启下测；topK 本身不敏感（4~16 之间 3.47×~3.65×），所以 MAB 固定 topK 不调。
+         CUDAGraph 显存数字用 Llama-3-8B、TP=4、4 个策略测。batch 敏感性（depth 10 / topK 8）：BS=1 verify64 最优 3.62×，BS=8 verify16 最优 2.73×，BS=32 verify16 最优 2.48× -->
+
+    <!-- <div class="fig-row cols-2">
+        <figure>
+            <img src="images/tlt-mab.png" alt="TLT Bucketed CUDAGraph：单策略内存低但吞吐受限，多策略吞吐高但内存增长四倍；分桶、target/drafter 解耦捕获与跨策略合并后，同时接近低内存和高吞吐">
+            <figcaption>图池不是实现细节：不做去重，多 arm tuner 会先把 KV cache 空间吃掉</figcaption>
+        </figure>
+        <figure>
+            <img src="images/tlt-rollout-profile.png" alt="Qwen2.5-32B 的 128-request rollout profile：baseline 在 337 秒结束；TLT 在 running requests 低于 32 时启动 SD，并在 138 秒结束，尾段显著缩短">
+            <figcaption>128 requests case study：只在尾段打开并动态调参，rollout 337s → 138s，2.44×</figcaption>
+        </figure>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CUDAGraph 方案</th>
+                <th class="num">显存</th>
+                <th class="num">相对 bucketed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>单一静态策略</td><td class="num">7.81 GB</td><td class="num">0.73×</td></tr>
+            <tr><td>朴素多策略</td><td class="num neg">30.39 GB</td><td class="num">2.84×</td></tr>
+            <tr><td><strong>Bucketed CUDAGraph</strong></td><td class="num pos"><strong>10.69 GB</strong></td><td class="num">1.00×</td></tr>
+        </tbody>
+    </table> -->
+    </section>
+
+    <!-- ==================== TLT RESULTS ==================== -->
+    <section id="tlt-results">
+    <h2>TLT 结果：整 step 1.7–2.1×</h2>
+
+    <p>TLT-Base：关掉 learned drafter、只剩 adaptive engine + n-gram drafter，也有 1.35–1.41×，换挡逻辑本身就值三分之一</p>
+
+    <figure>
+        <img src="images/tlt-main-speed.png" alt="TLT 端到端 GRPO 训练归一化吞吐：在 H100 上四个模型相对 VeRL 为 1.71 到 2.12 倍，geomean 1.86 倍；在 A100 上为 1.66 到 2.07 倍，geomean 1.79 倍；仅 model-free drafter 的 TLT-Base geomean 分别为 1.41 和 1.35 倍">
+        <!-- <figcaption>TLT 相对 VeRL 的端到端吞吐；TLT-Base 说明 adaptive engine + model-free drafter 本身已有 1.35–1.41× geomean</figcaption> -->
+    </figure>
+
+    <table>
+        <thead>
+            <tr>
+                <th>模型</th>
+                <th class="num">H100 TLT</th>
+                <th class="num">A100 TLT</th>
+                <th class="num">H100 TLT-Base</th>
+                <th class="num">A100 TLT-Base</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Qwen2.5-7B</td><td class="num">1.76×</td><td class="num">1.73×</td><td class="num">1.42×</td><td class="num">1.38×</td></tr>
+            <tr><td>DeepSeek-7B</td><td class="num">1.71×</td><td class="num">1.70×</td><td class="num">1.38×</td><td class="num">1.31×</td></tr>
+            <tr><td>Qwen2.5-32B</td><td class="num pos">2.12×</td><td class="num pos">2.07×</td><td class="num">1.54×</td><td class="num">1.49×</td></tr>
+            <tr><td>Llama-3.3-70B</td><td class="num">1.86×</td><td class="num">1.66×</td><td class="num">1.31×</td><td class="num">1.23×</td></tr>
+            <tr><td><strong>Geomean</strong></td><td class="num pos"><strong>1.86×</strong></td><td class="num pos"><strong>1.79×</strong></td><td class="num">1.41×</td><td class="num">1.35×</td></tr>
+        </tbody>
+    </table>
+
+    <!-- <p>Scaling 方向和长尾直觉一致：Qwen2.5-7B 从 1 node 的 1.21× 涨到 8 nodes 的 1.76×，32B 在 4 / 8 nodes 上 1.83× / 2.12×——DP worker 越多，先结束的越多，能拿来 spot training 的 bubble 就越大</p>
+
+    <p>顺带回收前面 NVIDIA 那张 n-gram 0.7× 的账：TLT-Base 用的也是 model-free 草稿，却能到 1.35×+。口径完全不能硬比（模型、硬件、实现都不同），但方向说明 model-free 不是死路——<strong>只在小 batch 尾段开、配置跟着 batch 调</strong>，同一类 drafter 的账就能算正</p> -->
+
+    <!-- <figure>
+        <img src="images/tlt-rl-trace.png" alt="Qwen2.5-7B 与 Qwen2.5-32B 的 RL reward 曲线，TLT 与 VeRL 在 110 个训练 step 内基本重合，显示 speculative decoding 没有改变 GRPO 学习曲线">
+        <figcaption>Qwen2.5-7B / 32B 的 reward 曲线与 VeRL 重合，支持 lossless 训练语义</figcaption>
+    </figure> -->
+
+    <!-- <div class="aside warn">
+        <p><strong>吞吐数字不是全程均值</strong>：口径是一个 global batch 的 prompt + response token 数除以单个 RL step 时长，1 个 warm-up step 后取 3 步平均，且用的是已经训好的 drafter；reward 曲线只覆盖 ~110 steps。数字本身可信，但别直接当成完整训练的 wall-clock 报出去</p>
+    </div> -->
+    </section>
+
+    <!-- ==================== SELECTION ==================== -->
+    <!-- <section id="selection">
+    <h2>三条路线怎么选</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>路线</th>
+                <th>Draft 来源</th>
+                <th>适应 policy 更新</th>
+                <th>主要系统代价</th>
+                <th>适用前提</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>BubbleSpec</strong></td><td>上一 step 在 bubble 中预生成，suffix tree 检索</td><td>每步直接用当前 policy，天然对齐</td><td>草稿缓存、suffix index、unified attention</td><td>bubble 足够大，跨 rollout 有前缀复用</td></tr>
+            <tr><td><strong>NVIDIA</strong></td><td>EAGLE-3 或模型原生 MTP head</td><td>复用 policy forward 缓存在线跟练</td><td>draft head 生命周期与权重同步</td><td>已有 NeMo-RL / vLLM 集成或原生 MTP</td></tr>
+            <tr><td><strong>TLT</strong></td><td>单层 EAGLE + model-free fallback</td><td>Spot Trainer 在 idle worker 上持续跟练</td><td>worker 调度、DataBuffer、graph pool、MAB</td><td>长尾稳定存在，且 infra 能抢占训练任务</td></tr>
+        </tbody>
+    </table>
+
+    <div class="summary-box">
+        <h3>真正决定收益的四个检查项</h3>
+        <ol>
+            <li><strong>先 profile 尾段 batch</strong>：SD 的甜点区是 running batch 已经收缩以后，不是 rollout 全程</li>
+            <li><strong>用 wall-clock 调参</strong>：acceptance 更高可能只是 draft 和 verify 做了更多无效工作</li>
+            <li><strong>把 policy drift 算进去</strong>：离线 drafter 足够好时 online adaptation 只是保险；初始化弱或训练分布漂移大时，它才是必要条件</li>
+            <li><strong>核算 hidden cost</strong>：graph memory、reprefill、缓存 I/O、权重同步和抢占延迟都会侵蚀论文里的局部 speedup</li>
+        </ol>
+        <p class="one-liner">BubbleSpec 用 bubble 生产 proposal，NVIDIA 复用训练 forward 生产监督，TLT 用 bubble 消化监督；差别不在 spec decoding 本身，而在 drafter 的数据、算力和生命周期放在哪里</p>
+    </div>
+    </section> -->
 
 </article>
 
