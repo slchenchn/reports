@@ -8,24 +8,22 @@
 
 ## TLDR
 
-[Macaron-V1](https://macaron.im/zh/mindlab/research/introducing-macaron-v1) 的 Mixture-of-LoRA（MoL）= 冻结的 base model + 四个职责不同的 LoRA（Chat / Agent / Coding / GenUI）+ 一次 request-level 路由。每个新请求先被分类到其中一个 LoRA，之后整个 reasoning 和 tool loop 只启用它，直到下一个request。
-
-本质上，这是一套 harness 级 lora policy 管理系统，不是新的 LoRA 算法：
-
-- **价值在哪**：adapter 生命周期管理。能力隔离、RL policy 版本，不同任务更新各自的参数，从而隔离优化冲突。也即官方所说的“参数空间正交化”
-<!-- - **LoRA 有多大**：远超官方“1B”口径给人的直觉。V1 公开 adapter 为每层全部 256 个 routed experts 保存了 LoRA tensor，实测单文件含 7.688B 个 BF16 标量、15.4 GB，官方口径与发布文件对不上（详见「参数实查」）。Tall 单 adapter 含 3.776B 个标量，约为 35B base 的 10.8%；两个版本约 98% 的 adapter 参数都来自 routed experts -->
-
-**注意**：截至 2026-07-29，Macaron-V1的Technical Report 仍为 `coming soon`状态，当前分析仅基于blog和开源代码。
+Macaron-V1 的 Mixture-of-LoRA（MoL）= 
+- 冻结的 base model
+- \+ 四个职责不同的 LoRA（Chat / Agent / Coding / GenUI）
+- \+ 一次 request-level 路由
+- 
+每个请求进来先分一次类，选定一个 LoRA adapter，直到下一个请求再重新分类。本质上，这是一套 harness 级的 LoRA policy 管理系统，不是新的 LoRA 算法。
+注意：截至 2026-07-29，Macaron-V1 的 Technical Report 仍是 coming soon，本文分析只基于官方 blog 和开源代码
 
 ![精度](./src/acc.png)
 ## 模型和 LoRA 布局
 
-V1 发布了两个模型： [Venti](https://huggingface.co/mindlab-research/Macaron-V1-Venti) 和 [Tall](https://huggingface.co/mindlab-research/Macaron-V1-Tall)
+Macaron-V1 发布了两个版本：[Venti](https://huggingface.co/mindlab-research/Macaron-V1-Venti) 和 [Tall](https://huggingface.co/mindlab-research/Macaron-V1-Tall)
 
 | 项目                  | Macaron-V1-Venti                                            | Macaron-V1-Tall                                 |
 | --------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
 | Base model            | GLM-5.2                                                     | Qwen3.6-35B-A3B                                 |
-| Base 结构             | 78 层，前 3 层 dense MLP，后 75 层 MoE，256 experts / top-8 | 40 层 hybrid attention MoE，256 experts / top-8 |
 | Adapter               | L0–L3 四个 rank-**16** LoRA                                 | L0–L3 四个 rank-**64** LoRA                     |
 | LoRA scaling          | `alpha=32`，`alpha/r=2`                                     | `alpha=128`，`alpha/r=2`                        |
 | 官方 adapter 参数口径 | 1B / adapter                                                | 3.7B / adapter                                  |
@@ -38,26 +36,25 @@ V1 发布了两个模型： [Venti](https://huggingface.co/mindlab-research/Maca
 
 | Adapter   | 职责                                                |
 | --------- | --------------------------------------------------- |
-| L0 Chat   | 通用对话、instruction following，同时是 router 入口 |
+| L0 Chat   | 通用对话、instruction following，同时是 request router 入口 |
 | L1 Agent  | 长时程、重工具使用、个人生活和动态工作流            |
 | L2 Coding | 代码理解、repo 修改、SWE 和 terminal                |
 | L3 GenUI  | UI4A/A2UI 渲染和 UI-driven action                   |
 
-与 [Macaron-V1-Preview](https://macaron.im/mindlab/research/macaron-v1-preview) 相比，V1 从 GLM-5.1 切到 GLM-5.2，并从五个 LoRA 缩为四个，原 L1 personal-life 和 L4 OpenClaw 合成了更通用的 L1 Agent
+与 [Macaron-V1-Preview](https://macaron.im/mindlab/research/macaron-v1-preview) 相比，V1 从 GLM-5.1 切到 GLM-5.2，五个 LoRA 缩成四个，原 L1 personal-life 和 L4 OpenClaw 合并成了更通用的 L1 Agent
 
 ## 为什么要拆成多个 LoRA
 
-减少 multi-task post-training 中的 optimization interference。Chat、tool use、coding 和 GenUI 的数据形态、chain-of-thought 与 reward 目标不同，全部更新同一份参数时，某一类任务的增益可能破坏另一类能力。MoL 的做法是：相似任务放进同一 adapter，差异较大的任务拆开，从参数更新边界上隔离冲突
+目的是减少 multi-task post-training 里的 optimization interference。Chat、tool use、coding 和 GenUI 的数据形态、chain-of-thought 与 reward 目标不同，全部更新同一份参数时，某一类任务的增益可能破坏另一类能力。MoL 的做法是：相似任务放进同一 adapter，差异大的拆开，从参数更新边界上隔离冲突
 
-这个设计有三个好处
+这个设计有三个好处：
+1. Base 和已有 adapter 不被新能力覆写，新 domain 可以以新 LoRA 和路由元数据的形式接入
+2. 不同 specialist 可以使用不同数据、reward 和更新节奏，回滚也只需替换某个 adapter revision
+3. Actor/learner 共享常驻 base，训练—推理边界只传输 adapter，对 744B base 仍有很大交付收益
 
-- Base 和已有 adapter 不被新能力覆写，新 domain 可以以新 LoRA 和路由元数据的形式接入
-- 不同 specialist 可以使用不同数据、reward 和更新节奏，回滚也只需替换某个 adapter revision
-- Actor/learner 共享常驻 base，训练—推理边界只传输 adapter，对 744B base 仍有很大交付收益
+## 其他 LoRA 细节
 
-## 其他LoRA 细节
-
-未使用 DoRA、RSLoRA 和 QLoRA。算法层就是标准 LoRA，排除了：`gate`、`shared_expert_gate`、`lm_head`
+算法层就是标准 LoRA，没用 DoRA、RSLoRA、QLoRA。target modules 排除了 `gate`、`shared_expert_gate` 和 `lm_head`，即不动 MoE routing gate 和 lm head。但注意：Macaron-V1是为每个routed expert都配备了lora adapter
 
 
 ### 参数实查：官方“1B”口径与发布文件对不上
@@ -73,7 +70,7 @@ V1 发布了两个模型： [Venti](https://huggingface.co/mindlab-research/Maca
 
 <!-- 由此，`744B + 4×1B = 748B` 的总参数口径同样不成立：完整四 adapter 参数池约 774.75B，单次请求激活一个 adapter 时约 751.69B。社区已有人在 [r/LocalLLaMA 发布帖](https://www.reddit.com/r/LocalLLaMA/comments/1v2k5hv/mindlabresearchmacaronv1venti_huggingface/)和 [Hugging Face discussions](https://huggingface.co/mindlab-research/Macaron-V1-Venti/discussions) 追问 `4×1B` 对应的 VRAM，官方尚未回应。部署预算应从完整文件、实际 TP/EP 布局和 adapter cache 策略推导，不要用官方 1B 口径 -->
 
-另外，Tall L2 的 header 显示全部 3.776B 标量均为 F32，而 model card 将整个 checkpoint 概括为 BF16。这两个问题都可以认为是官方的疏忽。
+另外，Tall L2 的 header 显示全部 3.776B 参数量都是 FP32，model card 却标称整个 checkpoint 是 BF16。这两个问题都可以算官方的疏忽
 
 <!--
 参数实查方法：通过 HTTP Range 只读取 adapter_model.safetensors 的 8-byte header length 和 JSON header，对除 __metadata__ 外的每个 tensor 计算 prod(shape) 并求和，未下载完整权重
@@ -86,54 +83,51 @@ Tall L2 header：780 tensors / 3775651840 F32 elements
 -->
 
 ## MoL 怎么路由
+MindLab开源了 [Mixture-of-LoRA-Harness](https://github.com/MindLab-Research/Mixture-of-LoRA-Harness) ，即把一次完整请求拆成 route、answer、summary 三个 model hop，只有 answer 会返回给用户，如下图所示
 
-开源 [Mixture-of-LoRA-Harness](https://github.com/MindLab-Research/Mixture-of-LoRA-Harness) 把一次完整请求拆成 route、answer、summary 三个 model hop，只有 answer 会返回给用户
-
-```mermaid
-flowchart TD
-    U[用户新请求] --> R["<b>Hop 1 · Route</b><br/>L0 只读当前请求<br/>分类输出 L0 / L1 / L2 / L3 之一"]
-    R --> A["<b>Hop 2 · Answer</b><br/>选中的 LoRA 加载自己的 own-view 历史<br/>（自己处理的任务 = 完整 trace，其他 LoRA 的任务 = 摘要）"]
-    A --> Q{产生 tool call？}
-    Q -->|是| T["锁定同一个 LoRA 执行 tool loop<br/>中途不重新路由"]
-    T --> Q
-    Q -->|否| S["<b>Hop 3 · Summary</b><br/>同一 LoRA 生成 1–2 句结果摘要"]
-    S --> P[Proxy 保存摘要<br/>供其他 LoRA 的 own-view 使用]
-```
+![MoL routing workflow](./src/mol-routing-workflow.png)
 
 ### Route hop
 
-L0 同时是 Chat specialist 和 router。路由过程分三步：Proxy 将当前 user request 与 [`route.md`](https://github.com/MindLab-Research/Mixture-of-LoRA-Harness/blob/main/mol_harness/Macaron-V1-Venti/route.md) 中的分类规则组合，以 `model_id=` 作 assistant prefill，再用 structured output 把解码约束到 L0–L3 中的一个 label。默认 `temperature=0`、路由 decode budget 是 24 tokens。正常模式完全信任 L0 输出，旧的关键词 scorer 只保留为 legacy mode，实现见 [`proxy.py`](https://github.com/MindLab-Research/Mixture-of-LoRA-Harness/blob/main/mol_harness/proxy.py)
+L0 adapter同时是 Chat specialist 和 router。路由过程：Harness 把当前 user request 和分类规则拼在一起，以 `model_id=` 做 assistant prefill，再用 structured output 把解码约束到 L0–L3 中的一个 label。路由 decode budget 24 tokens。
 
-两个性质值得注意。第一，这个 router 是 harness 中的离散 control hop，误差不会通过最终任务 loss 端到端回传；每次路由给出唯一 adapter，整个 forward 使用该 adapter，因此“Mixture”的准确含义是系统层 policy selection。第二，当前实现的 route hop 只看当前原始请求，不读取前序摘要——这对意图明确的新任务很干净，但“继续刚才那个”这类指代型 follow-up 可能因缺少历史而误路由，开源 prompt 对含糊请求默认选 L2 只能提供经验性 fallback
+<!-- 正常模式完全信任 L0 的输出；代码里还留了一套更早的关键词加权 scorer（纯规则、不过模型），只作为可显式开启的 legacy mode，不参与默认路由 -->
+
+**注意**：route hop 只看当前请求，不读前序摘要。意图明确的新任务没问题，但“继续刚才那个”这类指代型 follow-up 容易误路由，开源 prompt 对含糊请求默认选 L2，只是个经验性 fallback
 
 ### Answer 和 tool stickiness
 
-选中 Lx 后，当前 task 的 reasoning、answer 和多轮 tool call 都继续使用 Lx。工具返回时 Proxy 记录 `pending_tool_route=Lx`，跳过重新路由，避免一个未完成 trajectory 中的 policy 来回切换
+选中 Lx 后，当前 task 的 reasoning、answer 和多轮 tool call 都用 Lx 走完
+<!-- 。工具返回时 Harness 记下 `pending_tool_route=Lx`，跳过重新路由，避免未完成的 trajectory 中途换 policy -->
 
 ### 跨 LoRA 上下文
 
-每个 specialist 都有 own-view：它自己处理过的 task 保留完整 user/tool/assistant trace，其他 specialist 完成的 task 只保留原始 user request 和 1–2 句结果摘要，代码见 [`session.py`](https://github.com/MindLab-Research/Mixture-of-LoRA-Harness/blob/main/mol_harness/session.py)
+每个 specialist 都有 own-view：它自己处理过的 task 保留完整 user/tool/assistant trace，其他 specialist 完成的 task 只保留原始 user request 和 1–2 句结果摘要
 
-这种共享使用 context 传递。各 LoRA 的参数保持独立，每次推理只加载选中的一个 specialist。V1 的已公开证据覆盖了摘要式 context 协作，官方所说的 Collective Intelligence 仍处于后续扩展阶段
+跨 LoRA 的共享只靠 context 传递，参数各自独立，每次推理只加载选中的 specialist
+
+官方把这套设计指向的终态叫 Collective Intelligence：base 冻结、每个 specialist 只活在 LoRA 空间，所以不同团队训练的、或为不同用户个性化定制的 specialist，理论上都能插到同一个共享 base 上组合使用
+
+不过 V1 目前能确认的只有上面这种摘要式协作。跨团队、跨用户的 specialist 组合还没有公开实例，Collective Intelligence 现阶段只是一个愿景
 
 
 <!-- 代价是 multi-task 问题并没有消失，而是集中到任务 clustering、router 和跨 adapter 摘要三个环节。L1 合并 personal-life 与 OpenClaw 就是一个典型取舍：adapter 数量更少、通用性更强，但 L1 内部的数据与 reward 冲突也可能增大 -->
 
 ## infra
 
-### 数值 一致性
+### 数值一致性
 
-使用R3来避免train/rollout选到不同expert，还用 IcePop-style ratio band 将不可信 token 的 importance weight 置零（而不是TIS）
+用 R3 避免 train/rollout 选到不同 expert；剩下不可信的 token 用 IcePop-style ratio band 把 importance weight 置零，而不是 TIS
 
 
 ### V1 不再沿用 Preview 的跨 LoRA KV 复用
 
-Preview 文章曾写明，LoRA 切换会改变 attention 并使原 KV cache 失效，当时的方案是继续使用旧 cache 并接受一定精度损失。V1 开源实现已换成更干净的 per-LoRA 策略：每个 specialist 的 own-view prefix 按确定规则重建，再次进入该 LoRA 时前缀保持 byte-identical，由 engine 的 LoRA-aware prefix cache 命中，不需要把 Lx 生成的 KV 直接拿给 Ly
+Preview 文章里提过，LoRA 切换会改变 attention、让原 KV cache 失效，当时的方案是继续用旧 cache、接受一定精度损失。V1 换成了更干净的 per-LoRA 策略：每个 specialist 的 own-view prefix 按确定规则重建，再次进入该 LoRA 时前缀 byte-identical，由 engine 的 LoRA-aware prefix cache 命中，不需要把 Lx 生成的 KV 直接拿给 Ly
 
 
 ### 三个 hop 带来的成本
 
-普通无工具请求需要 route、answer、summary 三次 model call，只有 answer 返回给用户。Route 的 decode 很短，summary 默认最多 192 tokens，但两者仍然带来额外 prefill、decode 和调度延迟
+普通无工具请求需要 route、answer、summary 三次 model call，只有 answer 返回给用户。Route 的 decode 很短，summary 默认最多 192 tokens，但这两个 hop 仍有额外的 prefill、decode 和调度延迟
 
 但官方没有公开 router 准确率、route/summary 的 TTFT 占比、prefix-cache hit rate、跨 LoRA 切换率或摘要丢失导致的任务失败率
 
