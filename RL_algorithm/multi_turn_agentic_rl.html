@@ -812,11 +812,11 @@
                     <a class="paper-link" href="#agentflow" style="--paper-color:var(--green)">
                         <i class="paper-link__dot"></i><span class="paper-link__name">AgentFlow</span><span class="paper-link__mode">broadcast</span>
                     </a>
-                    <a class="paper-link" href="#reveal" style="--paper-color:var(--blue)">
-                        <i class="paper-link__dot"></i><span class="paper-link__name">ReVeal</span><span class="paper-link__mode">turn-aware</span>
-                    </a>
                     <a class="paper-link" href="#stitchcuda" style="--paper-color:var(--amber)">
                         <i class="paper-link__dot"></i><span class="paper-link__name">StitchCUDA</span><span class="paper-link__mode">single-turn task</span>
+                    </a>
+                    <a class="paper-link" href="#reveal" style="--paper-color:var(--blue)">
+                        <i class="paper-link__dot"></i><span class="paper-link__name">ReVeal</span><span class="paper-link__mode">turn-aware</span>
                     </a>
                 </aside>
 
@@ -830,8 +830,8 @@
                 <ol>
                     <li><a href="#summary">00 · Executive summary</a></li>
                     <li><a href="#agentflow">01 · AgentFlow</a></li>
-                    <li><a href="#reveal">02 · ReVeal</a></li>
-                    <li><a href="#stitchcuda">03 · StitchCUDA</a></li>
+                    <li><a href="#stitchcuda">02 · StitchCUDA</a></li>
+                    <li><a href="#reveal">03 · ReVeal</a></li>
                     <li><a href="#synthesis">04 · 横向综合</a></li>
                 </ol>
             </nav>
@@ -854,8 +854,8 @@
                     <h3>三篇工作的处理方式</h3>
                     <div class="intro-papers" aria-label="三篇工作的解法概览">
                         <p><a href="#agentflow" style="color:var(--green)"><strong>AgentFlow</strong></a> 只训练 Planner，把 terminal advantage 广播到它的所有 turns</p>
-                        <p><a href="#reveal" style="color:var(--blue)"><strong>ReVeal</strong></a> 交替生成代码和测试，并按执行结果分配每轮奖励</p>
                         <p><a href="#stitchcuda" style="color:var(--amber)"><strong>StitchCUDA</strong></a> 把 multi-turn workflow 拆成两类单轮任务，改用 single-turn GRPO</p>
+                        <p><a href="#reveal" style="color:var(--blue)"><strong>ReVeal</strong></a> 交替生成代码和测试，并按执行结果分配每轮奖励</p>
                     </div>
 
                     <!-- <div class="note note--method">
@@ -948,163 +948,10 @@
                 </section>
 
                 <!-- =================================================
-                     02 · REVEAL
-                     ================================================= -->
-                <section class="doc-section" id="reveal" style="--section-color:var(--blue); --section-wash:var(--blue-wash)">
-                    <div class="section-kicker">02 · ReVeal</div>
-                    <h2>ReVeal：turn-aware reward 与 TAPO</h2>
-                    <div class="paper-stamp">
-                        <a class="stamp stamp--accent" href="https://arxiv.org/abs/2506.11442" target="_blank">arXiv 2506.11442v2</a>
-                    </div>
-
-                    <h3>Motivation：把 self-verification 从隐式行为变成训练目标</h3>
-                    <div class="figure-frame" style="overflow-x:auto; margin-bottom:32px">
-                        <table class="compact-table compact-table--neutral" aria-label="ReVeal 所针对的 verification 方案对比">
-                            <thead><tr><th>方案</th><th>Verification signal</th><th>主要问题</th></tr></thead>
-                            <tbody>
-                                <tr><td>Outcome-only RLVR</td><td>只看最终答案是否正确</td><td>中间 verification 没有被直接优化，困难问题上容易退化为无效反思或猜测</td></tr>
-                                <tr><td>Separate critic</td><td>额外模型评价每次尝试</td><td>增加 inference cost，而且没有利用真实 tool execution feedback</td></tr>
-                                <tr><td>Pre-existing tests</td><td>执行公开测试用例</td><td>现实任务通常没有可直接使用的 public tests</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="prose">
-                        <p>ReVeal 利用 verification-generation asymmetry：验证一段 code 往往比写出它更容易。同一个 policy 交替扮演两个角色——生成 code、再生成 tests，用 tests 的执行结果指导下一轮修订；并把写 code"和"写 tests"两种行为都纳入训练</p>
-                    </div>
-
-                    <h3>算法流程：生成 code、生成 tests，再根据执行结果修订</h3>
-                    <figure class="wide-figure">
-                        <div class="figure-frame"><a href="assets/reveal-paper-method.png" target="_blank" aria-label="打开 ReVeal 方法原图"><img class="editorial-image" src="assets/reveal-paper-method.png" alt="ReVeal 论文原图，上半部分是 generation verification tool feedback loop，下半部分是 outcome generation verification rewards 的归属"></a></div>
-                        <figcaption data-label="FIG. 03">ReVeal 论文 Fig. 2：上半部分是 generation–verification rollout，下半部分是三类 reward 的计算与归属</figcaption>
-                    </figure>
-
-                    <ul class="plain-list">
-                        <li><strong>1 · Generation</strong><span>同一个 policy 根据题目与历史 context 生成 candidate code</span></li>
-                        <li><strong>2 · Verification</strong><span>policy 针对当前 code 构造可执行 tests，用于覆盖边界条件和潜在错误</span></li>
-                        <li><strong>3 · Tool feedback</strong><span>执行 tests，记录 expected output、actual output、异常与 pass / fail，并把结果写回下一轮 context</span></li>
-                        <li><strong>4 · Revision</strong><span>下一次 generation 根据执行反馈修改 code；流程重复到得到有效解或耗尽 turn budget</span></li>
-                    </ul>
-
-                    <h3>TAPO：先定义三类 reward，再构造 turn-aware advantage</h3>
-                    <div class="prose">
-                        <p><strong>TAPO</strong>（Turn-Aware Policy Optimization）的核心思想：整条 rollout 只有一个最终结果，但每个 turn 都有可验证的中间信号。而TAPO 把两类信号放进两条独立的 reward channel，分别计算</p>
-                        <p>记号：\(k\) 是 turn index（奇数 turn 生成 code，偶数 turn 生成 tests）；\(t\) 是整条 rollout 的 token index；\(p^k\) 是第 \(k\) 个 generation turn 的 code 在 ground-truth tests 上的 passrate</p>
-                    </div>
-
-                    <h4>1. 三类 verifiable reward</h4>
-                    <div class="figure-frame" style="overflow-x:auto; margin-bottom:28px">
-                        <table class="compact-table compact-table--neutral" aria-label="ReVeal 的三类训练 reward">
-                            <thead><tr><th>Reward</th><th>作用位置</th><th>公式</th><th>含义</th></tr></thead>
-                            <tbody>
-                                <tr><td>Outcome</td><td>Token-level channel，整条 trajectory</td><td>\(r_{\mathrm{out}}=r_{\mathrm{format}}+5p_{\mathrm{final}}\)</td><td>评价输出格式和最终 code 的 ground-truth test passrate</td></tr>
-                                <tr><td>Generation</td><td>Turn-level channel，当前 generation turn</td><td>\(r_{\mathrm{gen}}^1=p^1\)<br>\(r_{\mathrm{gen}}^k=p^k-p^{k-2}\)</td><td>首版看 absolute passrate，后续只奖励相对上一版 code 的改进</td></tr>
-                                <tr><td>Verification</td><td>Turn-level channel，当前 verification</td><td>\(r_{\mathrm{ver}}^k=N_{\mathrm{pass\text{-}golden}}/N_{\mathrm{generated}}\)</td><td>评价自生成 tests 在 golden code 上是否成立</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- <div class="prose">
-                        <p>\(r_{\mathrm{format}}\) 为 \(+1\)（格式正确）或 \(-1\)。Generation reward 的一般式含 absolute 与 improvement 两项，论文取 \(\mathrm{abs}=0\)、\(\mathrm{imp}=1\)，所以除第一轮外只奖励 passrate 差值</p>
-                    </div> -->
-
-                    <h4>2. Token-level return：只传播最终 outcome reward</h4>
-                    <div class="prose">
-                        <p>即把最终结果广播给整条 trajectory，time discount=1。</p>
-                    </div>
-
-                    <h4>3. Turn-level return：按 turn 角色分配中间 credit</h4>
-                    <div class="prose">
-                        <p>只放 generation / verification rewards，同一个 turn 内的所有 tokens 共享同一个 return：</p>
-                    </div>
-
-                    <div class="equation">
-                        \[
-                        R^{\mathrm{turn}}(k)=
-                        \begin{cases}
-                        r_{\mathrm{gen}}^k, & k\text{ is a generation turn} \\
-                        r_{\mathrm{ver}}^k+r_{\mathrm{gen}}^{k+1}, & k\text{ is a verification turn}
-                        \end{cases}
-                        \]
-                        <small>若 verification 后没有下一次 generation，则第二项为 0；同一 turn 内的所有 tokens 共享对应的 \(R^{\mathrm{turn}}(k)\)</small>
-                    </div>
-
-                    <!-- <div class="figure-frame" style="overflow-x:auto; margin:26px 0 30px">
-                        <table class="compact-table compact-table--neutral" aria-label="TAPO 的 turn-level reward 分配">
-                            <thead><tr><th>被更新的 turn</th><th>额外的 turn-level return</th><th>作用</th></tr></thead>
-                            <tbody>
-                                <tr><td>Generation turn \(k\)</td><td>\(r_{\mathrm{gen}}^k\)</td><td>只按当前 code 相对上一版的改进奖励 generation</td></tr>
-                                <tr><td>Verification turn \(k\)</td><td>\(r_{\mathrm{ver}}^k+r_{\mathrm{gen}}^{k+1}\)</td><td>既奖励 tests 本身可靠，也奖励它是否帮助下一版 code 改进</td></tr>
-                            </tbody>
-                        </table>
-                    </div> -->
-
-                    <h4>4. 合成 advantage，再进入标准 PPO update</h4>
-                    <div class="prose">
-                        <!-- <p>对 token \(t\)：取其所属 turn \(k(t)\)，两条 channel 的 return 相加，再减去 critic 估值 \(V_t\)。所得 \(A_t\) 替换标准 PPO 的 GAE advantage，其余不变</p> -->
-                        <p>用完整 rollout 的真实结果而不是 value model 的预测，bias 小但 variance 大；因此 critic 仍保留，在最后一步作为 baseline：\(A_t=\widetilde R_t-V_t\)</p>
-                    </div>
-
-                    <div class="equation">
-                        \[
-                        \widetilde R_t=R_t^{\mathrm{outcome}}+R^{\mathrm{turn}}\!\bigl(k(t)\bigr),
-                        \qquad
-                        A_t=\widetilde R_t-V_t
-                        \]
-                        <!-- <small>这里相加的是两条不同 channel：\(R_t^{\mathrm{outcome}}\) 只含 outcome reward，\(R^{\mathrm{turn}}\) 只由 generation / verification rewards 构造，因此不会把同一个 turn reward 原样加两次</small> -->
-                    </div>
-
-                    <!-- <div class="equation">
-                        \[
-                        \rho_t=\frac{\pi_\theta(y_t\mid h_t)}{\pi_{\mathrm{old}}(y_t\mid h_t)}
-                        \]
-                        \[
-                        \mathcal L_{\mathrm{TAPO}}
-                        =\mathbb E_t\!\left[
-                        \min\!\left(
-                        \rho_t A_t,
-                        \operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t
-                        \right)
-                        \right]
-                        \]
-                        <small>\(h_t\) 是当前 context 与此前 tokens；这里只写 policy surrogate，value loss 等其余部分沿用 PPO</small>
-                    </div> -->
-
-                    <!-- <div class="prose">
-                        <p>这样设计有两个关键约束：generation turn 只按 code 改进得分，拿不到 verification reward；verification turn 则必须既可靠（tests 在 golden code 上成立）又有用（帮助下一版 code 提高 passrate）。最终 code 的 passrate 会同时进入 \(r_{\mathrm{out}}\) 和最后一次 \(r_{\mathrm{gen}}\)——信息上有重叠，但两条 channel 独立计算，不会重复计分</p>
-                    </div> -->
-
-                    <!-- <h3>训练期依赖 golden solution，推理期不依赖</h3>
-                    <div class="prose">
-                        <p>训练时，candidate code 的 generation reward 由 ground-truth tests 计算，自生成 tests 的 verification reward 则由它们在 golden code 上的通过率计算；只有先通过 golden code 校验的 tests 才会用于测试 candidate code。推理时没有 golden quality gate，模型生成的 tests 会直接执行</p>
-                        <p>训练数据集为 <strong>TACO</strong>；评测使用 <strong>LiveCodeBench V6</strong> 与 <strong>CodeContests</strong></p>
-                    </div> -->
-
-                    <h3>主要实验结果</h3>
-                    <div class="prose">
-                        <p>下图展示了同一 ReVeal policy 随 inference turns 增加的变化，以及它与增加 sample 数的对比。<br>注意，25 turns 不是 25 轮完整上下文，推理使用 short-term memory，只保留最近 3 turns</p>
-                    </div>
-                    <figure class="wide-figure">
-                        <div class="figure-frame"><a href="assets/reveal-paper-test-time-scaling.png" target="_blank" aria-label="打开 ReVeal test-time scaling 原图"><img class="editorial-image" src="assets/reveal-paper-test-time-scaling.png" alt="ReVeal 论文原图，左侧展示 Code Pass@1 随 inference turns 增加，右侧展示 ReVeal、base model 与 single-turn RL 的 Pass@k"></a></div>
-                        <figcaption data-label="FIG. 04">ReVeal 论文 Fig. 1：左侧是同一 policy 的 test-time turn scaling，右侧比较 ReVeal、base model 与 single-turn outcome-only RL 的 Pass@k</figcaption>
-                    </figure>
-
-                    <!-- <div class="note note--warning">
-                        <span class="note__mark">!</span>
-                        <div><h4>25 turns 不是 25 轮完整上下文</h4><p>推理使用 short-term memory，只保留最近 3 turns</p></div>
-                    </div> -->
-
-                    <!-- <div class="limitation">
-                        <span class="limitation__label">Most important limitation</span>
-                        <h3>dense credit 依赖训练期 privileged verification</h3>
-                        <p>方法要求任务满足 verification asymmetry，并且训练期可以访问 golden solution；TAPO 的 anti-gaming 证据主要来自设计论证和 outcome-only 间接 ablation，没有直接测量 generation–verification collusion，CTRL 对比还存在 LiveCodeBench 版本不一致</p>
-                    </div> -->
-                </section>
-
-                <!-- =================================================
-                     03 · STITCHCUDA
+                     02 · STITCHCUDA
                      ================================================= -->
                 <section class="doc-section" id="stitchcuda" style="--section-color:var(--amber); --section-wash:var(--amber-wash)">
-                    <div class="section-kicker">03 · StitchCUDA</div>
+                    <div class="section-kicker">02 · StitchCUDA</div>
                     <h2>StitchCUDA：拆成 single-turn 任务，避免 full-trajectory RL</h2>
                     <div class="paper-stamp">
                         <a class="stamp stamp--accent" href="https://arxiv.org/abs/2603.02637" target="_blank">arXiv 2603.02637v2</a>
@@ -1261,6 +1108,159 @@
                 </section>
 
                 <!-- =================================================
+                     03 · REVEAL
+                     ================================================= -->
+                <section class="doc-section" id="reveal" style="--section-color:var(--blue); --section-wash:var(--blue-wash)">
+                    <div class="section-kicker">03 · ReVeal</div>
+                    <h2>ReVeal：turn-aware reward 与 TAPO</h2>
+                    <div class="paper-stamp">
+                        <a class="stamp stamp--accent" href="https://arxiv.org/abs/2506.11442" target="_blank">arXiv 2506.11442v2</a>
+                    </div>
+
+                    <h3>Motivation：把 self-verification 从隐式行为变成训练目标</h3>
+                    <div class="figure-frame" style="overflow-x:auto; margin-bottom:32px">
+                        <table class="compact-table compact-table--neutral" aria-label="ReVeal 所针对的 verification 方案对比">
+                            <thead><tr><th>方案</th><th>Verification signal</th><th>主要问题</th></tr></thead>
+                            <tbody>
+                                <tr><td>Outcome-only RLVR</td><td>只看最终答案是否正确</td><td>中间 verification 没有被直接优化，困难问题上容易退化为无效反思或猜测</td></tr>
+                                <tr><td>Separate critic</td><td>额外模型评价每次尝试</td><td>增加 inference cost，而且没有利用真实 tool execution feedback</td></tr>
+                                <tr><td>Pre-existing tests</td><td>执行公开测试用例</td><td>现实任务通常没有可直接使用的 public tests</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="prose">
+                        <p>ReVeal 利用 verification-generation asymmetry：验证一段 code 往往比写出它更容易。同一个 policy 交替扮演两个角色——生成 code、再生成 tests，用 tests 的执行结果指导下一轮修订；并把写 code"和"写 tests"两种行为都纳入训练</p>
+                    </div>
+
+                    <h3>算法流程：生成 code、生成 tests，再根据执行结果修订</h3>
+                    <figure class="wide-figure">
+                        <div class="figure-frame"><a href="assets/reveal-paper-method.png" target="_blank" aria-label="打开 ReVeal 方法原图"><img class="editorial-image" src="assets/reveal-paper-method.png" alt="ReVeal 论文原图，上半部分是 generation verification tool feedback loop，下半部分是 outcome generation verification rewards 的归属"></a></div>
+                        <figcaption data-label="FIG. 03">ReVeal 论文 Fig. 2：上半部分是 generation–verification rollout，下半部分是三类 reward 的计算与归属</figcaption>
+                    </figure>
+
+                    <ul class="plain-list">
+                        <li><strong>1 · Generation</strong><span>同一个 policy 根据题目与历史 context 生成 candidate code</span></li>
+                        <li><strong>2 · Verification</strong><span>policy 针对当前 code 构造可执行 tests，用于覆盖边界条件和潜在错误</span></li>
+                        <li><strong>3 · Tool feedback</strong><span>执行 tests，记录 expected output、actual output、异常与 pass / fail，并把结果写回下一轮 context</span></li>
+                        <li><strong>4 · Revision</strong><span>下一次 generation 根据执行反馈修改 code；流程重复到得到有效解或耗尽 turn budget</span></li>
+                    </ul>
+
+                    <h3>TAPO：先定义三类 reward，再构造 turn-aware advantage</h3>
+                    <div class="prose">
+                        <p><strong>TAPO</strong>（Turn-Aware Policy Optimization）的核心思想：整条 rollout 只有一个最终结果，但每个 turn 都有可验证的中间信号。而TAPO 把两类信号放进两条独立的 reward channel，分别计算</p>
+                        <p>记号：\(k\) 是 turn index（奇数 turn 生成 code，偶数 turn 生成 tests）；\(t\) 是整条 rollout 的 token index；\(p^k\) 是第 \(k\) 个 generation turn 的 code 在 ground-truth tests 上的 passrate</p>
+                    </div>
+
+                    <h4>1. 三类 verifiable reward</h4>
+                    <div class="figure-frame" style="overflow-x:auto; margin-bottom:28px">
+                        <table class="compact-table compact-table--neutral" aria-label="ReVeal 的三类训练 reward">
+                            <thead><tr><th>Reward</th><th>作用位置</th><th>公式</th><th>含义</th></tr></thead>
+                            <tbody>
+                                <tr><td>Outcome</td><td>Token-level channel，整条 trajectory</td><td>\(r_{\mathrm{out}}=r_{\mathrm{format}}+5p_{\mathrm{final}}\)</td><td>评价输出格式和最终 code 的 ground-truth test passrate</td></tr>
+                                <tr><td>Generation</td><td>Turn-level channel，当前 generation turn</td><td>\(r_{\mathrm{gen}}^1=p^1\)<br>\(r_{\mathrm{gen}}^k=p^k-p^{k-2}\)</td><td>首版看 absolute passrate，后续只奖励相对上一版 code 的改进</td></tr>
+                                <tr><td>Verification</td><td>Turn-level channel，当前 verification</td><td>\(r_{\mathrm{ver}}^k=N_{\mathrm{pass\text{-}golden}}/N_{\mathrm{generated}}\)</td><td>评价自生成 tests 在 golden code 上是否成立</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- <div class="prose">
+                        <p>\(r_{\mathrm{format}}\) 为 \(+1\)（格式正确）或 \(-1\)。Generation reward 的一般式含 absolute 与 improvement 两项，论文取 \(\mathrm{abs}=0\)、\(\mathrm{imp}=1\)，所以除第一轮外只奖励 passrate 差值</p>
+                    </div> -->
+
+                    <h4>2. Token-level return：只传播最终 outcome reward</h4>
+                    <div class="prose">
+                        <p>即把最终结果广播给整条 trajectory，time discount=1。</p>
+                    </div>
+
+                    <h4>3. Turn-level return：按 turn 角色分配中间 credit</h4>
+                    <div class="prose">
+                        <p>只放 generation / verification rewards，同一个 turn 内的所有 tokens 共享同一个 return：</p>
+                    </div>
+
+                    <div class="equation">
+                        \[
+                        R^{\mathrm{turn}}(k)=
+                        \begin{cases}
+                        r_{\mathrm{gen}}^k, & k\text{ is a generation turn} \\
+                        r_{\mathrm{ver}}^k+r_{\mathrm{gen}}^{k+1}, & k\text{ is a verification turn}
+                        \end{cases}
+                        \]
+                        <small>若 verification 后没有下一次 generation，则第二项为 0；同一 turn 内的所有 tokens 共享对应的 \(R^{\mathrm{turn}}(k)\)</small>
+                    </div>
+
+                    <!-- <div class="figure-frame" style="overflow-x:auto; margin:26px 0 30px">
+                        <table class="compact-table compact-table--neutral" aria-label="TAPO 的 turn-level reward 分配">
+                            <thead><tr><th>被更新的 turn</th><th>额外的 turn-level return</th><th>作用</th></tr></thead>
+                            <tbody>
+                                <tr><td>Generation turn \(k\)</td><td>\(r_{\mathrm{gen}}^k\)</td><td>只按当前 code 相对上一版的改进奖励 generation</td></tr>
+                                <tr><td>Verification turn \(k\)</td><td>\(r_{\mathrm{ver}}^k+r_{\mathrm{gen}}^{k+1}\)</td><td>既奖励 tests 本身可靠，也奖励它是否帮助下一版 code 改进</td></tr>
+                            </tbody>
+                        </table>
+                    </div> -->
+
+                    <h4>4. 合成 advantage，再进入标准 PPO update</h4>
+                    <div class="prose">
+                        <!-- <p>对 token \(t\)：取其所属 turn \(k(t)\)，两条 channel 的 return 相加，再减去 critic 估值 \(V_t\)。所得 \(A_t\) 替换标准 PPO 的 GAE advantage，其余不变</p> -->
+                        <p>用完整 rollout 的真实结果而不是 value model 的预测，bias 小但 variance 大；因此 critic 仍保留，在最后一步作为 baseline：\(A_t=\widetilde R_t-V_t\)</p>
+                    </div>
+
+                    <div class="equation">
+                        \[
+                        \widetilde R_t=R_t^{\mathrm{outcome}}+R^{\mathrm{turn}}\!\bigl(k(t)\bigr),
+                        \qquad
+                        A_t=\widetilde R_t-V_t
+                        \]
+                        <!-- <small>这里相加的是两条不同 channel：\(R_t^{\mathrm{outcome}}\) 只含 outcome reward，\(R^{\mathrm{turn}}\) 只由 generation / verification rewards 构造，因此不会把同一个 turn reward 原样加两次</small> -->
+                    </div>
+
+                    <!-- <div class="equation">
+                        \[
+                        \rho_t=\frac{\pi_\theta(y_t\mid h_t)}{\pi_{\mathrm{old}}(y_t\mid h_t)}
+                        \]
+                        \[
+                        \mathcal L_{\mathrm{TAPO}}
+                        =\mathbb E_t\!\left[
+                        \min\!\left(
+                        \rho_t A_t,
+                        \operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t
+                        \right)
+                        \right]
+                        \]
+                        <small>\(h_t\) 是当前 context 与此前 tokens；这里只写 policy surrogate，value loss 等其余部分沿用 PPO</small>
+                    </div> -->
+
+                    <!-- <div class="prose">
+                        <p>这样设计有两个关键约束：generation turn 只按 code 改进得分，拿不到 verification reward；verification turn 则必须既可靠（tests 在 golden code 上成立）又有用（帮助下一版 code 提高 passrate）。最终 code 的 passrate 会同时进入 \(r_{\mathrm{out}}\) 和最后一次 \(r_{\mathrm{gen}}\)——信息上有重叠，但两条 channel 独立计算，不会重复计分</p>
+                    </div> -->
+
+                    <!-- <h3>训练期依赖 golden solution，推理期不依赖</h3>
+                    <div class="prose">
+                        <p>训练时，candidate code 的 generation reward 由 ground-truth tests 计算，自生成 tests 的 verification reward 则由它们在 golden code 上的通过率计算；只有先通过 golden code 校验的 tests 才会用于测试 candidate code。推理时没有 golden quality gate，模型生成的 tests 会直接执行</p>
+                        <p>训练数据集为 <strong>TACO</strong>；评测使用 <strong>LiveCodeBench V6</strong> 与 <strong>CodeContests</strong></p>
+                    </div> -->
+
+                    <h3>主要实验结果</h3>
+                    <div class="prose">
+                        <p>下图展示了同一 ReVeal policy 随 inference turns 增加的变化，以及它与增加 sample 数的对比。<br>注意，25 turns 不是 25 轮完整上下文，推理使用 short-term memory，只保留最近 3 turns</p>
+                    </div>
+                    <figure class="wide-figure">
+                        <div class="figure-frame"><a href="assets/reveal-paper-test-time-scaling.png" target="_blank" aria-label="打开 ReVeal test-time scaling 原图"><img class="editorial-image" src="assets/reveal-paper-test-time-scaling.png" alt="ReVeal 论文原图，左侧展示 Code Pass@1 随 inference turns 增加，右侧展示 ReVeal、base model 与 single-turn RL 的 Pass@k"></a></div>
+                        <figcaption data-label="FIG. 04">ReVeal 论文 Fig. 1：左侧是同一 policy 的 test-time turn scaling，右侧比较 ReVeal、base model 与 single-turn outcome-only RL 的 Pass@k</figcaption>
+                    </figure>
+
+                    <!-- <div class="note note--warning">
+                        <span class="note__mark">!</span>
+                        <div><h4>25 turns 不是 25 轮完整上下文</h4><p>推理使用 short-term memory，只保留最近 3 turns</p></div>
+                    </div> -->
+
+                    <!-- <div class="limitation">
+                        <span class="limitation__label">Most important limitation</span>
+                        <h3>dense credit 依赖训练期 privileged verification</h3>
+                        <p>方法要求任务满足 verification asymmetry，并且训练期可以访问 golden solution；TAPO 的 anti-gaming 证据主要来自设计论证和 outcome-only 间接 ablation，没有直接测量 generation–verification collusion，CTRL 对比还存在 LiveCodeBench 版本不一致</p>
+                    </div> -->
+                </section>
+
+                <!-- =================================================
                      04 · SYNTHESIS
                      ================================================= -->
                 <section class="doc-section" id="synthesis" style="--section-color:var(--red); --section-wash:var(--red-wash)">
@@ -1275,23 +1275,23 @@
                         <div class="figure-frame" style="overflow-x:auto">
                             <table class="design-matrix" aria-label="三篇论文的三维设计空间">
                                 <thead>
-                                    <tr><th>Design axis</th><th class="paper-head" style="color:var(--green)">AgentFlow</th><th class="paper-head" style="color:var(--blue)">ReVeal</th><th class="paper-head" style="color:var(--amber)">StitchCUDA</th></tr>
+                                    <tr><th>Design axis</th><th class="paper-head" style="color:var(--green)">AgentFlow</th><th class="paper-head" style="color:var(--amber)">StitchCUDA</th><th class="paper-head" style="color:var(--blue)">ReVeal</th></tr>
                                 </thead>
                                 <tbody>
-                                    <tr><th>Trainable boundary</th><td><strong>只训练 Planner</strong><span>executor / verifier / generator frozen</span></td><td><strong>训练共享 policy</strong><span>generation + verification，另有 PPO value critic</span></td><td><strong>只训练 Coder</strong><span>Planner / Verifier 在 RL 环外</span></td></tr>
-                                    <tr><th>Credit granularity</th><td><strong>trajectory broadcast</strong><span>同一 group-normalized advantage 给所有 turns</span></td><td><strong>turn-aware return</strong><span>generation 与 verification 有不同归因</span></td><td><strong>single-turn task</strong><span>trajectory 先被切成 recurring tasks</span></td></tr>
-                                    <tr><th>Environment strategy</th><td><strong>live tool loop</strong><span>工具与 GPT-4o judge 进入 rollout</span></td><td><strong>cheap verification</strong><span>利用 execution 与 golden solution</span></td><td><strong>offline extraction</strong><span>先收集 feedback transition，再做 GRPO</span></td></tr>
+                                    <tr><th>Trainable boundary</th><td><strong>只训练 Planner</strong><span>executor / verifier / generator frozen</span></td><td><strong>只训练 Coder</strong><span>Planner / Verifier 在 RL 环外</span></td><td><strong>训练共享 policy</strong><span>generation + verification，另有 PPO value critic</span></td></tr>
+                                    <tr><th>Credit granularity</th><td><strong>trajectory broadcast</strong><span>同一 group-normalized advantage 给所有 turns</span></td><td><strong>single-turn task</strong><span>trajectory 先被切成 recurring tasks</span></td><td><strong>turn-aware return</strong><span>generation 与 verification 有不同归因</span></td></tr>
+                                    <tr><th>Environment strategy</th><td><strong>live tool loop</strong><span>工具与 GPT-4o judge 进入 rollout</span></td><td><strong>offline extraction</strong><span>先收集 feedback transition，再做 GRPO</span></td><td><strong>cheap verification</strong><span>利用 execution 与 golden solution</span></td></tr>
                                 </tbody>
                             </table>
                         </div>
                         <figcaption data-label="TABLE 02">三篇工作在 trainable boundary、credit granularity 与 environment strategy 上的选择</figcaption>
                     </figure>
 
-                    <div class="prose">
+                    <!-- <div class="prose">
                         <p>这三条轴线不是互相独立的超参数：可训练模块越多，on-policy state distribution 越复杂；credit 越细，通常越依赖可信 intermediate verifier；环境越贵，完整 trajectory 越难在线采样</p>
-                    </div>
+                    </div> -->
 
-                    <figure class="wide-figure">
+                    <!-- <figure class="wide-figure">
                         <div class="figure-frame" style="overflow-x:auto">
                             <table class="comparison-table" aria-label="AgentFlow ReVeal StitchCUDA 综合比较">
                                 <thead><tr><th>Constraint</th><th class="paper-head" style="color:var(--green)">AgentFlow</th><th class="paper-head" style="color:var(--blue)">ReVeal</th><th class="paper-head" style="color:var(--amber)">StitchCUDA</th></tr></thead>
@@ -1305,7 +1305,7 @@
                             </table>
                         </div>
                         <figcaption data-label="TABLE 03">三种方法的约束、隐含假设与主要取舍</figcaption>
-                    </figure>
+                    </figure> -->
 
                     <!-- <div class="prose">
                         <p>最值得迁移的不是三个方法的名字，而是它们对约束的响应顺序：AgentFlow 认为 intermediate heuristic 不可靠，于是保留 outcome-only signal；ReVeal 发现 intermediate verification 足够便宜且可校准，于是显式建模跨 turn credit；StitchCUDA 发现完整环境采样不可承受，于是改变训练问题本身</p>
