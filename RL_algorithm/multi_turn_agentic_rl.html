@@ -471,6 +471,22 @@
 
         .figure-frame > a { display: block; cursor: zoom-in; }
         .editorial-image { display: block; width: 100%; height: auto; border-radius: 2px; }
+        .figure-frame a:has(.editorial-image) { cursor: zoom-in; }
+
+        .lightbox {
+            position: fixed; inset: 0; z-index: 200;
+            display: grid; place-items: center; padding: 40px;
+            background: rgba(23, 32, 29, 0.82);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.25s var(--ease), visibility 0.25s;
+            cursor: zoom-out;
+        }
+        .lightbox.is-open { opacity: 1; visibility: visible; }
+        .lightbox img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            background: var(--paper-strong); border-radius: 4px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        }
 
         figcaption {
             margin-top: 13px;
@@ -1437,6 +1453,8 @@
         </div>
     </main>
 
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="图片预览"><img src="" alt=""></div>
+
     <button class="back-to-top" id="backToTop" type="button" aria-label="返回顶部">↑</button>
 
     <script>
@@ -1512,6 +1530,28 @@
         updateTocState();
         window.addEventListener('scroll', updateTocState, { passive: true });
         window.addEventListener('resize', updateTocState, { passive: true });
+
+        /* Lightbox：图片在当前 tab 内放大，而不是开新 tab */
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = lightbox.querySelector('img');
+        const closeLightbox = () => {
+            lightbox.classList.remove('is-open');
+            document.body.style.overflow = '';
+        };
+
+        document.addEventListener('click', (event) => {
+            const link = event.target.closest('a[target="_blank"]');
+            if (!link || !link.querySelector('.editorial-image')) return;
+            event.preventDefault();
+            lightboxImg.src = link.href;
+            lightboxImg.alt = link.querySelector('.editorial-image').alt;
+            lightbox.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        });
+        lightbox.addEventListener('click', closeLightbox);
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeLightbox();
+        });
     </script>
 </body>
 </html>
