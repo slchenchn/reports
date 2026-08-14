@@ -1,0 +1,148 @@
+This case highlights how both agents eventually succeed, but with markedly different efficiency and strategy. The Flow-GRPO-tuned \model agent learns to refine its queries effectively and—upon recognizing the limitations of Wikipedia search—switches tools strategically to a targeted and the most task-solving relevant web search, achieving success with minimal redundancy. In contrast, the untrained agent persists in issuing dense, ineffective queries within the same tool despite diminishing returns, only escaping the loop by eventually switching to Google Search. While both reach the correct answer, the latter exhibits inefficient exploration and delayed adaptation; furthermore, with no path consistency, underscoring Flow-GRPO's role in fostering not just correctness, but \textit{strategic focus} and \textit{timely tool transition}.
+
+\begin{custombox}[title=Example from \# HotpotQA]{toolcardborder}
+
+\textbf{Question:} Which part of Handel's Messiah covers the birth of a child who, according to the gospels of Luke and Matthew, was born in Bethlehem?
+
+\vspace{1em}
+
+\textbf{Answer:} Part I
+\end{custombox}
+
+\begin{small}
+\begin{center}
+
+\begin{casebox}{successbg}{successframe}{Success Case: \model w/ Flow-GRPO}
+    \textbf{Action Steps 1-2: Initial Failures}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve information about the part of Handel's Messiah that refers to the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah refers to the birth of Jesus in Bethlehem?")}
+        \item \textbf{Result:} \textcolor{orange}{Initial long-form queries failed to find relevant pages (returned irrelevant pages like "Historical Jesus", "Advent", "Passion of Jesus").}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 3: Query Refinement}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Identify the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Handel's Messiah birth of Jesus Bethlehem")}
+        \item \textbf{Result:} This successfully identified relevant pages like ``Structure of Handel's Messiah'' and ``Messiah Part I''.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Steps 4-6: Further Search}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah refers to the birth of Jesus in Bethlehem?")} 
+         
+         and 
+         
+         \smalltt{tool.execute(query="birth of Jesus in Handel's Messiah")}
+        \item \textbf{Result:} \textcolor{orange}{Agent gets briefly confused, re-runs a failed query}, but then another refined query again locates the main ``Messiah (Handel)'' Wikipedia pages.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 7: Tool Switching (Breakthrough)}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Web Search} (on a specific URL)
+        \item \textbf{Sub-goal:} Retrieve the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah covers the birth of Jesus in Bethlehem?", \\url="https://en.wikipedia.org/wiki/Handel\%27s\_Messiah")}
+        \item \textbf{Result:} {Success! The tool extracted the answer from the page: The part of Handel's Messiah that covers the birth of Jesus in Bethlehem is found in Part I, specifically in the scene that includes the prophecy of Christ's birth. This section features the well-known chorus ``For unto us a child is born,'' which celebrates the nativity of Jesus.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{successframe}{The relevant section is \textbf{Part I}, which includes the famous chorus \textbf{``For unto us a child is born''}.}
+
+\end{casebox}
+
+\begin{casebox}{successbg}{successframe}{Success Case but stuck in dense information: \model w/o Flow-GRPO}
+    \textbf{Action Step 1: Initial Wikipedia Search}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve information about the part of Handel's Messiah that refers to the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah refers to the birth of Jesus in Bethlehem?")}
+        \item \textbf{Result:} Returned irrelevant pages (e.g., ``Historical Jesus'', ``Advent''). \textcolor{orange}{(No direct answer)}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2: Refined Wikipedia Search}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve information about the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah refers to the birth of Jesus in Bethlehem?")}
+        \item \textbf{Result:} Still returned mostly irrelevant pages, but "Messiah Part I" appeared in other suggestions. \textcolor{orange}{(Hint found, but no direct answer)}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 3: Keyword Wikipedia Search}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve information about the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Handel's Messiah birth of Jesus Bethlehem")}
+        \item \textbf{Result:} Still no direct relevant pages, but ``Structure of Handel's Messiah'' and ``Messiah Part I'' again appeared. \textcolor{orange}{(Still no direct answer)}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Steps 4-5: Persistent Wikipedia Queries}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah refers to the birth of Jesus in Bethlehem?")} 
+             
+            \smalltt{tool.execute(query="Handel's Messiah birth of Jesus Bethlehem")}
+        \item \textbf{Result:} Consistently returned irrelevant pages like ``Historical Jesus'' and ``Christmas Oratorio''. \textcolor{red}{(Wikipedia tool stuck/ineffective for direct answer)}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 6: External Search (Breakthrough)}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the specific part of Handel's Messiah that mentions the birth of Jesus in Bethlehem.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Which part of Handel's Messiah covers the birth of a child who, according to the gospels of Luke and Matthew, was born in Bethlehem?", add\_citations=True)}
+        \item \textbf{Result:} {Successfully found the answer: Handel's Messiah addresses the birth of a child born in Bethlehem primarily in Part I of the work. Key elements within Part I include the chorus ``For unto us a child is born'' and the scene depicting the annunciation to the shepherds.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP (via query refinement and external search after Wikipedia limitations)}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{successframe}{The part of Handel's Messiah referring to the birth of Jesus in Bethlehem is found in \textbf{Part I}, particularly the chorus \textbf{``For unto us a child is born''} and the scene depicting the annunciation to the shepherds.}
+
+\end{casebox}
+
+\end{center}
+\end{small}

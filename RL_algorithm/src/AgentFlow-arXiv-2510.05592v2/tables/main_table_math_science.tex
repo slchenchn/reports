@@ -1,0 +1,43 @@
+
+\begin{table}[t!]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{0.3em}
+    \renewcommand{\arraystretch}{0.95}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{ll|ccc|cc|cc|cc}
+    \toprule
+    \multirow{2}{*}{} & \multirow{2}{*}{} & \multicolumn{5}{c}{\cellcolor{MathBg}\textbf{Math Reasoning}} & \multicolumn{4}{c}{\cellcolor{ScienceBg}\textbf{Scientific Reasoning}}  \\
+    \cmidrule(lr){3-7} \cmidrule(lr){8-11}
+    \textbf{Model} & \textbf{Size} & \textbf{AIME24} & \textbf{AMC23} & \textbf{GameOf24} & \textbf{~Avg.~} & \textbf{$\Delta$} & \textbf{GPQA} & \textbf{MedQA} & \textbf{~Avg.~} & \textbf{$\Delta$} \\
+    \midrule
+    Qwen-2.5-7B-Instruct & 7B-Inst & 6.7 & 47.5 & \underline{33.0} & 29.1 & \mygreen{67.5}\gain{22.5} & 34.0 & 66.0 & 50.0 & \mygreen{40.5}\gain{13.5} \\
+    Qwen-2.5-14B-Instruct & 14B-Inst & 6.7 & \underline{60.0} & 25.0 & 30.6 & \mygreen{63.0}\gain{21.0} & 31.0 & \underline{75.0} & \underline{53.0} & \mygreen{31.5}\gain{10.5} \\
+    Llama-3.3-70B-Instruct & 70B-Inst & 6.7 & 47.5 & 31.0 & 28.4 & \mygreen{69.3}\gain{23.1} & \underline{35.0} & 67.0 & 51.0 & \mygreen{37.5}\gain{12.5} \\
+    Llama-3.1-405B-Instruct & 405B-Inst & \underline{26.7} & 47.5 & 23.0 & \underline{32.4} & \mygreen{57.3}\gain{19.1} & 30.0 & 62.0 & 46.0 & \mygreen{52.5}\gain{17.5} \\
+    \midrule
+    GPT-4o-mini~\citep{hurst2024gpt} & $\sim$8B & \underline{13.3} & 57.5 & 16.0 & 28.9 & \mygreen{67.8}\gain{22.6} & 27.0 & \underline{66.0} & \underline{46.5} & \mygreen{51.0}\gain{17.0} \\
+    GPT-4o~\citep{hurst2024gpt} & $\sim$200B & \underline{13.3} & \underline{60.0} & \underline{32.0} & \underline{35.1} & \mygreen{49.2}\gain{16.4} & \underline{31.0} & 60.0 & 45.5 & \mygreen{54.0}\gain{18.0} \\
+    \midrule
+    Supervised Fine-Tuning (SFT) & 7B-Inst & 6.7 & 47.5 & \underline{33.0} & 29.1 & \mygreen{67.5}\gain{22.5} & 34.0 & 66.0 & 50.0 & \mygreen{40.5}\gain{13.5} \\
+    \midrule
+    SimpleRL-reason~\citep{zeng2025simplerl} & 7B-Base & 16.7 & \underline{60.0} & \underline{33.0} & \underline{36.6} & \mygreen{45.0}\gain{15.0} & \underline{45.0} & 65.0 & 50.0 & \mygreen{40.5}\gain{13.5} \\
+    Open-Reasoner-Zero~\citep{hu2025open} & 7B-Base & 16.7 & 54.9 & 32.0 & 34.5 & \mygreen{51.0}\gain{17.0} & 34.0 & 54.0 & 44.0 & \mygreen{58.5}\gain{19.5} \\
+    General-Reasoner~\citep{ma2025general} & 7B-Base & 13.3 & 55.0 & \underline{33.0} & 33.8 & \mygreen{53.1}\gain{17.7} & 35.5 & 61.0 & 48.3 & \mygreen{45.6}\gain{15.2} \\
+    Luffy~\citep{yan2025learning} & 7B-Inst & \underline{30.7} & 44.8  & \underline{33.0} & 36.2 & \mygreen{45.9}\gain{15.3} & 34.0 & \underline{77.0} & \underline{55.5} & \mygreen{24.0}\gain{8.0} \\
+    \midrule
+    TIR~\citep{yang2024qwen2} & 7B-Inst & 10.0 & 50.0 & \underline{33.0} & 31.0 & \mygreen{61.5}\gain{20.5} & \underline{42.0} & \underline{76.8}  & \underline{59.4} & \mygreen{12.3}\gain{4.1} \\
+    ToRL~\citep{li2025torl} & 7B-Inst & \underline{20.0} & \underline{60.0} & 31.0 & \underline{37.0} & \mygreen{46.8}\gain{14.5} & 35.0 & 76.5 & 55.8 & \mygreen{24.1}\gain{7.7} \\
+    \midrule
+    AutoGen~\citep{wu2024autogen} & 7B-Inst & 13.3 & 57.5 & 24.0 & 31.6 & \mygreen{59.7}\gain{19.9} & 42.0 & 72.0 & 57.0 & \mygreen{19.5}\gain{6.5} \\
+    \midrule
+    \textbf{\model} & 7B-Inst & 16.7 & 47.4 & 31.0 & 31.7 & \mygreen{59.4}\gain{19.8} & 37.0 & 76.0 & 56.5 & \mygreen{21.0}\gain{7.0} \\
+    \textbf{\model} (w/ Flow-GRPO) & 7B-Inst & \textbf{40.0} & \textbf{61.5} & \textbf{53.0} & \textbf{51.5} & -- & \textbf{47.0} & \textbf{80.0} & \textbf{63.5} & -- \\
+    \bottomrule
+    \end{tabular}
+    } %
+    \vspace{-3mm}
+    \caption{\textbf{Accuracy comparison of mathematical and scientific reasoning tasks.}} 
+    \label{tab:main_table_math_science}
+    \vspace{-5mm}
+\end{table}

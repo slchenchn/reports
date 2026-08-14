@@ -1,0 +1,95 @@
+The comparison highlights the effectiveness of a multi-tool, systematic reasoning approach enabled by Flow-GRPO. In the success case, the model leveraged sequential tool usage—starting with Google Search, followed by targeted Wikipedia and Web Search—to accurately identify Gülçiçek Hatun as Olivera Despina's mother-in-law through verified historical sources. Each step built upon prior findings, ensuring robustness and precision. In contrast, the failure case without Flow-GRPO relied on a single, improperly executed Wikipedia query without task decomposition that resulted in a timeout and no meaningful output, leading to premature termination. This demonstrates that Flow-GRPO enhances reasoning trace reliability, tool coordination, and overall task completion in complex knowledge retrieval scenarios.
+
+\begin{custombox}[title=Example from \# 2Wiki]{toolcardborder}
+
+\textbf{Question:} Who is the mother-in-law of Olivera Despina?
+
+\vspace{1em}
+
+\textbf{Answer:} Gülçiçek Hatun
+\end{custombox}
+
+\begin{small}
+\begin{center}
+
+\begin{casebox}{successbg}{successframe}{Success Case: \model w/ Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Perform a Google search for ``Olivera Despina biography'' to find relevant information about her and possibly identify her husband's family members.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Olivera Despina biography", add\_citations=True)}
+        \item \textbf{Result:} \textcolor{orange}{Olivera Despina, also known as Mileva Olivera Lazarević or Despina Hatun, was a Serbian princess born around 1372. She was the youngest daughter of Prince Lazar of Serbia and Princess Milica. In 1389, shortly after the Battle of Kosovo, Olivera was given in marriage to the Ottoman Sultan Bayezid I as a peace offering between the Lazarević and Ottoman dynasties.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Identify any mention of Olivera's parents or in-laws in Wikipedia articles.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Who is the mother-in-law of Olivera Despina")}
+        \item \textbf{Result:} \textcolor{orange}{Returned pages about Bayezid I and other related historical figures, but no direct answer in relevant pages.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 3:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Perform a Google search to find more detailed biographical information about Olivera Despina and her family members.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Who is the mother-in-law of Olivera Despina")}
+        \item \textbf{Result:} \textcolor{orange}{Olivera Despina's mother-in-law was Gülçiçek Hatun. Olivera Despina was a Serbian princess who married Ottoman Sultan Bayezid I after the Battle of Kosovo in 1389. Gülçiçek Hatun was the first wife of Sultan Murad I and the mother of Bayezid I.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator:} \textcolor{successframe}{Multi-tool verification approach successfully identified \textbf{Gülçiçek Hatun} as Olivera Despina's mother-in-law through systematic research.}
+
+\end{casebox}
+
+\begin{casebox}{failbg}{failframe}{Failure Case: \model w/o Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Search for information about the film ``Pugachev'' (1978) and identify the director and any awards they received.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="What is the award that the director of film Pugachev (1978 Film) received?", add\_citations=True)}
+        \item \textbf{Result:} \textcolor{red}{Alexey Saltykov, the director of the 1978 film ``Pugachev,'' received the title of People's Artist of the RSFSR in 1980 and the Order of the Badge of Honour for his contributions to cinema. While the film ``Pugachev'' itself was honored with a special prize at the All-Union Film Festival in 1979, this award was given to the film rather than specifically to Saltykov for his direction of it.}
+        \item \textit{Note: This step shows the agent working on a completely different question than asked.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve information about the personal awards received by Alexey Saltykov for directing the film ``Pugachev'' (1978).
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Alexey Saltykov awards for Pugachev 1978")}
+        \item \textbf{Result:} \textcolor{red}{Returned pages about "Alexey Saltykov (director)", "Catherine the Great", and "Imperial Russian Army" but no relevant information about the original question.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{red}{STOP - Agent worked on wrong question, no useful information gathered for original query}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator:} \textcolor{red}{Tool attempts failed to address the actual question about Olivera Despina's mother-in-law. The agent became confused and worked on an unrelated question about the Pugachev film director.}
+
+\end{casebox}
+
+\end{center}
+\end{small}

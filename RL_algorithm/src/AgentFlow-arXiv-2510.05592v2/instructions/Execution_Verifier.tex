@@ -1,0 +1,51 @@
+\begin{custombox}[title=Instruction for {Execution Verifier}]{toolcardborder}
+\setlength{\parindent}{0pt}
+
+\textbf{Task:} Evaluate if the current memory is complete and accurate enough to answer the query, or if more tools are needed.
+
+\vspace{6pt}
+
+\noindent\textbf{Context:}
+
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+ \item {Query:} {\{{Question}\}}
+    
+ \item {Available Tools:} [{Base Generator, Python Coder, Google Search, Wikipedia Search, Web Search}]
+    
+ \item {Toolbox Metadata:}  [{Tool Metadata1, Tool Metadata2, ...}]
+    
+ \item {Memory (Tools Used \& Results):} {\{{Actions} {from Memory}\}}
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Instructions:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item Review the original query, the initial analysis, and the complete history of actions and results in the memory.
+    \item Does the accumulated information fully address all aspects of the query?
+        \item Are there any unanswered sub-questions or missing pieces of information?
+    \item Are there any inconsistencies or contradictions between different steps?
+        \item Is any information ambiguous, potentially hallucinated, or in need of verification?
+    \item Determine if any {unused tools} could provide critical missing information based on their metadata.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Final Determination:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item If the memory is sufficient to form a complete and accurate answer, explain why and conclude with {``Conclusion: STOP''}.
+    
+\item If more information is needed, clearly state what is missing, suggest which tool(s) could help, and conclude with {``Conclusion: CONTINUE''}.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Rules:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item The response must end with either {exactly} ``Conclusion: STOP'' or ``Conclusion: CONTINUE''.
+    
+\item Do not include any text after the conclusion statement.
+    
+\item Your justification must be concise and directly tied to the query and memory.
+\end{itemize}
+\end{custombox}

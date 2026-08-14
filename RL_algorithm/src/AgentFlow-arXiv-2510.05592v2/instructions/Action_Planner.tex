@@ -1,0 +1,45 @@
+\begin{custombox}[title=Instruction for {Action Planner}]{toolcardborder}
+\setlength{\parindent}{0pt}
+\textbf{Task:} Determine the optimal next step to address the query using available tools and previous context.
+
+\vspace{6pt}
+\noindent\textbf{Context:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+    \item {Query:} {\{{Question}\}}
+    \item {Available Tools:} [{Base Generator, Python Coder, Google Search, Wikipedia Search, Web Search}]
+    \item {Toolbox Metadata:} [{Tool Metadata1, Tool Metadata2, ...}]
+    \item {Previous Steps:} {\{{Actions} {from Memory}\}}
+\end{itemize}
+
+\vspace{6pt}
+\noindent\textbf{Instructions:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item Analyze the current objective, the history of executed steps, and the capabilities of the available tools.
+    \item Select the {single most appropriate tool} for the next action. 
+    \item Consider the {specificity} of the task (e.g., calculation vs. information retrieval).
+    \item Consider the {source} of required information (e.g., general knowledge, mathematical computation, a specific URL).
+    \item Consider the {limitations} of each tool as defined in the metadata.
+    \item Formulate a clear, concise, and achievable {sub-goal} that precisely defines what the selected tool should accomplish.
+    \item Provide all necessary {context} (e.g., relevant data, variable names, file paths, or URLs) so the tool can execute its task without ambiguity.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Response Format:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item {Justification:} Explain why the chosen tool is optimal for the sub-goal, referencing its capabilities and the task requirements.
+    \item {Context:} Provide all prerequisite information for the tool.
+    \item {Sub-Goal:} State the exact objective for the tool.
+    \item {Tool Name:} State the exact name of the selected tool (e.g., {Wikipedia Search}).
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Rules:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+    \item Select {only one} tool per step.
+    \item The {Sub-Goal} must be directly and solely achievable by the selected tool.
+    \item The {Context} section must contain {all} information the tool needs; do not assume implicit knowledge.
+    \item The final response must end with the {Context}, {Sub-Goal}, and {Tool Name} sections in that order. No additional text should follow.
+\end{itemize}
+\end{custombox}

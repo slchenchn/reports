@@ -1,0 +1,35 @@
+\begin{custombox}[title=Reward Function Instruction in Training]{toolcardborder}
+\setlength{\parindent}{0pt}
+
+\textbf{Task:} Determine if the Model Response is equivalent to the Ground Truth.
+
+\vspace{6pt}
+
+\noindent\textbf{Instructions:}
+\begin{enumerate}[left=0pt]
+    \item \textbf{Extract:} Isolate the final answer from the Model Response, ignoring all reasoning steps. Look specifically for content within \boxed{...} or the concluding statement.
+    \item \textbf{Normalize \& Compare:} Assess equivalence after normalization:
+    \item \textbf{Mathematical Answers:} Must be mathematically identical (e.g., $\frac{1}{2}$ is equivalent to $0.5$).
+        \item \textbf{Numerical/Textual Answers:} Ignore formatting (commas, spaces), case sensitivity, and extraneous units/currency (e.g., ``1,000'' == ``1000'', ``Paris'' == ``PARIS'').
+        \item \textbf{Multiple Choice Questions (MCQ):} The answer must match either the correct option's content (e.g., ``Paris'') or its identifier (e.g., ``A'' or ``1st'').
+    \item \textbf{Verdict:} Return ``True'' only if the normalized answers are semantically or mathematically equivalent.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Inputs:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item {Question:} {\{{Question}\}}
+
+    \item {Model Response:} {\{{Final Response} {from Solution Generator}\}}
+
+   \item {Ground Truth:} {\{{GT}\}}
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Output Format:}
+Present your response in the following structured format. Do not include any extra text or explanations.
+\textless{}\texttt{analysis}\textgreater{}: Brief analysis of the comparison.\\
+\textless{}\texttt{true\_false}\textgreater{}: ``True'' or ``False''.
+\end{custombox}

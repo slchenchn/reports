@@ -1,0 +1,39 @@
+\begin{algorithm}
+\caption{In-the-Flow Optimization for \model}
+\label{alg:agentflow}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $\mathcal{D}$, Action Planner policy $\pi_\theta$, Tool Executor $\mathcal{E}$, Executive Verifier $\mathcal{V}$, Solution Generator $\mathcal{G}$, Toolset $K$, and Shared Evolving Memory ${M}$
+
+
+\ENSURE Optimized Action Planner parameters $\theta^\star$
+
+\FOR{each training iteration}
+
+    \FOR{each query–label pair $(q, y^*) \sim \mathcal{D}$}
+    
+    \STATE \textbf{\textsc{1. In-the-Flow Rollout Generation}}
+    \STATE Initialize: $t \leftarrow 1$, $M^t \leftarrow q$
+
+    \REPEAT
+        \STATE $a^{t} \sim \pi_\theta(a^t \mid q, K, M^{t})$ \COMMENT{\textit{Plan Action}} \
+        \STATE $e^{t} \sim \mathcal{E}(e^t \mid a^{t}, K)$ \ \COMMENT{\textit{Execute Action}}
+        \STATE $v^{t} \sim \mathcal{V}(v^{t} \mid q, e^{t}, M^{t})$ \COMMENT{\textit{Verify Result}}
+        \STATE $M^{t+1} = f_{\text{mem}}\!(M^t, a^t, e^t, v^t)$ \COMMENT{\textit{Update Memory}} 
+        \STATE $t \leftarrow t + 1$
+    \UNTIL{termination condition met}
+    
+    \STATE $o \sim \mathcal{G}(o \mid q, M^T)$ \COMMENT{\textit{Generate Final Solution}}
+
+    \STATE \textbf{\textsc{2. Reward Computation}}
+    
+    \STATE $R(a^t) = \bar{R}(o, q, y^*), \quad \forall t = 1,\dots,T$
+
+
+\STATE \textbf{\textsc{3. Policy Update}}
+\STATE Update the Action Planner policy $\pi_\theta$ by maximizing the Flow-GRPO objective (Eq. \ref{eq:Flow-GRPO_objective})
+    \ENDFOR
+\ENDFOR
+
+\RETURN optimized parameters $\theta^\star$
+\end{algorithmic}
+\end{algorithm}

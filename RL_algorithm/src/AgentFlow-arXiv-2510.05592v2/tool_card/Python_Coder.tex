@@ -1,0 +1,78 @@
+
+
+
+\begin{tooldescbox}{{Python Coder}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+\textbf{Description:} A tool that generates and executes simple Python code snippets for basic arithmetical calculations and math-related problems. The generated code runs in a highly restricted environment with only basic mathematical operations available.
+
+\vspace{6pt}
+
+\inputtype{query: str - A clear, specific description of the arithmetic calculation or math problem to be solved, including any necessary numerical inputs.}
+
+\vspace{4pt}
+
+\outputtype{dict - A dictionary containing the generated code, calculation result, and any error messages.}
+
+\textbf{Output prompt:} Given a query, generate a Python code snippet that performs the specified operation on the provided data. Please think step by step. Ensure to break down the process into clear, logical steps. Make sure to print the final result in the generated code snippet with a descriptive message explaining what the output represents. The final output should be presented in the following format:
+\begin{simplecode}
+{\verb|```| python
+
+<code snippet>
+
+\verb|```| }
+\end{simplecode}
+
+\vspace{6pt}
+
+\textbf{Demo Commands:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item \textbf{Command:} 
+
+\begin{simplecode}
+{execution = tool.execute(query="Find the sum of prime numbers up to 50")}
+\end{simplecode}
+
+\enspace\text{Description:} Generate a Python code snippet to find the sum of prime numbers up to 50.
+    
+\vspace{4pt}
+    
+\item \textbf{Command:} 
+\begin{simplecode}
+{{query=" Given the list [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], calculate the sum of squares of odd numbers”\\
+execution = tool.execute(query=query)}}
+\end{simplecode}
+    
+\enspace\text{Description:} Generate a Python function for a mathematical operation on a given list of numbers.
+\end{itemize}
+
+\begin{limitationbox}
+\begin{toolenum}
+    \item Restricted to basic Python arithmetic operations and built-in mathematical functions.
+    \item Cannot use any external libraries or modules, including those in the Python standard library.
+    \item Limited to simple mathematical calculations and problems.
+    \item Cannot perform any string processing, data structure manipulation, or complex algorithms.
+    \item No access to any system resources, file operations, or network requests.
+    \item Cannot use `import' statements.
+    \item All calculations must be self-contained within a single function or script.
+    \item Input must be provided directly in the query string.
+    \item Output is limited to numerical results or simple lists/tuples of numbers.
+    \item Output should be kept to a single numerical result or a simple list/tuple of numbers.
+    \item DO NOT generate loop output.
+\end{toolenum}
+\end{limitationbox}
+
+\begin{bestpracticebox}
+\begin{toolenum}
+    \item Provide clear and specific queries that describe the desired mathematical calculation.
+    \item Include all necessary numerical inputs directly in the query string.
+    \item Keep tasks focused on basic arithmetic, algebraic calculations, or simple algorithms.
+    \item Ensure all required numerical data is included in the query.
+    \item Verify that the query only involves mathematical operations and does not require any data processing or complex algorithms.
+    \item Review generated code to ensure it only uses basic Python arithmetic operations and built-in math functions.
+\end{toolenum}
+\end{bestpracticebox}
+
+\textbf{LLM Engine Required:} True
+\end{tooldescbox}

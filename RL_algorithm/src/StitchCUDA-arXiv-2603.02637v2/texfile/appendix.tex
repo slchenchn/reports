@@ -1,0 +1,1026 @@
+\newpage
+\appendix
+\onecolumn
+\section{KernelBench Modification.}
+\label{app:bench}
+We use KernelBench~\cite{kernelbench} as our training environment (80\% tasks) and testing environment(20\% tasks). During training, we identified limitations in the original KernelBench and addressed them manually. These issues can lead to misleading results in evaluation, we show an example as following.
+
+Level2 task 80, which contains 4 kernels. The original model applies a linear projection (GEMM via \texttt{nn.Linear}) to the input, then reduces by taking the maximum along a specified feature dimension (with keepdim=True, yielding a single value per sample when reducing over the feature axis). It then mean-centers the reduced tensor by subtracting the mean computed along dimension 1, and finally applies a GELU to produce the output.
+
+However, after the max-reduction, the tensor collapses from shape $(B, O)$ to $(B,1)$:
+\[
+x = \max_{j \in \{1,\dots,O\}} \tilde{x}_{:,j}, \qquad x \in \mathbb{R}^{B \times 1},
+\]
+where $\tilde{x} \in \mathbb{R}^{B \times O}$ is the output of the linear layer.
+
+For any sample $i \in \{1,\dots,B\}$, the $i$-th row contains a single scalar,
+\[
+x_i = [m_i] \in \mathbb{R}^{1}.
+\]
+Therefore, the mean over dimension $1$ equals the element itself:
+\[
+\mathrm{mean}(x_i) = m_i.
+\]
+The subsequent mean-centering step becomes
+\[
+x_i - \mathrm{mean}(x_i) = m_i - m_i = 0,
+\]
+so the tensor is identically zero:
+\[
+x - \mathrm{mean}(x, \mathrm{dim}=1) = \mathbf{0} \in \mathbb{R}^{B \times 1}.
+\]
+Finally, since $\mathrm{GELU}(0)=0$, the output remains all zeros, no matter what inputs and what size of inputs. 
+
+In this case, even the Coder gives a fault code and does not implement any of 4 kernels in this model, the output can be just correct because the correct answer is always a tensor with all 0 values. We even find that sometimes Planner can identified this bug and just tell Coder to implement a “fill-zero kernel” that just fills a tensor with 0 value. And the Verifier will eventually report a significant speedup. 
+
+In our experiments, we replace the hard $\max$ reduction with a $\mathrm{top}\text{-}k$ selection, so the model retains the $k$ largest feature values per sample instead of collapsing the feature dimension to a single scalar. Concretely, it changes the computation graph from
+\[
+\text{GEMM} \;\rightarrow\; \max(\mathrm{dim}=1) \;\rightarrow\; \text{mean-center on } \mathrm{dim}=1 \;\rightarrow\; \mathrm{GELU}
+\]
+to
+\[
+\text{GEMM} \;\rightarrow\; \mathrm{top}\text{-}k(\mathrm{dim}=1) \;\rightarrow\; \text{mean-center on } \mathrm{dim}=1 \;\rightarrow\; \mathrm{GELU}.
+\]
+
+This avoids the original issue because after $\mathrm{top}\text{-}k$, each row has $k>1$ elements (i.e., $x \in \mathbb{R}^{B \times k}$). Hence, the per-row mean is no longer trivially equal to the single retained element, and the mean-centering step does not degenerate to $x - x = 0$. Formally, for sample $i$,
+\[
+x_i = [v_{i,1}, \ldots, v_{i,k}] \in \mathbb{R}^k,\quad
+x_i - \frac{1}{k}\sum_{\ell=1}^k v_{i,\ell} \neq \mathbf{0}
+\]
+In general, the output will not deterministically be all zeros.
+Similar issues have been identified in the following tasks: Task 12, 85, 87 on Level 1; Task 80, 83 on Level 2; and Task 33, 41, 45, 50 on Level 3. We fix all of them manually before we collect RL training data and our evaluation.
+
+
+
+\section{Additional details in multi-agent framework}
+\subsection{Prompts and example outputs}
+\label{app:prompt}
+Here we show the prompts for our three agents separately. 
+
+\begin{tcolorbox}[mybox, title={Prompts for Planner}]
+\ttfamily
+\tiny
+\begin{verbatim}
+You are an expert CUDA performance engineer. 
+Your task is to analyze the PyTorch reference code and create an optimized CUDA implementation plan.
+
+## Goal
+Create a high-performance CUDA/C++ program that:
+1. Implements the SAME FUNCTIONALITY as the PyTorch reference (correctness is mandatory)
+2. Maximizes GPU utilization and minimizes latency
+3. Uses advanced optimization techniques (tiling, fusion, tensor cores, etc.)
+
+## Target Hardware
+**GPU:** $gpu_name (sm_120 architecture - Blackwell)
+- Tensor cores available (use XMMA/WMMA for matrix operations)
+- High memory bandwidth - optimize for coalesced access
+- Large shared memory - use for data reuse
+
+## PyTorch Reference Code
+```python
+$reference_code
+```
+
+## NSYS Profiling of Reference
+$profiling_summary
+
+## Your Task
+
+Analyze the reference code and create an optimization plan:
+
+1. **Understand the computation graph** - what operations are performed and in what order
+2. **Identify optimization opportunities**:
+   - Which operations can be fused? (e.g., conv+bias+relu, matmul+add)
+   - Which operations benefit from tensor cores? (matmul, conv with specific shapes)
+   - Where is memory bandwidth the bottleneck?
+   - What tiling strategies work best for the data sizes?
+3. **Plan the implementation** - specify each kernel with optimization details
+
+## Output JSON Format
+
+```json
+{
+  "project_name": "cuda_project",
+  "analysis": {
+    "operations": ["list all operations from reference code"],
+    "input_shapes": ["exact shapes from get_inputs()"],
+    "output_shape": "exact output shape",
+    "batch_size": "from reference code",
+    "total_weights": "total number of weight parameters",
+    "weight_specs": [
+      {"name": "layer.weight", "shape": [...], "size": N}
+    ],
+    "fusion_opportunities": [
+      {"ops": ["op1", "op2"], "reason": "why fuse"}
+    ],
+    "intermediate_buffers": [
+      {"name": "buffer_name", "shape": [...], "size_bytes": N}
+    ]
+  },
+  "kernel_specs": [
+    {
+      "function_name": "kernel_name",
+      "description": "what this kernel does",
+      "inputs": "input tensor specs with exact shapes",
+      "outputs": "output tensor specs with exact shapes",
+      "parameters": {"all parameters needed for this kernel"},
+      "use_library": "cuBLAS | CUTLASS | none",
+      "optimization_notes": "specific optimization strategy for this kernel"
+    }
+  ],
+  "execution_order": [
+    "1. kernel1: input -> intermediate1",
+    "2. kernel2: intermediate1 -> intermediate2",
+    "..."
+  ],
+  "optimization_strategy": {
+    "overall_approach": "high-level optimization strategy",
+    "memory_optimization": "how to minimize memory traffic",
+    "compute_optimization": "how to maximize compute utilization",
+    "fusion_plan": "which operations to fuse and why"
+  }
+}
+```
+
+## Optimization Principles
+
+1. **Analyze the specific model** - understand its unique characteristics
+2. **Identify bottlenecks** - is it memory-bound or compute-bound?
+3. **Plan fusions** - eliminate unnecessary memory round-trips
+4. **Choose right tools** - cuBLAS for GEMM, hand-written for custom ops
+5. **Use tensor cores** - when matrix dimensions are suitable (multiples of 8)
+6. **Optimize memory access** - coalescing, shared memory, tiling
+
+Output only the JSON.
+"""
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+\begin{tcolorbox}[mybox, title={Prompts for Verifier}]
+\ttfamily
+\tiny
+\begin{verbatim}
+You are a CUDA specialist. Your job is to analyze profiling results and provide optimization feedback.
+
+## Current Code Status
+- Iteration: $iteration
+- Compiled: $is_compiled
+- Correct Output: $is_correct
+- Speedup vs Baseline: ${speedup}x
+
+## Generated Code
+```python
+$generated_code
+```
+
+## Your Task
+
+**IMPORTANT: Profiling results (NSYS and NCU) are provided ABOVE this prompt. Analyze them directly.**
+
+### 1. Analyze Profiling Results
+
+### 2. Provide ONE Specific Optimization
+
+Based on the profiling data, identify the PRIMARY bottleneck and suggest ONE concrete fix.
+
+### 3. Provide Verification Feedback
+After analysis, provide structured feedback in JSON format:
+
+```json
+{
+  "verification_status": "pass" | "fail" | "needs_optimization",
+  "bottleneck_type": "memory-bound" | "compute-bound" | "low-occupancy" | "stall-issues" | "none",
+  "performance_issues": 
+    {
+      "bottleneck": "Description of bottleneck from profiling",
+      "evidence": "Specific metric values (e.g., dram__throughput: 85%)",
+      "optimization": "ONE specific optimization to address this"
+    },
+  "profiling_summary": {
+    "nsys_results": "Key findings from NSYS",
+    "ncu_results": "Key findings from NCU metrics",
+    "primary_bottleneck": "The main performance limiter"
+  },
+  "files_to_modify": 
+    {
+      "file_path": "kernel.cu",
+      "file_type": "cuda",
+      "changes_needed": "Description of what to change"
+    },
+  "next_steps": 
+    "ONE specific actionable optimization",
+  "routing_decision": "coding" | "next_task" | "final_test",
+  "routing_reasoning": "Brief explanation"
+}
+```
+
+**Routing Decision Guidelines:**
+- **"coding"**: Test failed, compilation error, or correctness issue → retry SAME task (provide feedback)
+- **"next_task"**: Test passed and kernel is correct → mark task complete, advance to NEXT task
+- **"final_test"**: ALL tasks in todo list completed → run final integration test
+
+**How to decide:**
+1. If test bench fails or code has errors → "coding"
+2. If test bench passes for current task AND more tasks remain → "next_task"
+3. If test bench passes for current task AND this is the LAST task → "final_test"
+
+**Important Guidelines:**
+- Be specific: Reference actual code, metrics, and line numbers
+- Prioritize: List issues from most to least critical
+- Be actionable: Every issue should have a clear suggested fix
+- Use profiling wisely: Don't profile if the issue is obvious from code review
+"""
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+
+
+
+
+\begin{tcolorbox}[mybox, title={Prompts for Coder}]
+\ttfamily
+\tiny
+\begin{verbatim}
+'''\
+You are a senior CUDA kernel optimization specialist.
+
+## MODE: Separate CUDA Files
+
+You are working on a project with SEPARATE CUDA source files, NOT inline code.
+
+## Current Task
+
+**Task Description:** $task_description
+**CUDA File:** $cuda_filename
+**Kernel Name:** $kernel_name
+**Expected Signature:** $kernel_signature
+**Data Type:** $dtype
+**Implementation Hint:** $implementation_hint
+
+**GPU Specifications:**
+$gpu_specs
+
+## Current File Contents
+
+The file `$cuda_filename` currently contains:
+
+```cuda
+$current_file_contents
+```
+
+## Your Job
+
+Implement ONLY the kernel in `$cuda_filename`. Output:
+
+1. The COMPLETE contents of `$cuda_filename` (with your implementation)
+2. NO other files (bindings.cpp, setup.py, etc. are already generated)
+3. NO Python code (ModelNew will be auto-generated)
+
+## Implementation Requirements
+
+### CRITICAL: You MUST implement a `__global__` kernel
+
+**ALWAYS write a `__global__` kernel function.** This is required for profiling.
+
+**Prefer custom kernels over library calls.** Custom kernels allow fine-grained optimization and profiling.
+
+
+**DO NOT** write a file with only host-side library calls and no `__global__` kernel.
+**DO NOT write fallback code** that uses generic library functions without optimization.
+
+## Output Format (STRICT)
+
+Output ONLY the CUDA code within code blocks:
+
+```cuda
+// Your complete implementation of $cuda_filename
+```
+
+NO explanations, NO additional text, ONLY the CUDA code.
+
+Begin!```
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+\subsection{RAG database building}
+\label{app:rag}
+In Fig.~\ref{fig:rag-database}, we curate a set of official NVIDIA CUDA library webpages, including tutorials and documentation for cuBLAS and CUTLASS, to serve as authoritative references for the Planner and Verifier agents. These sources provide up-to-date API specifications and usage guidance to support the Coder. Each webpage is retrieved and converted into text documents using LangChain’s \texttt{WebBaseLoader}. The resulting documents are segmented into overlapping chunks of 1000 tokens with a 100-token overlap to preserve contextual continuity across segments. We then encode each chunk using the \texttt{text-embedding-3-small} embedding model and store the resulting embeddings in a Chroma vector database for retrieval. Table~\ref{tab:rag} presents examples of official documentation and code snippets included in the RAG database.
+
+It is hard to quantitatively evaluate RAG's effects in our framework because we allow our agents to freely choose whether to use it in each inference. Only when the Verifier or Planner thinks it is necessary to search for something in the RAG database will they retrieve it. But we have observed some evidence that implies it is helpful. For example, when the Coder triggers a compile error with a cuBLAS API name, Verifier sometimes searches the RAG database to provide the correct API name, which helps the framework spend less time on minor errors. Without RAG, LLMs can rely only on knowledge gained from pre-training, which may lead to hallucinations during inference.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{pic/RAG-database.pdf}
+    \caption{Illustration of online documents processed into the database for RAG}
+    \label{fig:rag-database}
+    \vspace{-10pt}
+\end{figure}
+\begin{table}[h]
+\centering
+\begin{tabularx}{\linewidth}{|l|X|}
+\hline
+\textbf{Topic} & \textbf{URL} \\
+\hline
+CUDA-12.9 & \small \url{https://docs.nvidia.com/cuda/archive/12.9.0/} \\
+cuBLAS-12.9 & \small \url{https://docs.nvidia.com/cuda/archive/12.9.0/cublas/index.html} \\
+cuSPARSE-12.9 & \small \url{https://docs.nvidia.com/cuda/archive/12.9.0/cusparse/index.html} \\
+CUTLASS-4.3.5 & \small \small\url{https://docs.nvidia.com/cutlass/latest/} \\
+cuSPARSELt-0.8.1 & \small \small \small\url{https://docs.nvidia.com/cuda/cusparselt/index.html} \\
+Nvidia Blackwell Architecture Whitepaper & \small\url{https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf} \\
+Nvidia Hopper Architecture Whitepaper & \small\url{https://resources.nvidia.com/en-us-hopper-architecture/nvidia-h100-tensor-c} \\
+Blackwell SM100 GEMMs APIs & \small\url{https://docs.nvidia.com/cutlass/latest/media/docs/cpp/blackwell_functionality.html} \\
+Nsys Documentation & \small\url{https://docs.nvidia.com/nsight-systems/UserGuide/index.html} \\
+NCU Profiling Guide & \small\url{https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html}\\
+\hline
+\end{tabularx}
+\caption{Example official documentation topics and links}
+\label{tab:rag}
+\end{table}
+% \begin{table}[h]
+% \centering
+% \begin{tabular}{|l|l|}
+% \hline
+% \textbf{Topic} & \textbf{URL} \\
+% \hline
+% CUDA-12.9 & https://docs.nvidia.com/cuda/archive/12.9.0/ \\
+% cuBLAS-12.9 & https://docs.nvidia.com/cuda/archive/12.9.0/cublas/index.html \\
+% cuSPARSE-12.9 & https://docs.nvidia.com/cuda/archive/12.9.0/cusparse/index.html \\
+% CUTLASS-4.3.5 & https://docs.nvidia.com/cutlass/latest/ \\
+% cuSPARSELt-0.8.1 & https://docs.nvidia.com/cuda/cusparselt/index.html \\
+% Nvidia Blackwell Architecture Whitepaper & https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf \\
+% Nvidia Hopper Architecture Whitepaper & https://resources.nvidia.com/en-us-hopper-architecture/nvidia-h100-tensor-c \\
+% Blackwell SM100 GEMMs APIs & https://docs.nvidia.com/cutlass/latest/media/docs/cpp/blackwell\_functionality.html \\
+% \hline
+% \end{tabular}
+% \caption{Example official documentations topics and links}
+% \label{tab:rag}
+% \end{table}
+
+
+
+
+
+
+\section{Additional details in rubric-based agentic reinforcement learning}
+\label{app:rl}
+\subsection{Challenges of RL for CUDA generation and rubric reward design}
+
+Existing RL-based methods are vulnerable to reward hacking and degenerate behaviors. In this section, we will provide some cases of reward hacking/degenerate behaviors and demonstrate how we use the rubric reward to mitigate these challenges.
+
+\subsubsection{Challenges of reward hacking}
+\label{app:rewardhack}
+Reward hacking refers to behaviors that maximize a specified reward by exploiting loopholes in the reward or evaluation procedure, yielding high reward but poor alignment with the intended task objective. In the domain of CUDA generation, a common rule-based reward design is the following formulation from Kevin-32B~\cite{kevin}, combining functional correctness and speedup:
+$$
+\label{kevinreward}
+S = 0.3 \cdot \mathbf{1}_{\{\text{correct}\}} + \frac{T_{\text{baseline}}}{T_{\text{kernel}}}  \cdot \mathbf{1}_{\{\text{correct}\}}
+$$
+Functional correctness is checked against the reference PyTorch implementation when tested with randomized inputs; speedup is computed as the ratio of the PyTorch baseline time to the custom “kernel” runtime. 
+
+However, this reward design could lead to reward hacking, as LLMs could directly generate PyTorch-only code and achieve a high reward, which is much easier for them on difficult tasks than writing complex custom kernels. Eventually, LLMs learn it via RL and try to hack KernelBench during evaluation, producing “kernels” with a high success rate and high speedup, but without CUDA code. Here we provide a case of Kevin-32B's hacking behavior in Kernelbench Level 1 Task 59, and the “kernel” Kevin-32B generated is:
+
+\begin{tcolorbox}[mybox, title={Level 1 Task 59 — Reported $1.004\times$ Speedup}]
+\ttfamily
+\tiny
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+class ModelNew(nn.Module):
+    def __init__(self, in_channels, out_channels, 
+    kernel_size, stride=(1, 1, 1), padding=(0, 0, 0), 
+    output_padding=(0, 0, 0), groups=1, bias=False):
+        super(ModelNew, self).__init__()
+        self.conv_transpose3d = nn.ConvTranspose3d(
+            in_channels, out_channels, kernel_size,
+            stride=stride, padding=padding, output_padding=output_padding,
+            groups=groups, bias=bias, 
+            # dtype=torch.float16 if using FP16, but kept as default here
+        )
+
+    def forward(self, x):
+        return self.conv_transpose3d(x)
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+The model basically just copies the original code with only one additional comment. Although in the paper of Kevin-32B, the authors claim that they use “format checks” to “assign 0 reward to responses with no PyTorch
+functional operators”. However, the results show that they fail to effectively avoid reward hacking, as shown in the case above and in the experimental results in Section~\ref{sec:hack}. 
+
+Similar results are also found in CUDA-L1's official GitHub repo, as they report the Level 1 Task 12  as "64.4x speedup", where the model just switch another implementation method with PyTorch API:
+\begin{tcolorbox}[redbox, title={Level 1 Task 12 — Reported $64.4\times$ Speedup by CUDA-L1}]
+\tiny
+\ttfamily
+\begin{verbatim}
+# diag_mm_compare.py
+import time
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# -------------------------------
+# Reference implementation
+# -------------------------------
+class Model(nn.Module):
+    """
+    Simple model that performs a matrix multiplication of a diagonal matrix 
+    with another matrix.
+    C = diag(A) * B
+    """
+    def __init__(self):
+        super(Model, self).__init__()
+
+    def forward(self, A, B):
+        """
+        Args:
+            A (torch.Tensor): 1D tensor, diagonal entries. Shape: (N,)
+            B (torch.Tensor): 2D tensor. Shape: (N, M)
+        Returns:
+            torch.Tensor: (N, M)
+        """
+        return torch.diag(A) @ B
+
+
+# -------------------------------
+# Optimized implementation
+# -------------------------------
+class ModelNew(nn.Module):
+    """
+    Optimized model that performs a matrix multiplication of a diagonal matrix
+    with another matrix.
+    C = diag(A) * B
+    """
+    def __init__(self):
+        super(ModelNew, self).__init__()
+
+    def forward(self, A, B):
+        """
+        Args:
+            A (torch.Tensor): 1D tensor, diagonal entries. Shape: (N,)
+            B (torch.Tensor): 2D tensor. Shape: (N, M)
+        Returns:
+            torch.Tensor: (N, M)
+        """
+        # Equivalent to torch.diag(A) @ B, but avoids forming the full diagonal 
+        matrix
+        return B * A.unsqueeze(1)
+
+
+# -------------------------------
+# Hyperparameters & inputs
+# -------------------------------
+M = 4096
+N = 4096
+
+def get_inputs(device=None, dtype=torch.float32):
+    A = torch.randn(N, device=device, dtype=dtype)
+    B = torch.randn(N, M, device=device, dtype=dtype)
+    return [A, B]
+
+def get_init_inputs():
+    return []  # No special initialization inputs needed
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+Why do they fail to avoid reward hacking? Taking Kevin-32B as an example, we empirically attribute it to two reasons: First, the anti-hacking mechanism fails to detect reward hacking. Using “format checks” to “assign 0 reward to responses with any PyTorch
+functional operators” faces a trade-off---A strict check may assign 0 reward to correct kernels, as \textbf{correct ones may also contain partial PyTorch functional operators in multi-kernel tasks}, while a loose check will omit some reward hacking behaviors. Second, because the “format checks” may omit some hacking kernels, the LLM will learn to reward hacking. Unfortunately, rewards for these hacked kernels are usually higher than those for custom-implemented kernels, as shown in the two cases above. Thus, the model's behavior will be sufficiently changed to the hacking behavior. 
+
+We address this challenge through a rubric-based reward, using an advanced LLM to follow expert-designed rubrics and detect reward hacking. In our early experiments, we found that it is a more robust mechanism compared with “format checks”. And the result in Section~\ref{sec:hack} supports its effectiveness. Details of rubrics are in the following Section~\ref{app:rubric}. 
+
+In addition, we find that \textbf{reward clipping is also very useful}, as the $R_{\max}$ shown in Formulation~\ref{eq:final_reward}. It not only helps avoid training collapse but also helps avoid reward hacking — even if some hacking kernels pass detection, their extremely high rewards will not affect RL training much, since rewards are clipped to a reasonable range.  
+
+\subsubsection{challenges of degenerate behavior}
+\label{app:fear}
+Besides reward hacking, another challenge in RL training is the emergence of degenerate behaviors. Degenerate behaviors mean that LLM only modifies a trivial part of the reference code(e.g., only replacing a trivial operator such as a standalone \texttt{ReLU} in a Neural Network) or generates too conservative implementations(e.g., a correct but 0.001x speedup kernel). It is also a result of the rule-based reward design. Taking the reward of Kevin-32B in ~\ref{kevinreward} as an example, the reward is positive only when the LLMs generate a correct kernel. That means a correct but very low-speed kernel will score higher than a well-optimized kernel with minor errors. Considering the CUDA code generation is hard for current LLMs~\cite{kernelbench} that they do not have the capability to frequently generate high-speed and correct kernels during RL, model's behavior will be pushed to a direction where \textbf{the model prefers low-speed conservative but correct kernels}, or \textbf{only modifies a trivial part in reference code to ensure correctness}. As a result, the model will generate very conservative implementations in practice. We provide a case of Kevin-32B in KernelBench Level 2 task 1, where models are required to customize a PyTorch implementation with Conv2D, ReLU, and Bias:
+
+
+\begin{tcolorbox}[mybox, title={Level 2 Task 1 — Reported $1.05\times$ Speedup}]
+\ttfamily
+\tiny
+\begin{verbatim}
+import torch
+import torch.nn as nn
+from torch.utils.cpp_extension import load_inline
+
+relu_bias_source = """
+#include <torch/extension.h>
+#include <cuda_runtime.h>
+
+__global__ void relu_bias_kernel(const float* input, 
+const float* bias, float* output, int total_elements, int channels, int 
+spatial_size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= total_elements) return;
+    int c = (idx / spatial_size) % channels;
+    float val = input[idx];
+    val = fmaxf(val, 0.0f);
+    val += bias[c];
+    output[idx] = val;
+}
+
+torch::Tensor relu_bias_cuda(torch::Tensor input, torch::Tensor bias, 
+int spatial_size, int channels) {
+    auto total_elements = input.numel();
+    auto output = torch::empty_like(input);
+    const int block_size = 256;
+    const int num_blocks = (total_elements + block_size - 1) / block_size;
+    relu_bias_kernel<<<num_blocks, block_size>>>
+    (input.data_ptr<float>(), bias.data_ptr<float>(), 
+    output.data_ptr<float>(), total_elements, channels, spatial_size);
+    return output;
+}
+"""
+
+relu_bias_header = """
+torch::Tensor relu_bias_cuda(torch::Tensor input, torch::Tensor bias, 
+int spatial_size, int channels);
+"""
+
+relu_bias = load_inline(
+    name="relu_bias",
+    cpp_sources=relu_bias_header,
+    cuda_sources=relu_bias_source,
+    functions=["relu_bias_cuda"],
+    verbose=True
+)
+
+class ModelNew(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, bias_shape):
+        super(ModelNew, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size)
+        self.bias = nn.Parameter(torch.randn(bias_shape))
+        self.relu_bias = relu_bias
+
+    def forward(self, x):
+        x = self.conv(x)
+        spatial_size = x.size(2) * x.size(3)
+        channels = x.size(1)
+        bias_1d = self.bias.view(-1)
+        x = self.relu_bias.relu_bias_cuda(x, bias_1d, spatial_size, channels)
+        return x
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+
+Although it gets 1.10x speedup in the benchmark, it is not a very meaningful implementation in practice: the main bottleneck in the PyTorch code is Conv2D. Optimization in Conv2D will bring more practical value, but the RL-based model does not achieve that, even though it is prompted to implement it by the verifier's feedback.
+
+Promising methods to address this issue are to modify the reward design in two directions: encourage more aggressive optimization or punish overly conservative implementations. For the former, more advanced CUDA techniques used in implementation should be given a higher reward. For the latter, only “writing a ReLU” should be given a lower reward. The goal of the two reward design directions could be achieved by a rubric reward at the same time. We use expert designed rubric reward to encourage more advanced techniques and broader operations coverage. The result in Section~\ref{sec:main_result} supports our method, for our model gets the best or the second best speedup in evaluation, which even outperforms advanced GPT-5.2. 
+
+\subsection{Case study of StitchCUDA}
+\label{app:case}
+It is difficult to quantitatively analyze “how many kernels should cover” or “how many advanced techniques we can use” in practice. But here we provide a case code generated by our method during iterations on Level 3 Task 44, to demonstrate how it performs in practice:
+
+\begin{tcolorbox}[mybox, title={our model in Level 3 Task 44 — Reported 3.75 $\times$ Speedup}]
+\ttfamily
+\tiny
+\begin{verbatim}
+# <complete ModelNew code>
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.cpp_extension import load_inline
+
+# ---- Custom CUDA: cuBLASLt fused GEMM epilogues (FP16) with cached Lt objects/algo + persistent workspace ----
+cublaslt_fused_ext = load_inline(
+    name="cublaslt_fused_ext",
+    cpp_sources=r"""
+#include <torch/extension.h>
+
+torch::Tensor fc_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes);
+torch::Tensor fc_gelu_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes);
+torch::Tensor fc_relu_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes);
+
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.def("fc_bias_forward", &fc_bias_forward, "FC + Bias (cuBLASLt, CUDA)");
+  m.def("fc_gelu_bias_forward", &fc_gelu_bias_forward, "FC + Bias + GELU (cuBLASLt, CUDA)");
+  m.def("fc_relu_bias_forward", &fc_relu_bias_forward, "FC + Bias + ReLU (cuBLASLt, CUDA)");
+}
+""",
+    cuda_sources=r"""
+#include <torch/extension.h>
+#include <ATen/cuda/CUDAContext.h>
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+#include <cublasLt.h>
+#include <cublas_v2.h>
+
+#include <unordered_map>
+#include <mutex>
+#include <cstdint>
+
+static inline void checkLt(cublasStatus_t status, const char* msg) {
+  TORCH_CHECK(status == CUBLAS_STATUS_SUCCESS, msg, " (cublas status=", (int)status, ")");
+}
+static inline void checkCuda(cudaError_t e, const char* msg) {
+  TORCH_CHECK(e == cudaSuccess, msg, " (cuda err=", (int)e, " ", cudaGetErrorString(e), ")");
+}
+
+struct Key {
+  int M, N, K;
+  int epi;
+  int64_t workspace;
+  bool operator==(const Key& o) const {
+    return M == o.M && N == o.N && K == o.K && epi == o.epi && workspace == o.workspace;
+  }
+};
+struct KeyHash {
+  size_t operator()(const Key& k) const noexcept {
+    uint64_t h = 1469598103934665603ull;
+    auto mix = [&](uint64_t v) {
+      h ^= v + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+    };
+    mix((uint64_t)k.M);
+    mix((uint64_t)k.N);
+    mix((uint64_t)k.K);
+    mix((uint64_t)k.epi);
+    mix((uint64_t)k.workspace);
+    return (size_t)h;
+  }
+};
+
+struct CacheEntry {
+  cublasLtMatmulDesc_t matmulDesc = nullptr;
+  cublasLtMatrixLayout_t Adesc = nullptr;
+  cublasLtMatrixLayout_t Bdesc = nullptr;
+  cublasLtMatrixLayout_t Cdesc = nullptr;
+  cublasLtMatmulPreference_t pref = nullptr;
+  cublasLtMatmulHeuristicResult_t heur{};
+  bool valid = false;
+};
+
+static std::mutex g_mutex;
+static cublasLtHandle_t g_ltHandle = nullptr;
+static std::unordered_map<Key, CacheEntry, KeyHash> g_cache;
+
+// Persistent workspace per CUDA stream
+struct WS {
+  void* ptr = nullptr;
+  size_t bytes = 0;
+};
+static std::unordered_map<uint64_t, WS> g_ws_by_stream;
+
+static cublasLtHandle_t getHandle() {
+  if (g_ltHandle) return g_ltHandle;
+  std::lock_guard<std::mutex> lock(g_mutex);
+  if (!g_ltHandle) {
+    checkLt(cublasLtCreate(&g_ltHandle), "cublasLtCreate failed");
+  }
+  return g_ltHandle;
+}
+
+static WS getWorkspaceForStream(cudaStream_t stream, size_t bytes_required) {
+  // Key by stream handle value
+  uint64_t sid = (uint64_t)(uintptr_t)stream;
+  std::lock_guard<std::mutex> lock(g_mutex);
+  WS& ws = g_ws_by_stream[sid];
+  if (bytes_required == 0) return ws;
+  if (ws.ptr == nullptr || ws.bytes < bytes_required) {
+    // (Re)allocate larger buffer; keep old one allocated to avoid sync/free complications.
+    void* new_ptr = nullptr;
+    checkCuda(cudaMalloc(&new_ptr, bytes_required), "cudaMalloc persistent workspace failed");
+    ws.ptr = new_ptr;
+    ws.bytes = bytes_required;
+  }
+  return ws;
+}
+
+// Column-major interpretation trick:
+// A points to w row-major [N,K] interpreted as col-major [K,N], op(A)=T => [N,K]
+// B points to x row-major [M,K] interpreted as col-major [K,M], op(B)=N => [K,M]
+// C points to y row-major [M,N] interpreted as col-major [N,M]
+static CacheEntry buildEntry(int M, int N, int K, cublasLtEpilogue_t epi, int64_t workspace_bytes) {
+  CacheEntry entry;
+  cublasLtHandle_t ltHandle = getHandle();
+
+  checkLt(cublasLtMatmulDescCreate(&entry.matmulDesc, CUBLAS_COMPUTE_32F, CUDA_R_32F),
+          "cublasLtMatmulDescCreate failed");
+
+  cublasOperation_t transA = CUBLAS_OP_T;
+  cublasOperation_t transB = CUBLAS_OP_N;
+  checkLt(cublasLtMatmulDescSetAttribute(entry.matmulDesc, CUBLASLT_MATMUL_DESC_TRANSA, &transA, sizeof(transA)),
+          "set TRANSA failed");
+  checkLt(cublasLtMatmulDescSetAttribute(entry.matmulDesc, CUBLASLT_MATMUL_DESC_TRANSB, &transB, sizeof(transB)),
+          "set TRANSB failed");
+  checkLt(cublasLtMatmulDescSetAttribute(entry.matmulDesc, CUBLASLT_MATMUL_DESC_EPILOGUE, &epi, sizeof(epi)),
+          "set EPILOGUE failed");
+
+  const int64_t lda = K, ldb = K, ldc = N;
+  checkLt(cublasLtMatrixLayoutCreate(&entry.Adesc, CUDA_R_16F, K, N, lda), "create Adesc failed");
+  checkLt(cublasLtMatrixLayoutCreate(&entry.Bdesc, CUDA_R_16F, K, M, ldb), "create Bdesc failed");
+  checkLt(cublasLtMatrixLayoutCreate(&entry.Cdesc, CUDA_R_16F, N, M, ldc), "create Cdesc failed");
+
+  checkLt(cublasLtMatmulPreferenceCreate(&entry.pref), "preferenceCreate failed");
+  size_t wsize = (workspace_bytes > 0) ? (size_t)workspace_bytes : (size_t)0;
+  checkLt(cublasLtMatmulPreferenceSetAttribute(entry.pref, CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES, &wsize, sizeof(wsize)),
+          "set workspace pref failed");
+
+  int returned = 0;
+  checkLt(cublasLtMatmulAlgoGetHeuristic(
+              ltHandle, entry.matmulDesc, entry.Adesc, entry.Bdesc, entry.Cdesc, entry.Cdesc,
+              entry.pref, 1, &entry.heur, &returned),
+          "algoGetHeuristic failed");
+  TORCH_CHECK(returned > 0, "cuBLASLt: no heuristic algorithm found for requested epilogue/config");
+  entry.valid = true;
+  return entry;
+}
+
+static CacheEntry& getOrCreate(int M, int N, int K, cublasLtEpilogue_t epi, int64_t workspace_bytes) {
+  Key key{M, N, K, (int)epi, workspace_bytes};
+  {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    auto it = g_cache.find(key);
+    if (it != g_cache.end() && it->second.valid) return it->second;
+  }
+
+  CacheEntry entry = buildEntry(M, N, K, epi, workspace_bytes);
+
+  std::lock_guard<std::mutex> lock(g_mutex);
+  auto [it, inserted] = g_cache.emplace(key, entry);
+  if (!inserted) it->second = entry;
+  return it->second;
+}
+
+static torch::Tensor fc_epilogue_impl(torch::Tensor x, torch::Tensor w, torch::Tensor b,
+                                      cublasLtEpilogue_t epi, int64_t workspace_bytes) {
+  TORCH_CHECK(x.is_cuda() && w.is_cuda() && b.is_cuda(), "inputs must be CUDA");
+  TORCH_CHECK(x.is_contiguous(), "x must be contiguous");
+  TORCH_CHECK(w.is_contiguous(), "w must be contiguous");
+  TORCH_CHECK(b.is_contiguous(), "b must be contiguous");
+  TORCH_CHECK(x.scalar_type() == at::kHalf, "x must be float16");
+  TORCH_CHECK(w.scalar_type() == at::kHalf, "w must be float16");
+  TORCH_CHECK(b.scalar_type() == at::kHalf, "b must be float16");
+  TORCH_CHECK(x.dim() == 2, "x must be 2D [M, K]");
+  TORCH_CHECK(w.dim() == 2, "w must be 2D [N, K]");
+  TORCH_CHECK(b.dim() == 1, "b must be 1D [N]");
+
+  const int64_t M64 = x.size(0), K64 = x.size(1), N64 = w.size(0);
+  TORCH_CHECK(w.size(1) == K64, "w shape mismatch");
+  TORCH_CHECK(b.size(0) == N64, "b shape mismatch");
+  TORCH_CHECK(M64 <= INT_MAX && N64 <= INT_MAX && K64 <= INT_MAX, "dims too large");
+  int M = (int)M64, N = (int)N64, K = (int)K64;
+
+  auto y = torch::empty({M64, N64}, x.options());
+
+  CacheEntry& ce = getOrCreate(M, N, K, epi, workspace_bytes);
+
+  // Bias pointer is per-call
+  void* biasPtr = (void*)b.data_ptr<at::Half>();
+  checkLt(cublasLtMatmulDescSetAttribute(ce.matmulDesc, CUBLASLT_MATMUL_DESC_BIAS_POINTER, &biasPtr, sizeof(biasPtr)),
+          "set BIAS_POINTER failed");
+
+  cudaStream_t stream = at::cuda::getDefaultCUDAStream();
+
+  size_t wsize = (workspace_bytes > 0) ? (size_t)workspace_bytes : (size_t)0;
+  WS ws = getWorkspaceForStream(stream, wsize);
+  void* workspace = (wsize > 0) ? ws.ptr : nullptr;
+
+  float alpha = 1.0f, beta = 0.0f;
+  const void* A = (const void*)w.data_ptr<at::Half>();
+  const void* Bptr = (const void*)x.data_ptr<at::Half>();
+  void* Cptr = (void*)y.data_ptr<at::Half>();
+
+  checkLt(cublasLtMatmul(getHandle(),
+                        ce.matmulDesc,
+                        &alpha,
+                        A, ce.Adesc,
+                        Bptr, ce.Bdesc,
+                        &beta,
+                        Cptr, ce.Cdesc,
+                        Cptr, ce.Cdesc,
+                        &ce.heur.algo,
+                        workspace, wsize,
+                        stream),
+          "cublasLtMatmul failed");
+
+  return y;
+}
+
+torch::Tensor fc_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes) {
+  return fc_epilogue_impl(x, w, b, CUBLASLT_EPILOGUE_BIAS, workspace_bytes);
+}
+torch::Tensor fc_gelu_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes) {
+  return fc_epilogue_impl(x, w, b, CUBLASLT_EPILOGUE_GELU_BIAS, workspace_bytes);
+}
+torch::Tensor fc_relu_bias_forward(torch::Tensor x, torch::Tensor w, torch::Tensor b, int64_t workspace_bytes) {
+  return fc_epilogue_impl(x, w, b, CUBLASLT_EPILOGUE_RELU_BIAS, workspace_bytes);
+}
+""",
+    functions=None,
+    extra_cuda_cflags=["-O3", "--use_fast_math", "-lineinfo"],
+    extra_cflags=["-O3"],
+    with_cuda=True,
+    verbose=False,
+)
+
+
+class FusedLinearBias(nn.Module):
+    """FC + Bias via cuBLASLt epilogue (cached). Params FP16."""
+    def __init__(self, in_features: int, out_features: int, workspace_bytes: int = 64 * 1024 * 1024):
+        super().__init__()
+        self.weight = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.float16))
+        self.bias = nn.Parameter(torch.empty(out_features, dtype=torch.float16))
+        self.workspace_bytes = int(workspace_bytes)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        w = torch.empty_like(self.weight, dtype=torch.float32)
+        b = torch.empty_like(self.bias, dtype=torch.float32)
+        nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+        fan_in = w.size(1)
+        bound = 1 / math.sqrt(fan_in)
+        nn.init.uniform_(b, -bound, bound)
+        with torch.no_grad():
+            self.weight.copy_(w.to(torch.float16).contiguous())
+            self.bias.copy_(b.to(torch.float16).contiguous())
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        orig_shape = x.shape
+        x2 = x.reshape(-1, orig_shape[-1]).contiguous()
+        if x2.dtype != torch.float16:
+            x2 = x2.to(dtype=torch.float16)
+        y2 = cublaslt_fused_ext.fc_bias_forward(x2, self.weight.contiguous(), self.bias.contiguous(), self.workspace_bytes)
+        return y2.view(*orig_shape[:-1], y2.shape[-1])
+
+
+class FusedFCGELU(nn.Module):
+    """FC + Bias + GELU via cuBLASLt epilogue (cached). Params FP16."""
+    def __init__(self, in_features: int, out_features: int, workspace_bytes: int = 64 * 1024 * 1024):
+        super().__init__()
+        self.weight = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.float16))
+        self.bias = nn.Parameter(torch.empty(out_features, dtype=torch.float16))
+        self.workspace_bytes = int(workspace_bytes)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        w = torch.empty_like(self.weight, dtype=torch.float32)
+        b = torch.empty_like(self.bias, dtype=torch.float32)
+        nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+        fan_in = w.size(1)
+        bound = 1 / math.sqrt(fan_in)
+        nn.init.uniform_(b, -bound, bound)
+        with torch.no_grad():
+            self.weight.copy_(w.to(torch.float16).contiguous())
+            self.bias.copy_(b.to(torch.float16).contiguous())
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        orig_shape = x.shape
+        x2 = x.reshape(-1, orig_shape[-1]).contiguous()
+        if x2.dtype != torch.float16:
+            x2 = x2.to(dtype=torch.float16)
+        y2 = cublaslt_fused_ext.fc_gelu_bias_forward(x2, self.weight.contiguous(), self.bias.contiguous(), self.workspace_bytes)
+        return y2.view(*orig_shape[:-1], y2.shape[-1])
+
+
+class CausalSelfAttention(nn.Module):
+    def __init__(self, n_embd, n_head, attn_pdrop, resid_pdrop, max_seqlen):
+        super().__init__()
+        assert n_embd % n_head == 0
+        self.n_head = n_head
+        self.n_embd = n_embd
+        self.c_attn = nn.Linear(n_embd, 3 * n_embd)
+        self.c_proj = nn.Linear(n_embd, n_embd)
+        self.resid_dropout = nn.Dropout(resid_pdrop)
+        with torch.no_grad():
+            self.c_attn.weight.data = self.c_attn.weight.data.contiguous()
+            self.c_attn.bias.data = self.c_attn.bias.data.contiguous()
+            self.c_proj.weight.data = self.c_proj.weight.data.contiguous()
+            self.c_proj.bias.data = self.c_proj.bias.data.contiguous()
+
+    def forward(self, x):
+        B, T, C = x.size()
+        hs = C // self.n_head
+        q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
+        q = q.view(B, T, self.n_head, hs).transpose(1, 2)
+        k = k.view(B, T, self.n_head, hs).transpose(1, 2)
+        v = v.view(B, T, self.n_head, hs).transpose(1, 2)
+        y = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=True)
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        y = self.resid_dropout(self.c_proj(y))
+        return y
+
+
+class ModelNew(nn.Module):
+    def __init__(self, n_embd, n_head, attn_pdrop, resid_pdrop, max_seqlen):
+        super().__init__()
+        self.ln_1 = nn.LayerNorm(n_embd)
+        self.attn = CausalSelfAttention(n_embd, n_head, attn_pdrop, resid_pdrop, max_seqlen)
+        self.ln_2 = nn.LayerNorm(n_embd)
+
+        self.mlp = nn.ModuleDict(
+            dict(
+                c_fc_gelu=FusedFCGELU(n_embd, 4 * n_embd, workspace_bytes=64 * 1024 * 1024),
+                c_proj_bias=FusedLinearBias(4 * n_embd, n_embd, workspace_bytes=64 * 1024 * 1024),
+                dropout=nn.Dropout(resid_pdrop),
+            )
+        )
+
+    def forward(self, x):
+        x_fp32 = x.float()
+
+        ln1 = self.ln_1(x_fp32)
+        with torch.cuda.amp.autocast(dtype=torch.float16):
+            attn_out = self.attn(ln1)
+        x_fp32 = x_fp32 + attn_out.float()
+
+        ln2 = self.ln_2(x_fp32)
+        with torch.cuda.amp.autocast(dtype=torch.float16):
+            h = self.mlp["c_fc_gelu"](ln2)
+            h = self.mlp["c_proj_bias"](h)
+            h = self.mlp["dropout"](h)
+        x_fp32 = x_fp32 + h.float()
+
+        return x_fp32
+
+
+batch_size = 128
+max_seqlen = 1024
+seq_len = 512
+n_embd = 768
+n_head = 8
+attn_pdrop = 0.0
+resid_pdrop = 0.0
+
+
+def get_inputs():
+    return [torch.rand(batch_size, seq_len, n_embd, device="cuda", dtype=torch.float32)]
+
+
+def get_init_inputs():
+    return [n_embd, n_head, attn_pdrop, resid_pdrop, max_seqlen]
+\end{verbatim}
+\normalfont
+\end{tcolorbox}
+The final solution generated by StitchCUDA applies the following optimizations.
+
+At the system level, Planner proposed 2 critical optimizations: \textbf{Mixed precision computing:} LayerNorm and residual accumulation run in \texttt{fp32}, while the compute-intensive MLP runs in \texttt{fp16}, preserving stability while enabling Tensor Cores. \textbf{Data layout:} weights/biases are made \texttt{contiguous()} at initialization, and activations are reshaped and made contiguous before GEMM to avoid stride-induced fallbacks and implicit copies. Enabling pinned memory for contiguous data transfers to maximize PCIe bandwidth utilization.
+
+On the kernel level, Planner gives the following implementation guide. \textbf{MLP fusion:} implemented as custom fused modules instead of separate \texttt{Linear}$\rightarrow$\texttt{GELU}$\rightarrow$\texttt{Linear} ops, reducing kernel launch and dispatch overhead. \textbf{cuBLASLt epilogue fusion:} cuBLASLt epilogues fuse \texttt{(GEMM+bias)} and \texttt{(GEMM+bias+GELU)} into single launches, cutting elementwise kernels and intermediate traffic, which has been observed as bottelneck during Nsys profiling. \textbf{Heuristic descriptors caching:} cuBLASLt descriptors and selected algorithms are cached by shape/epilogue/workspace, avoiding repeated heuristic queries. \textbf{Persistent per-stream workspace:} per-stream buffers are retained and grown as needed, reducing \texttt{cudaMalloc}/\texttt{cudaFree} overhead and associated synchronization.
+
+\noindent Overall, these system-level and kernel-level optimizations yield a $2.7\times$ speedup over the reference implementation in eager mode and $2.08\times$ speedup over enabling \texttt{torch.compile} on this task. 
+
+Unlike Kevin-32B, we do not classify degenerate behavior as a form of reward hacking for two reasons: First, although not very meaningful, LLMs actually write CUDA kernels in custom code. Second, for current LLMs, it is very hard to cover all reference operations with custom kernels in a single inference. Directly assigning 0 reward for this behavior will lead to a severe sparse reward problem, which is very harmful to RL training, as we observed in our early experiments. 
+
+
+\subsubsection{Rubric Design}
+To address the challenges of reward hacking and degenerate behaviors, we use a rubric reward to provide a more comprehensive evaluation of the kernel's quality, beyond the rule-based reward function. We invite human experts in CUDA engineering to write the rubrics. After refining it with GPT-5.2 and testing it in offline samples to ensure its effectiveness, we get a well-designed rubric with the following four dimensions: 
+\begin{itemize}
+    \item \textbf{Anti-Hacking}, penalizing reward exploitation;
+    \item \textbf{CUDA Engineering}, rewarding advanced optimization techniques, including tiling with shared memory, asynchronous memcpy, cuBLASLt, CUTLASS, wmma instruction for tensor core, kernel-fusion, mixed-precision computing, and inline PTX Assembly;
+    \item \textbf{Operator Coverage}, encouraging broader optimization for complex multi-kernel programs, covering host-side optimization and as many kernels as possible;
+    \item \textbf{Skill Compliance}, enforcing adherence to task requirements (Skill~1) or feedback instructions (Skill~2).
+\end{itemize}
+
+Each dimension uses a discrete scale with detailed criteria per score level. 
+
+\label{app:rubric}
+
+
+
+\subsection{Comparing computation overhead between our rubric-based agentic RL with multi-turn agentic RL and agentic RL without rubrics}
+\label{app:time}
+The most important motivation for decomposing multi-turn agentic RL into learning two atomic skills is the prohibitive computational cost of multi-turn agentic RL. Here, we provide details to demonstrate it and compare the computation overhead between different methods.
+\subsubsection{The multi-turn rollout overhead}
+The standard method for agentic RL training~\cite{jin2025searchr1trainingllmsreason,wang2025ragenunderstandingselfevolutionllm} is to collect the trajectories of model-environment interactions in real executions, assign trajectory-level reward, and train the model via RL algorithms like GRPO~\cite{Guo_2025}.  During the procedure, the most time-consuming part is usually the multi-turn rollout(collecting the trajectories of model-environment interactions). The problem even becomes worse in RL for CUDA code generation: In a famous agentic RL work, Search-R1~\cite{jin2025searchr1trainingllmsreason}, it takes seconds for the model to get feedback from the search environment in a single turn. But in the CUDA code generation setting, it takes several minutes to get feedback from the environment. As shown in Fig.~\ref {fig:RL}, for a single-turn interaction, the generated code needs to be compiled and tested on several unit tests. After that, the Verifier needs to call the RAG database or Nsys/NCU profiling to generate further feedback. Finally, the feedback is generated by Verifier and sent back to Coder. In our experiments, the single-turn interaction process takes 4-5 minutes on average. Given that the trajectories we need contain multi-turn interactions, the overall time required to collect a 15-turn trajectory is 60-75 minutes. Finally, with 400 RL samples, a training batch size of 16, a group size of 8, and 3 epochs, the estimated training time for one model is about 60 days, which makes RL training too costly and impractical in practice. 
+
+\subsection{Compare the computation overhead between different methods}
+To provide a clear comparison, we evaluate the computational overhead of different methods, including multi-turn agentic RL, our method without a rubric reward, and our rubric-based agentic RL. Using the same training dataset and parameters, the H200-Hour comparison is shown in Table~\ref {tab:h200_overhead}. The result shows that our method is very efficient compared with multi-turn agentic RL. Although the rubric assignment takes more time, the extra computation overhead is modest. 
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lccc}
+\toprule
+Method & Turns per trajectory & Total turns & H200-Hour \\
+\midrule
+Multi-turn agentic RL & $15$ &
+$144000$ &
+$9600-12000$ \\
+\addlinespace
+Our method (w/o rubric reward) & $1$ &
+- &
+$128$ \\
+\addlinespace
+Rubric-based agentic RL (ours) & $1$ &
+- &
+$160$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+\caption{Computation overhead comparison measured in H200-Hour under the same dataset and training hyperparameters (400 samples, group=8, epoch=3).
+We estimate the average environment interaction takes 4--5 minutes.}
+\label{tab:h200_overhead}
+\vspace{-6pt}
+\begin{flushleft}
+\end{flushleft}
+\end{table}
+
+
+
+

@@ -1,0 +1,444 @@
+\appendix
+
+\renewcommand*\footnoterule{} %
+
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+\section*{Table of Contents}
+\setcounter{tocdepth}{2}
+\renewcommand{\contentsname}{Appendix Contents}
+\startcontents[appendix]  %
+\printcontents[appendix]{}{1}{}
+
+
+
+
+
+\clearpage
+\section{Training Algorithm of \model}
+\label{app:details_of_model}
+
+
+We provide a flowchart of the overall training algorithm of \model (\S\ref{sec:methodology}) in Algorithm~\ref{alg:agentflow}.
+
+\input{algorithms/training}
+
+\clearpage
+\section{Theoretical Analysis of Flow-GRPO}
+\label{app:mathematical_analysis}
+\subsection{Preliminaries and Notation}
+
+We adopt the notation from the paper to formalize our analysis.
+
+\begin{definition}[Core Components] Here we list core definition of variables. 
+\\
+\\
+{\small
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+    \multicolumn{2}{@{}l}{\textbf{Symbol and Description}} \\
+    \hline \\
+    $\pi_{\theta}$ & The trainable planner policy, parameterized by $\theta$. \\
+    $\pi_{\theta_{\text{old}}}$ & The behavior policy used to sample trajectories. \\
+    $s^t$ & The state at turn $t$, defined as $s^t = (q, K, M_t)$. \\
+    $a^t$ & The action (a sequence of tokens) generated at state $s^t$, where $a^t \sim \pi_\theta(\cdot \mid s^t)$. \\
+    $\tau$ & A trajectory of states and actions over $T$ time steps, defined as $\tau = \{(s^t, a^t)\}_{t=1}^T$. \\
+    $R(\tau)$ & The outcome-based reward for trajectory $\tau$, where $R(\tau) \in \{0,1\}$. \\
+    $A_{\tau}$ & The group-normalized advantage for trajectory $\tau$. A crucial property is that the advantage is constant for all timesteps within a trajectory defined in Eq. \ref{eq:advantage_norm}: $a^t = A_{\tau}, \quad \forall (s^t, a^t) \in \tau$.  \\
+    $\rho_{i,j}^t$ & The token-level importance sampling ratio, defined as:
+    $$ \rho_{i,j}^t
+    = \frac{\pi_\theta\!\big(a_{i,j}^t \,\big|\, s_i^t, a_{i,1:j-1}^t\big)}
+    {\pi_{\theta_\text{old}}\!\big(a_{i,j}^t \,\big|\, s_i^t, a_{i,1:j-1}^t\big)}. $$ \\
+    $L_{\text{clip}}(\rho, A)$ & The PPO clipped objective term, defined as $L_{\text{clip}}(\rho, A) = \min(\rho A, \text{clip}(\rho, 1-\epsilon, 1+\epsilon) A)$. \\
+    \hline
+    \\
+\end{tabularx}
+}
+\end{definition}
+\begin{definition}[Objective Functions]
+The \emph{global policy objective} is the expected trajectory-level reward:
+\begin{equation}
+    \mathcal{J}(\theta) := \E_{\tau \sim \pi_{\theta}}[R(\tau)].
+\end{equation}
+
+The \emph{single-turn optimization objective} for a given state $s^t$ is defined as:
+\begin{equation}
+    \mathcal{J}_{\text{local}}(\theta; s^t) := \E_{a^t \sim \pi_{\theta_{\text{old}}}(\cdot \mid s^t)} \left[ \frac{1}{|a^t|} \sum_{j=1}^{|a^t|} L_{\text{clip}}(\rho_{i, j}^t, A_i^t) \right].
+\end{equation}
+
+The full \emph{}{Flow-GRPO objective function} in the multi-turn setting is given by:
+\begin{equation}
+    \mathcal{J}_{\text{Flow-GRPO}}(\theta) := \E_{\substack{(q,y^*) \sim \mathcal{D} \\ \{\tau_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}}} \left[ \frac{1}{G} \sum_{i=1}^G \frac{1}{T_i} \sum_{t=1}^{T_i} \frac{1}{|a^t_i|} \sum_{j=1}^{|a^t_i|} L_{\text{clip}}(\rho_{i,j}^t, A_i^t) \right] - \beta \mathbb{D}_{\mathrm{KL}}(\pi_\theta \| \pi_{\text{ref}}).
+\end{equation}
+\end{definition}
+
+\subsection{Equivalence Proof for Optimization Objectives}
+
+
+\begin{theorem}    
+In Flow-GRPO, maximizing the global multi-turn objective is mathematically equivalent to maximizing the expected token-level local objective at each time step under the on-policy induced state distribution, given standard sampling assumptions (trajectories sampled i.i.d. from the policy with fixed finite turn $T$).
+\end{theorem}
+
+
+\begin{proof}
+\label{app:proof_clip_term_equalization}
+Let's denote the clipping part of the Flow-GRPO objective as $\mathcal{J}_{\text{clip}}(\theta)$.
+
+First, by the linearity of expectation, we can simplify the expectation over a group of $G$ trajectories. Since the trajectories $\{\tau_i\}$ are sampled independently and identically (i.i.d.) from the behavior policy $\pi_{\theta_{\text{old}}}$, the expectation of their average is equal to the expectation over a single trajectory.
+\begin{align}
+    \mathcal{J}_{\text{clip}}(\theta) &= \E_{(q,y^*) \sim \mathcal{D}} \left[ \E_{\{\tau_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}} \left[ \frac{1}{G} \sum_{i=1}^G \frac{1}{T_i} \sum_{t=1}^{T_i} \left( \frac{1}{|a^t_i|} \sum_{j=1}^{|a^t_i|} L_{\text{clip}}(\rho_{i,j}^t, A_i^t) \right) \right] \right] \\
+    &= \E_{(q,y^*) \sim \mathcal{D}} \left[ \E_{\tau \sim \pi_{\theta_{\text{old}}}(\cdot|q)} \left[ \frac{1}{T} \sum_{t=1}^{T} \left( \frac{1}{|a^t|} \sum_{j=1}^{|a^t|} L_{\text{clip}}(\rho^t_j, A_\tau) \right) \right] \right].
+\end{align}
+Here, $\tau = \{(s^t, a^t)\}_{t=1}^T$ represents a single, arbitrarily sampled trajectory with advantage $A_\tau$.
+
+Next, we can re-interpret the expectation over trajectories as an expectation over the state-visitation distribution induced by the policy $\pi_{\theta_{\text{old}}}$. Let $d^{\pi_{\theta_{\text{old}}}}$ be the on-policy distribution of states visited, where each state $s^t$ in a trajectory of length $T$ is weighted by $1/T$. The expectation can be rewritten as:
+\begin{align}
+    \mathcal{J}_{\text{clip}}(\theta) &= \E_{(q,y^*) \sim \mathcal{D}} \left[ \E_{s^t \sim d^{\pi_{\theta_{\text{old}}}}} \left[ \E_{a^t \sim \pi_{\theta_{\text{old}}}(\cdot|s^t)} \left[ \frac{1}{|a^t|} \sum_{j=1}^{|a^t|} L_{\text{clip}}(\rho^t_j, A^t) \right] \right] \right].
+\end{align}
+Note that $A^t$ is the advantage corresponding to the trajectory from which $s^t$ was sampled.
+
+We now recognize that the inner expectation is precisely the definition of the local, per-state objective, $\mathcal{J}_{\text{local}}(\theta; s^t)$.
+\begin{align}
+    \mathcal{J}_{\text{clip}}(\theta) &= \E_{(q,y^*) \sim \mathcal{D}, \ s^t \sim d^{\pi_{\theta_{\text{old}}}}} \left[ \mathcal{J}_{\text{local}}(\theta; s^t) \right].
+\end{align}
+Adding the KL-divergence term back, we arrive at the final equivalence:
+\begin{equation}
+    \mathcal{J}_{\text{Flow-GRPO}}(\theta) = \E_{(q,y^*) \sim \mathcal{D}, \ s^t \sim d^{\pi_{\theta_{\text{old}}}}} \left[ \mathcal{J}_{\text{local}}(\theta; s^t) \right] - \beta \mathbb{D}_{KL}(\pi_\theta \| \pi_{\text{ref}}).
+\end{equation}
+This proves that maximizing the global multi-turn Flow-GRPO objective is equivalent to maximizing the expected token-level local objective at each time step under the on-policy induced state distribution.
+\end{proof}
+
+
+\subsection{Convergence Analysis}
+Having established the structural validity of the objective, we now analyze its convergence properties. 
+The analysis builds on the monotonic improvement guarantee provided by trust-region methods~\citep{schulman2015trust}.
+
+\begin{lemma}[Policy Performance Difference]
+For two policies $\pi_{\theta}$ and $\pi_{\theta_{\rm old}}$, the difference in expected return can be expressed as:
+\begin{equation}
+\mathcal{J}(\theta) - \mathcal{J}(\theta_{\rm old}) 
+= \E_{\tau \sim \pi_{\theta}} \left[ \sum_{t=1}^{T} \, A_{\theta_{\rm old}}(s^t, a^t) \right],
+\end{equation}
+where $A_{\theta_{\rm old}}$ is the advantage function under the old policy.
+\end{lemma}
+
+This lemma enables the construction of a lower bound on policy improvement.
+
+\begin{theorem}[Monotonic Improvement Guarantee]
+Define the surrogate objective
+\begin{equation}
+\mathcal{L}_{\theta_{\rm old}}(\theta) 
+= \E_{\tau \sim \pi_{\theta_{\rm old}}} \left[ \sum_{t=1}^{T} \, 
+\frac{\pi_{\theta}(a^t|s^t)}{\pi_{\theta_{\rm old}}(a^t|s^t)} \, A_{\theta_{\rm old}}(s^t, a^t) \right].
+\end{equation}
+Then the performance improvement satisfies the lower bound
+\begin{equation}
+\mathcal{J}(\theta) - \mathcal{J}(\theta_{\rm old}) 
+\;\;\ge\;\; \mathcal{L}_{\theta_{\rm old}}(\theta) 
+- C \cdot \bar{\mathbb{D}}_{\mathrm{KL}}\!\left(\pi_{\theta_{\rm old}}, \pi_{\theta}\right),
+\end{equation}
+where $C > 0$ is a constant depending on the horizon and reward scale, and 
+$\bar{\mathbb{D}}_{\mathrm{KL}}$ denotes the average KL-divergence between the two policies.
+\end{theorem}
+
+By optimizing the right-hand side of the above inequality, we are guaranteed to improve the performance of $\pi_\theta$. Therefore, for policies $\pi_\theta^t$ and $\pi_\theta^{t+1}$ obtained from iterations $t$ and $t+1$, we have:
+\begin{equation}
+\mathcal{J}(\theta^{t+1}) \geq \mathcal{J}(\theta^t).
+\end{equation}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\textbf{Conclusion.}
+This analysis establishes that Flow-GRPO optimizes a valid surrogate objective and guarantees monotonic policy improvement, thereby converging reliably to a locally optimal policy.
+
+
+
+\clearpage
+\section{Experimental Details}
+\label{app:exp_details}
+
+\subsection{Training Details}
+\label{app:training_details}
+
+
+We provide further details on the training setup for \model. Our Flow-GRPO implementation uses a learning rate of $1 \times 10^{-6}$. The Action Planner generates actions with a sampling temperature of $0.5$ to balance exploration and exploitation. To prevent policy collapse and stabilize training, we incorporate a KL-divergence penalty against a reference policy with a coefficient $\beta = 0.001$. The maximum output length for the planner is set to 2048 tokens to ensure complete exploration during rollouts.
+
+To accelerate the training speed, we limit the maximum number of turns per rollout to $3$. The final-outcome reward signal (Eq.~\ref{eq:reward_func}) is provided by an LLM-as-judge, for which we use \textit{GPT-4o}. All tool calls are executed synchronously with a 500-second timeout to handle external service latency robustly. The LLM engines within the tools are set to a temperature of 0.0 to ensure deterministic and stable outputs. The full training process was conducted on 8 NVIDIA A100 GPUs. Further details on agent prompts and the memory update mechanism are provided in \S\ref{app:modules_and_memory}.
+
+
+\subsection{Evaluation Details}
+\label{app:eval_details}
+Here, we outline the specifics of our evaluation protocol. For evaluation, we increase the maximum number of turns per rollout to $T=10$ to allow for more extensive and deeper reasoning. The planner's sampling temperature is set to 0.7 to encourage diverse solution paths. Unless otherwise specified, all tool LLM engines are initialized with Qwen2.5-7B-Instruct.
+
+For fair and consistent evaluation, we adopt the previous work's methodology while standardizing tools: we replace search tools in search-enhanced models with our Google Search tool and code tools in code-enhanced models with our Python Coder tool. We use GPT-4o as an LLM-based judge to determine the correctness of final answers. This approach provides a robust measure of semantic and numerical equivalence, which is critical for complex reasoning tasks. The specific judging prompt is detailed in \S\ref{app:llm_based_judging}, and additional information on evaluation datasets can be found in \S\ref{app:datasets}. To mitigate randomness, we report the average accuracy with standard deviation across three trials for all experiments.
+
+
+\subsection{Compared Baselines}
+\label{app:baseline}
+\textbf{Proprietary LLMs:}
+\begin{itemize}[leftmargin=1em]
+
+\item \textbf{Qwen2.5 Series}~\citep{yang2024qwen2.5}, created by Alibaba, comes in multiple configurations. These models undergo training on multilingual corpora covering 29 different languages, demonstrating superior performance in cross-lingual applications. Furthermore, Qwen2.5 showcases robust proficiency in programming and mathematical domains. 
+
+
+\item \textbf{Llama-3 Series}~\citep{dubey2024llama}, created by Meta AI, encompasses various iterations. Each model configuration within the Llama family provides dual versions: foundational and instruction-following variants. Training incorporates diverse dataset combinations spanning multiple domains and linguistic varieties. The Llama model family demonstrates excellent results in logical reasoning, software development, and cross-lingual comprehension evaluations. Through progressive enhancements in fine-tuning methodologies and expanded sequence lengths, these models become more applicable to practical deployment scenarios.
+
+\item \textbf{GPT-4o Series}~\citep{hurst2024gpt}, produced by OpenAI, includes several model variants such as GPT-4o and GPT-4o-mini, with training leveraging extensive multimodal datasets encompassing text, vision, and audio modalities. The series achieves outstanding performance in complex reasoning tasks, creative generation, and multimodal understanding benchmarks with continuous refinements in alignment techniques and enhanced processing capabilities.
+\end{itemize}
+
+\textbf{Reasoning LLMs:}
+\begin{itemize}[leftmargin=1em]
+\item \textbf{SFT}~\citep{zeng2025simplerl} serves as our basic baseline following Search-R1 \citep{jin2025search}. We fine-tune models using supervised fine-tuning on GPT-4o-generated reasoning chains. 
+
+
+\item \textbf{SimpleRL-Zoo}~\citep{zeng2025simplerl} investigates zero reinforcement learning training across 10 diverse base models spanning different families and sizes using GRPO algorithm with simple rule-based rewards, achieving substantial improvements in reasoning accuracy. 
+
+\item \textbf{Open-Reasoner-Zero}~\citep{hu2025open} presents the first open-source implementation of large-scale reasoning-oriented RL training using PPO with GAE and straightforward rule-based rewards, without KL regularization. The framework demonstrates that minimalist design can successfully scale both response length and benchmark performance. 
+
+
+\item \textbf{General-Reasoner}~\citep{ma2025general} extends LLM reasoning capabilities beyond mathematics to diverse domains using RLVR through a 230K verifiable reasoning questions dataset spanning physics, chemistry, and finance.
+
+\item \textbf{LUFFY}~\citep{yan2025learning} addresses limitations in on-policy RLVR by introducing an off-policy framework that augments training with external reasoning demonstrations using Mixed Policy GRPO and regularized importance sampling.
+
+
+\end{itemize}
+
+\textbf{Search-Integrated Reasoning LLMs:}
+\begin{itemize}[leftmargin=1em]
+\item \textbf{Iter-RetGen}~\citep{shao2023enhancing} addresses limitations in retrieval-augmented language models by introducing iterative retrieval-generation synergy, where a model's previous response serves as context for retrieving more relevant knowledge in subsequent iterations. 
+
+
+\item \textbf{Search-R1}~\citep{jin2025search} represents a reinforcement learning approach that develops a model from the ground up to invoke search functionality throughout the reasoning process.
+
+
+\item \textbf{ZeroSearch}~\citep{sun2025zerosearch} addresses high API costs in RL-based search training by using an LLM to simulate search engines, employing lightweight supervised fine-tuning to transform an LLM into a retrieval module that generates both useful and noisy documents. The framework combines this with a curriculum-based rollout strategy that progressively degrades document quality, achieving better performance than real search engine-based methods while incurring zero API costs.
+
+
+\item \textbf{ReSearch}~\citep{chen2025research} proposes a reinforcement learning framework that trains LLMs to integrate search operations as components of the reasoning chain without supervised data on reasoning steps, treating search decisions as guided by text-based thinking. 
+
+\item \textbf{StepSearch}~\citep{wang2025stepsearch} addresses the sparse reward problem in multi-hop reasoning by training search LLMs using step-wise proximal policy optimization with intermediate rewards and token-level process supervision based on information gain and redundancy penalties. 
+
+\item \textbf{VerlTool}~\citep{jiang2025verltool} addresses fragmentation and synchronization bottlenecks in Agentic Reinforcement Learning with Tool use by introducing a unified modular framework that extends beyond single-turn RLVR paradigms, providing upstream VeRL alignment and unified tool management with asynchronous rollout execution achieving near 2× speedup. 
+\end{itemize}
+
+\textbf{Code-Integrated Reasoning LLMs:}
+\begin{itemize}[leftmargin=1em]
+\item \textbf{TIR}~\citep{yang2024qwen2} is a basic baseline that demonstrates the model's ability to generate code for tool utilization. In our implementation, we directly prompt the model to write code that calls the programming interpreter and processes the returned results to generate the final answer.
+
+\item \textbf{ToRL}~\citep{li2025torl} is a code-enhanced architecture developed via reinforcement learning that empowers models to independently activate code execution environments for mathematical reasoning tasks.
+\end{itemize}
+
+\textbf{Training-free Agentic System}
+
+\begin{itemize}[leftmargin=1em]
+\item \textbf{AutoGen}~\citep{wu2024autogen} introduces an agentic conversation framework that enables developers to build LLM applications through conversable agents that can operate using combinations of LLMs, human inputs, and tools.
+\end{itemize}
+
+
+
+\subsection{Evaluation Datasets}
+\label{app:datasets}
+We provide a detailed introduction to the \textit{search-intensive} and \textit{agentic} benchmarks in our experiments as follows:
+
+\begin{itemize}[leftmargin=1em]
+    \item \textbf{Bamboogle}~\citep{press2023measuring} presents a demanding multi-step reasoning dataset containing manually constructed questions requiring up to four inferential steps. The dataset evaluates models' capacity for intricate compositional reasoning across interconnected facts.
+    \item \textbf{2Wiki (2WikiMultihopQA)}~\citep{ho2020constructing} constitutes a comprehensive multi-step QA corpus combining structured Wikidata knowledge with unstructured Wikipedia text. The dataset encompasses varied question formats and annotated reasoning chains to facilitate interpretable sequential inference. We randomly sample 100 examples as a test set for efficiency.
+    \item \textbf{HotpotQA}~\citep{yang2018hotpotqa} represents a widely-adopted question answering corpus featuring multi-step queries constructed from Wikipedia entries. We randomly sample 100 examples as a test set for efficiency.
+    \item \textbf{Musique}~\citep{trivedi2022musique} comprises a multi-step reasoning corpus requiring sequential inference where each reasoning stage depends on information derived from preceding steps. We conduct evaluations using the development partition of this particularly challenging dataset. We randomly sample 100 examples as a test set for efficiency.
+    \item \textbf{GAIA}~\citep{mialon2023gaia} constitutes a benchmark engineered to assess general AI systems and agents, demanding capabilities including sequential reasoning, web navigation, and comprehensive tool utilization skills. We utilize the text-exclusive portion of this dataset, designed to challenge base language models in our experimental setup.
+\end{itemize}
+
+
+
+Furthermore, we also conduct a series of experiments on \textit{math} and \textit{scientific reasoning} benchmarks:
+\begin{itemize}[leftmargin=1em]
+\item \textbf{AIME24} \citep{aops_aime} A collection of 30 demanding mathematical problems sourced from the 2024 American Invitational Mathematics Examination (AIME), encompassing algebra, geometry, number theory, and combinatorics. Each JSONL-formatted record contains the problem identifier, question text, comprehensive solution methodology, and the final numerical result. Created to assess large language models' sophisticated mathematical reasoning abilities, the dataset presents substantial difficulty, systematic multi-phase solutions, and distinctive answers—establishing it as a robust benchmark for evaluating advanced analytical capabilities.
+\item \textbf{AMC23} \citep{AMC23} contains mathematical problems derived from the 2023 American Mathematics Competition, emphasizing areas such as functional equations and complex analysis.
+\item \textbf{GameOf24} \citep{24game} derives from the traditional numerical puzzle known as 24 (alternatively called the 24 numbers game). The challenge requires utilizing four given numbers with fundamental arithmetic operations (addition, subtraction, multiplication, division) to create an expression yielding 24. For instance, with numbers 4, 9, 10, and 13, a correct solution would be ``(10 - 4) × (13 - 9) = 24''. Successfully solving requires computational proficiency along with iterative attempts to validate potential solutions. Each challenge is formatted as open-ended inquiries. 
+\item \textbf{GPQA} or Graduate Level Google-Proof Q\&A Benchmark \citep{rein2024gpqa} comprises a collection of demanding text-based multiple choice problems authored by subject specialists in biology, physics, and chemistry, intentionally crafted to be ``exceptionally challenging''. We randomly sample 100 examples as a test set for efficiency.
+\item \textbf{MedQA}~\citep{jin2021disease} features text-based multiple choice problems assembled from professional medical licensing examinations. Problems encompass comprehensive medical knowledge and clinical reasoning skills.
+
+\end{itemize}
+
+
+\clearpage
+\section{More Discussion about Experiment Results}
+\subsection{Main Result Analysis}
+\label{app:main_result_analysis}
+Our main results are presented in Tables \ref{tab:main_table_search_agentic} and \ref{tab:main_table_math_science}. Overall, \model consistently outperforms all baseline models across diverse domains, including search-intensive tasks, agentic tasks, and mathematical and scientific reasoning tasks. These comprehensive results yield several key insights:
+
+
+\textbf{Monolithic LLMs are insufficient for complex reasoning.} While scaling up model size (from 7B model to GPT-4o) improves average performance, their monolithic nature presents limitations when facing complex tasks that require multi-turn reasoning and sub-goal decomposition. In contrast, our proposed \model consistently outperforms these larger models. Specifically, it achieves an average improvement of 8.2\% over GPT-4o on search-intensive tasks (57.3\% vs.\ 49.1\% in Table~\ref{tab:main_table_search_agentic}), and a remarkable 15.8\% gain over GPT-4o on agentic tasks (33.1\% vs.\ 17.3\% in Table~\ref{tab:main_table_search_agentic}). For mathematical reasoning benchmarks, \model obtains a substantial improvement of 16.4\% over GPT-4o (51.5\% vs.\ 35.1\% in Table~\ref{tab:main_table_math_science}). Furthermore, it surpasses the strong Llama-3.3-70B by 12.5\% on scientific reasoning tasks (63.5\% vs.\ 51.0\% in Table~\ref{tab:main_table_math_science}). These results demonstrate that the carefully designed agentic system of \model, despite being built on a 7B-parameter backbone, can deliver superior and more efficient performance compared to substantially larger monolithic LLMs.  
+
+
+
+\textbf{Specialized reasoning models exhibit strong in-domain focus but limited generalizability.}  
+While domain-specific fine-tuning and tailored tool integration provide clear benefits over base LLMs, they fail to deliver robust cross-domain performance due to fundamental scaling limitations. Our evaluation across three reasoning domains substantiates these limitations. On search-intensive tasks, specialized models such as Search-R1 (33.3\%) and VerlTool (39.0\%) perform well within their narrow scope yet fall substantially short of \model (57.3\%) as shown in Table~\ref{tab:main_table_search_agentic}. Similarly, in mathematical reasoning, methods like SimpleRL-reason (36.6\%) and ToRL (37.0\%) trail significantly behind \model (51.5\%) in Table~\ref{tab:main_table_math_science}. Even in scientific reasoning, where models such as Luffy (55.5\%) offer competitive results, they are consistently surpassed by \model (63.5\%) in Table~\ref{tab:main_table_math_science}. These findings demonstrate that while specialized reasoning models excel within narrow domains, their reliance on a single monolithic policy introduces poor generalization, making them brittle when confronted with diverse, cross-domain challenges.
+
+\textbf{\model demonstrates superior, versatile reasoning through its adaptive agentic system.}
+\model establishes a new state-of-the-art agentic system by achieving an average accuracy of 57.3\% on search-intensive tasks, 33.1\% on agentic tasks, 51.5\% on mathematical reasoning, and 63.5\% on scientific reasoning. Our method's advantage stems from combining an agentic system with targeted planning policy refinement via on-policy reinforcement learning in an online fashion. When compared to AutoGen---a general agent framework with the same backbone model---\model demonstrates a massive improvement of 14.9\% on search tasks and 19.9\% on math tasks. This underscores that the core advantage comes from our dedicated trainable agentic system that integrates our novel Flow-GRPO for in-system on-policy optimization, enabling effective agent planning and tool utilization to solve complex, long-horizon problems across diverse domains.
+
+
+
+\begin{figure}[!ht]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/app_tool_scale.pdf}
+    \vspace{-1mm}
+    \caption{{\textbf{Tool scaling study}. \model's performance improves when its tools are upgraded from Qwen-2.5-7B-Instruct to GPT-4o.}}
+    \label{app:fig:app_tool_scale}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=0.75\textwidth]{figs/app_tool_usage.pdf}
+    \vspace{-1mm}
+    \caption{{\textbf{Tool call optimization on Musique}. \model's planner increases Web Search usage after Flow-GRPO training.}}
+    \label{app:fig:app_tool_usage}
+\end{minipage}
+\end{figure}
+
+\subsection{In-depth Analysis of Optimized Planning}
+
+\paragraph{\model adapts to inference-time tool scaling.}
+We scale the tools—the Base Generator and Python Coder—to GPT-4o-powered versions. Empirical results on search and math datasets ({{Figure~\ref{app:fig:app_tool_scale}}}) show that \model, when using these GPT-4o-powered tools, substantially outperforms its performance with Qwen2.5-7B-Instruct-powered tools, achieving improvements of 1.0\% on GAIA, 6.0\% on AMC23, and a notable 13.0\% on HotpotQA. This finding further supports a consistent trend: after in-the-flow RL training, the planner can adaptively leverage improvements in the underlying tools to enhance the agentic system's overall performance.
+
+\paragraph{Flow-GRPO spontaneous tool usage preference change.} 
+We further compare tool usage distributions before and after in-the-flow RL training on Musique. {{Figure~\ref{app:fig:app_tool_usage}}} shows that due to Musique's need for a diverse source of information, Flow-GRPO optimizes the planner to increase Web Search to delve deeper into the URL provided by other search tools. This maneuver presents a steady performance improvement of 6.1\%.
+
+
+
+
+\begin{figure}[!ht]
+\centering
+    \includegraphics[width=0.85\textwidth]{figs/scaling_model_size.pdf}
+    \caption{Flow-GRPO fine-tuning offers consistent gains on \model as the backbone model size scales from 3B to 7B.}
+    \label{app:fig:app_scaling_model_size}
+\end{figure}
+
+\paragraph{More evidence of training scaling in backbone size.}
+We further investigate how the backbone LLM scale affects \model's performance and the efficacy of Flow-GRPO on GameOf24, AMC23, and MedQA. We construct two versions of the system: one using \textit{Qwen2.5-3B-Instruct} and another using \textit{Qwen2.5-7B-Instruct} for all four modules (planner, executor, verifier, and generator) as well as the associated tools. In both versions, only the planner is fine-tuned with Flow-GRPO. As shown in Figure~\ref{app:fig:app_scaling_model_size}, Flow-GRPO fine-tuning consistently improves performance across tasks for both backbones. These results demonstrate that our in-the-flow optimization is effective across model capacities, enhancing \model regardless of LLM size.
+
+\clearpage
+
+\section{Instruction Templates in \model}
+
+\subsection{Modules and Memory}
+\label{app:modules_and_memory}
+
+\subsubsection{Action Planner}
+\label{app:action_planner}
+Tool Metadata can be found in \S\ref{app:tool_metadata}.
+
+\input{instructions/Action_Planner}
+
+\clearpage
+\subsubsection{Tool Executor}
+\label{app:tool_executor}
+\input{instructions/Tool_Executor}
+
+\clearpage
+\subsubsection{Execution Verifier}
+\label{app:execution_verifier}
+\input{instructions/Execution_Verifier}
+
+\clearpage
+\subsubsection{Solution Generator}
+\label{app:solution_generator}
+\input{instructions/Solution_Generator}
+
+\clearpage
+\subsubsection{Evolving Memory}
+\label{app:memory}
+
+
+\vspace{-1mm}
+
+\input{instructions/Memory}
+
+Our shared evolving memory system creates a deterministic, structured record that captures the reasoning process across three integrated agents: the \textit{Action Planner}, \textit{Tool Executor}, and \textit{Execution Verifier}. By sequentially stacking crucial information from each action step, the system enables transparent state tracking, controllable behavior, and bounded context growth.
+
+The memory reading and matching process employs regular expressions to parse outputs generated by different system components, adhering to standardized formats defined in their respective component instructions. For the \textit{Action Planner}, we use a relatively permissive regular expression to extract key information. Specifically, it matches the content immediately following: \textit{Sub-Goal} as the sub-goal and the content following; \textit{Tool Name} as the selected tool. This extracted information is then used to populate the next memory entry. For the \textit{Tool Executor}, the regular expression is designed to capture the entire \textit{Command} line starting with \texttt{execution = tool.execute(...)}. Additionally, the value passed to the \textit{Query} parameter within this command is parsed and saved into the memory for future reference. All results returned by the tools are directly stored in the \textit{Result} field of the memory. The \textit{Verification Status} is extracted from \textit{Execution Verifier}, including a brief analysis of the current tool result and previous memory, and then it gives a conclusion whether the loop needs to be CONTINUE or STOP.
+\vspace{-2mm}
+
+
+\clearpage
+\subsection{Toolset Metadata}
+\label{app:tool_metadata}
+This section details the implementation and metadata of the tools used in our main results.  We employ a suite of specialized tools, each designed for distinct tasks. Below, we present core metadata for each tool, including its functionality, input/output schema, limitations, and best practices.
+
+\subsubsection{Base Generator}
+\input{tool_card/Base_Generator}
+
+\clearpage
+\subsubsection{Python Coder}
+\input{tool_card/Python_Coder}
+
+\clearpage
+\subsubsection{Google Search}
+\input{tool_card/Google_Search}
+
+\clearpage
+\subsubsection{Wikipedia Search}
+\input{tool_card/Wikipedia_Search}
+
+\clearpage
+\subsubsection{Web Search}
+\input{tool_card/Web_Search}
+
+\clearpage
+\subsection{LLM-based Judging}
+\label{app:llm_based_judging}
+We employ GPT-4o as our judge model using a two-step ``analyze-then-judge'' instruction paradigm to ensure both accuracy and efficiency.
+
+\input{instructions/judgement}
+
+\clearpage
+\section{Case Studies}
+\label{app:case_studies}
+In this section, we conduct a case study to demonstrate how our \model, coherent with Flow-GRPO, enhances problem-solving performance with greater elegance, efficiency, and robustness. We present solution comparisons showing brief outputs from memory of the \textit{Action Planner} (Qwen2.5-7B-Instruct) before (w/o) tuning by Flow-GRPO and after (w/) Flow-GRPO tuning, with the methodology detailed in \S\ref{subsec:flow-grpo}.
+
+
+\subsection{Example 1: Efficient Search for Simple Tasks}
+\label{case1_gameof24_3B}
+\input{cases/case1_gameof24_3B}
+
+\subsection{Example 2: Spontaneous Brute-force}
+\label{case2_gameof24_7B}
+\input{cases/case2_gameof24_7B}
+
+\clearpage
+\subsection{Example 3: A Good Initial Plan is Essential}
+\label{case3_gaia_1}
+\input{cases/case3_gaia_1}
+
+\subsection{Example 4: Robust Self-Correction and Adaptation}
+\label{case4_gaia_2}
+\input{cases/case4_gaia_2}
+
+\subsection{Example 5: New Combo: Retrieve with Specific URL}
+\label{case5_hotpotqa_1}
+\input{cases/case5_hotpotqa_1}
+
+\subsection{Example 6: Rapid and Correct Physics Calculation}
+\label{case6_gpqa_1}
+\input{cases/case6_gpqa_1}
+
+\subsection{Example 7:  Multi-Source Cross-Verification}
+\label{case7_2wiki_1}
+\input{cases/case7_2wiki_1}

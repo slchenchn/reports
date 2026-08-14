@@ -1,0 +1,50 @@
+\begin{custombox}[title=Instruction for {Tool Executor}]{toolcardborder}
+\textbf{Task:} Generate a precise command to execute the selected tool.
+
+\vspace{6pt}
+
+\noindent\textbf{Context:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+ \item{Query:} {\{{Question}\}}
+    
+ \item{Sub-Goal:} {\{{Sub Goal} {from Next Step Plan}\}}
+    
+ \item{Tool Name:} {\{{Selected Tool} {from Next Step Plan}\}}
+    
+ \item{Toolbox Metadata:}  \{{{Selected Tool Metadata}} {from Next Step Plan}\}
+    
+ \item{Relevant Data:} {\{{Context} {from Next Step Plan}\}}
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Instructions:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item Analyze the tool's required parameters from its metadata.
+    \item Construct valid Python code that addresses the sub-goal using the provided context and data.
+    \item The command must include at least one call to \smalltt{tool.execute()}.
+    \item Each \smalltt{tool.execute()} call must be assigned to a variable named {\smalltt{execution}}.
+    \item Use exact numbers, strings, and parameters in the \smalltt{tool.execute()} call based on the context.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Output Format:}
+Present your response in the following structured format. Do not include any extra text or explanations.
+
+\vspace{4pt}
+
+\begin{itemize}[left=3pt, label={}, itemsep=0pt, parsep=0pt]
+\item \hspace{-3mm}\textbf{Example 1:}\\
+Generated Command:
+\begin{simplecode}
+execution = tool.execute(query="Summarize the following porblom:"Isaac has 100 toys, masa gets ...., how much are their together?")
+\end{simplecode}
+
+\item \hspace{-3mm}\textbf{Example 2:}\\
+Generated Command:
+\begin{simplecode}
+execution = tool.execute(query=["Methanol", "function of hyperbola", "Fermat's Last Theorem"])
+\end{simplecode}
+\end{itemize}
+\end{custombox}

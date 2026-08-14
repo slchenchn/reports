@@ -1,0 +1,44 @@
+
+\begin{table}[t!]
+    \vspace{-1mm}
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{0.5em}
+    \renewcommand{\arraystretch}{0.95}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{ll|cccc|cc|cc}
+    \toprule
+    \multirow{2}{*}{} & \multirow{2}{*}{} & \multicolumn{6}{c}{\cellcolor{SearchBg}\textbf{Search Intensive}} & \multicolumn{2}{c}{\cellcolor{AgenticBg}\textbf{Agentic}} \\
+    \cmidrule(lr){3-8} \cmidrule(lr){9-10}
+    \textbf{Model} & \textbf{Size} & \textbf{Bamboogle} & \textbf{2Wiki} & \textbf{HotpotQA} & \textbf{Musique} & \textbf{~Avg.~} & \textbf{$\Delta$} & \textbf{GAIA} & \textbf{$\Delta$} \\
+    \midrule
+    Qwen-2.5-7B-Instruct & 7B-Inst & 12.0 & 23.0 & 21.0 & 6.0 & 15.5 & \mygreen{83.6}\gain{41.8} & 3.2 & \mygreen{59.8}\gain{29.9} \\
+    Qwen-2.5-14B-Instruct & 14B-Inst & 21.6 & \underline{26.7} & 20.0 & 8.0 & 19.1 & \mygreen{76.4}\gain{38.2} & 5.5 & \mygreen{55.2}\gain{27.6} \\
+    Qwen-2.5-32B-Instruct & 32B-Inst & \underline{24.0} & \underline{26.7} & 27.0 & 6.0 & 20.9 & \mygreen{72.8}\gain{36.4} & \underline{9.5} & \mygreen{47.2}\gain{23.6} \\
+    Llama-3.3-70B-Instruct & 70B-Inst & 18.4 & 22.7 & \underline{52.0} & \underline{16.0} & \underline{27.3} & \mygreen{60.0}\gain{30.0} & 3.2 & \mygreen{59.8}\gain{29.9} \\
+    \midrule
+    GPT-4o-mini~\citep{hurst2024gpt} & $\sim$8B & 40.8 & 35.6 & 41.0 & 15.0 & 33.1 & \mygreen{48.4}\gain{24.2} & 7.1 & \mygreen{52.0}\gain{26.0} \\
+    GPT-4o~\citep{hurst2024gpt} & $\sim$200B & \underline{68.8} & \underline{49.5} & \underline{54.0} & \underline{24.0} & \underline{49.1} & \mygreen{16.4}\gain{8.2} & \underline{17.3} & \mygreen{31.6}\gain{15.8} \\
+    \midrule
+    Supervised Fine-Tuning (SFT) & 7B-Inst & 12.0 & 25.9 & 22.0 & 6.6 & 16.6 & \mygreen{83.6}\gain{40.7} & 3.2 & \mygreen{59.8}\gain{29.9} \\
+    \midrule
+    Iter-RetGen~\citep{shao2023enhancing} & 7B-Inst & 36.8 & 33.6 & 37.4 & 17.8 & 31.4 & \mygreen{51.8}\gain{25.9} & 3.9 & \mygreen{58.4}\gain{29.2} \\
+    Search-R1~\citep{jin2025search} & 7B-Inst & 43.2 & 38.2 & 37.0 & 14.6 & 33.3 & \mygreen{48.0}\gain{24.0} & \underline{19.1} & \mygreen{28.0}\gain{14.0} \\
+    ZeroSearch~\citep{sun2025zerosearch} & 7B-Base & 27.8 & 35.2 & 34.6 & 18.0 & 28.9 & \mygreen{56.8}\gain{28.4} & 16.5 & \mygreen{33.2}\gain{16.6} \\
+    ReSearch~\citep{chen2025research} & 7B-Base & 42.4 & \underline{47.6} & 43.5 & 22.3 & \underline{39.0} & \mygreen{36.6}\gain{18.3} & 17.3 & \mygreen{31.6}\gain{15.8} \\
+    StepSearch~\citep{wang2025stepsearch} & 7B-Base & 40.0 & 36.6 & 38.6 & \underline{22.6} & 34.5 & \mygreen{45.6}\gain{22.8} & -- & -- \\
+    VerlTool~\citep{jiang2025verltool} & 7B-Base & \underline{46.4} & 45.3 & \underline{44.8} & 19.3 & \underline{39.0} & \mygreen{36.6}\gain{18.3} & 11.2 & \mygreen{43.8}\gain{21.9} \\
+    \midrule
+    AutoGen~\citep{wu2024autogen} & 7B-Inst & 59.6 & 44.0 & 50.0 & 15.9 & 42.4 & \mygreen{29.8}\gain{14.9} & 6.3 & \mygreen{53.6}\gain{26.8} \\
+    \midrule
+    \textbf{\model} & 7B-Inst & 58.4 & 60.0 & 51.3 & 19.2 & 47.2 & \mygreen{26.8}\gain{12.1} & 17.2 & \mygreen{31.8}\gain{15.9} \\
+    \textbf{\model} (w/ Flow-GRPO) & 7B-Inst & \textbf{69.6} & \textbf{77.2} & \textbf{57.0}& \textbf{25.3} & \textbf{57.3} & -- & \textbf{33.1} & -- \\
+    \bottomrule
+    \end{tabular}
+    } %
+    \vspace{-2mm}
+    \caption{\textbf{Accuracy comparison on search-intensive and agentic tasks.} 7B-Base refers to Qwen-2.5-7B-Base and 7B-Inst refers to Qwen-2.5-7B-Instruct. AutoGen and our \model method are agentic systems, which use Qwen-2.5-7B-Instruct for the LLM-powered agents and tools for fair comparison. 
+    We visualize the gains of \model to the each baseline in the \colorbox{DeltaBg}{$\Delta$ columns}.}
+    \vspace{-2mm}
+    \label{tab:main_table_search_agentic}
+\end{table}

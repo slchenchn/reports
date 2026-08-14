@@ -1,0 +1,50 @@
+\begin{custombox}[title=Example {Memory} Entry]{toolcardborder}
+\begin{simplecode}
+"\textbf{Query}": Where is the largest shopping mall besides Tokyo’s biggest metropolitan station? \\
+
+"\textbf{Action Turn 1}": \{
+
+    \ \ \ \textbf{"Tool Name"}: "Wikipedia Search",
+    
+    \ \ \  \textbf{"Sub-Goal"}: "Retrieve detailed information about Tokyo‘s metropolitan area from Wikipedia.",
+    
+    \ \ \ \textbf{"Command"}: "execution = tool.execute(query="Tokyo metropolitan area details")",
+    
+    \ \ \ \textbf{"Result"}: "The Greater Tokyo Area is the largest metropolitan area in the world...",
+
+    \ \ \  \textbf{"Verification Status"}: "
+    
+    \ \ \ \ \ \  Brief Review of the Query, Initial Analysis, and Previous Memory.
+    
+    \ \ \ \ \ \  Assessment of Completeness and Accuracy.
+    
+    \ \ \ \ \ \ Conclusion: The memory is not complete and accurate enough to answer the query. Additional tools are needed to verify or generate more solutions.
+    
+    \ \ \ \ \ \  \textbf{Final Determination:} \textbf{CONTINUE}"
+    
+\},\\
+
+"\textbf{Action Turn 2}": \{
+
+\ \ \ \ ...
+
+\},\\
+
+...\\
+
+"\textbf{Action Turn t}": \{
+
+\ \ \ \ ...
+
+\ \ \  \textbf{"Verification Status"}: "
+    
+    \ \ \ \ \ \ Brief Review of the Query, Initial Analysis, and Previous Memory.
+    
+    \ \ \ \ \ \  Assessment of Completeness and Accuracy. (Including Time Dilation Calculation, Geographic Precise, Inconsistencies or Contradictions, Unit Conversion, etc. )
+    
+    \ \ \ \ \ \ Conclusion: The memory is complete and accurate enough to answer the query. No additional tools are needed to verify or generate more solutions.
+    
+    \ \ \ \ \ \  \textbf{Final Determination:} \textbf{STOP}"
+\\\}
+\end{simplecode}
+\end{custombox}

@@ -1,0 +1,259 @@
+\documentclass{article}
+\usepackage{iclr2026_conference,times}
+\input{math_commands.tex}
+\iclrfinalcopy
+
+\usepackage{graphicx}
+\definecolor{mylinkcolor}{RGB}{11, 20, 110}
+\usepackage[
+    pagebackref,
+    breaklinks,
+    citecolor=mylinkcolor,
+    colorlinks=true,
+    linkcolor=mylinkcolor,
+    urlcolor=mylinkcolor
+]{hyperref}
+
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{multirow} 
+\usepackage{xspace}
+\usepackage[breakable]{tcolorbox}
+\usepackage{titletoc}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+\newcommand{\model}{\textsc{AgentFlow}\xspace}
+
+\makeatletter
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{\z@}{0.0ex plus
+0.3ex minus .2ex}{-1em}{\normalsize\textbf}}
+\makeatother
+
+\definecolor{darkgreen}{RGB}{0, 181, 18}
+\definecolor{darkred}{RGB}{252, 90, 90}
+
+\definecolor{DeltaBg}{HTML}{D4F2D7}
+\definecolor{SearchBg}{HTML}{C2E6F5}
+\definecolor{AgenticBg}{HTML}{F5C2CC}
+\definecolor{MathBg}{HTML}{E6D4F2}
+\definecolor{ScienceBg}{HTML}{FBE0BC}
+
+\newcommand{\gain}[1]{$\uparrow$ #1}
+\newcommand{\mygreen}[1]{\cellcolor{darkgreen!#1}}
+
+\definecolor{toolcardbox}{RGB}{240, 248, 255}
+\definecolor{toolcardborder}{RGB}{52, 52, 173}
+
+\newtcolorbox{custombox}[2][]{
+    colback=toolcardbox,
+    colframe=toolcardborder,          
+    coltitle=white,                
+    arc=1pt,                       
+    boxrule=1pt,
+    fonttitle=\bfseries,
+    title=#1,                      
+    left=5pt,
+    right=5pt,
+    top=5pt,
+    bottom=5pt,
+    before skip=1em,
+    after skip=1em,
+    fontupper=\small,               
+    breakable,     
+    width=1.\linewidth, 
+    #1                        
+}
+
+\newtcolorbox{tooldescbox}[1]{%
+    colback=toolcardbox,
+    colframe=toolcardborder,
+    arc=1pt,                       
+    boxrule=1pt,
+    left=5pt,
+    right=5pt,
+    top=5pt,
+    bottom=5pt,
+    fonttitle=\bfseries,
+    title={Tool Metadata of #1},
+    fontupper=\small,             
+    breakable,
+}
+
+\newtcolorbox{limitationbox}{%
+    colback=failbg,
+    colframe=failframe,
+    arc=1pt,                      
+    boxrule=0.8pt,
+    left=4pt,
+    right=4pt,
+    top=4pt,
+    bottom=4pt,
+    fonttitle=\bfseries\small,
+    title={Limitation},
+    coltitle=white,
+    fontupper=\small,               
+    breakable,
+    before skip=6pt,
+    after skip=6pt
+}
+
+\newtcolorbox{bestpracticebox}{%
+    colback=successbg,
+    colframe=successframe,
+    arc=1pt,                        
+    boxrule=0.8pt,
+    left=4pt,
+    right=4pt,
+    top=4pt,
+    bottom=4pt,
+    fonttitle=\bfseries\small,
+    title={Best Practice},
+    coltitle=white,
+    fontupper=\small,              
+    breakable,
+    before skip=6pt,
+    after skip=6pt
+}
+
+\newcommand{\inputtype}[1]{\textbf{Input:} #1}
+\newcommand{\outputtype}[1]{\textbf{Output:} #1}
+\newcommand{\smalltt}[1]{{\ttfamily\fontsize{8}{10}\selectfont #1}}
+
+\definecolor{failbg}{RGB}{248, 230, 234}
+\definecolor{failframe}{RGB}{176, 36, 24}
+
+\definecolor{successbg}{RGB}{239, 255, 229}
+\definecolor{successframe}{RGB}{34, 139, 34}
+
+\newlist{toolenum}{enumerate}{2}
+\setlist[toolenum]{label=\arabic*., leftmargin=1.8em, itemsep=2pt, topsep=4pt}
+
+\newtcolorbox{simplecode}[1][]{%
+    colback=toolcardbox,
+    colframe=toolcardbox,
+    arc=1pt,
+    boxrule=0pt,
+    top=-3pt, bottom=0pt,
+    left=3pt, right=3pt,
+    boxsep=0pt,
+    left skip=0pt,
+    right skip=0pt,
+    fontupper=\ttfamily\fontsize{8.0}{10}\selectfont,
+    breakable,
+    #1
+}
+
+\newtcolorbox{casebox}[3]{
+    colback=#1,             
+    colframe=#2,    
+    arc=1pt,
+    coltitle=white,                  
+    fonttitle=\bfseries,         
+    title=#3,                    
+    boxrule=1pt,                   
+    rounded corners,   
+    breakable
+}
+
+\newtcolorbox{casecode}[1]{%
+    colback=#1,
+    colframe=toolcardbox,
+    arc=1pt,
+    boxrule=0pt,
+    top=-3pt, bottom=0pt,
+    left=3pt, right=3pt,
+    boxsep=0pt,
+    left skip=0pt,
+    right skip=0pt,
+    fontupper=\ttfamily\fontsize{8.0}{10}\selectfont,
+    breakable,
+}
+
+\newtheoremstyle{mythm}%
+  {3pt}{3pt}{\itshape}{}{\bfseries}{.}{ }{}
+\newtheoremstyle{mydef}%
+  {3pt}{3pt}{}{}{\bfseries}{.}{ }{}
+
+\theoremstyle{mydef}
+\newtheorem{definition}{Definition}[section]
+
+\theoremstyle{mythm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\title{In-the-Flow Agentic System Optimization for Effective Planning and Tool Use}
+
+\author{
+  \hspace{-1mm}\textbf{Zhuofeng Li}$^{*1,2}$\textnormal{,} 
+  \textbf{Haoxiang Zhang}$^{*1,3}$\textnormal{,}  
+  \textbf{Seungju Han}$^{1}$\textnormal{,}  
+  \textbf{Sheng Liu}$^{1}$\textnormal{,}  
+  \textbf{Jianwen Xie}$^{4}$\textnormal{,}  \\
+  \textbf{Yu Zhang}$^{2}$, 
+  \textbf{Yejin Choi}$^{1}$, 
+  \textbf{James Zou}$^{\dagger1}$, 
+  \textbf{Pan Lu}$^{*\dagger1}$ \\
+  $^1$Stanford University, 
+  $^2$Texas A\&M University, 
+  $^3$UC San Diego,
+  $^4$Lambda \vspace{-1mm}
+  \\\\
+  \begin{minipage}[t]{0.1\textwidth}
+      \centering
+      \href{https://agentflow.stanford.edu}{\includegraphics[height=2.5em]{logos/agentflow.pdf}}
+  \end{minipage}%
+  \hfill
+  \hspace{-5mm}
+  \begin{minipage}[t]{0.7\textwidth}
+      \vspace{-8.5mm} 
+      \textbf{\texttt{Website:}}
+      \textbf{\url{https://agentflow.stanford.edu}\vspace{1mm}}
+      \\
+      \raisebox{-0.4ex}{\includegraphics[height=1em]{logos/github.png}}\hspace{0.3em}\href{https://github.com/lupantech/AgentFlow}{\texttt{Code}} 
+      \hspace{0.2cm}
+      \raisebox{-0.4ex}{\includegraphics[height=1em]{logos/huggingface.png}}\hspace{0.3em}\href{https://huggingface.co/AgentFlow/models}{\texttt{Model}}
+      \hspace{0.2cm}
+      \raisebox{-0.4ex}{\includegraphics[height=1em]{logos/gradio.png}}\hspace{0.3em}\href{https://huggingface.co/spaces/AgentFlow/agentflow}{\texttt{Demo}}
+      \hspace{0.2cm}
+      \raisebox{-0.4ex}{\includegraphics[height=1em]{logos/agentflow.pdf}}\hspace{0.4em}\href{https://agentflow.stanford.edu/\#visualization}{\texttt{Visualize}}
+  \end{minipage}
+    \vspace{-7mm}
+}
+
+\begin{document}
+\maketitle
+\renewcommand*\thefootnote{}
+\footnotetext[0]{
+    *Equal contribution.
+    $^{\dagger}$Co-senior authors. 
+    Work was partially done while ZL and HZ were visiting Stanford.
+}
+
+\begin{abstract}
+Outcome-driven reinforcement learning has advanced reasoning in large language models (LLMs), but prevailing tool-augmented approaches train a single, monolithic policy that interleaves thoughts and tool calls under full context; this scales poorly with long horizons and diverse tools and generalizes weakly to new scenarios. Agentic systems offer a promising alternative by decomposing work across specialized modules, yet most remain training-free or rely on offline training decoupled from the live dynamics of multi-turn interaction. We introduce \model, a trainable, \emph{in-the-flow} agentic framework that coordinates four modules (planner, executor, verifier, generator) through an evolving memory and directly optimizes its planner inside the multi-turn loop. To train on-policy in live environments, we propose \emph{Flow-based Group Refined Policy Optimization} (Flow-GRPO), which tackles long-horizon, sparse-reward credit assignment by converting multi-turn optimization into a sequence of tractable single-turn policy updates. It broadcasts a single, verifiable trajectory-level outcome to every turn to align local planner decisions with global success and stabilizes learning with group-normalized advantages. Across ten benchmarks, \model with a 7B-scale backbone outperforms top-performing baselines with average accuracy gains of 14.9\% on search, 14.0\% on agentic, 14.5\% on mathematical, and 4.1\% on scientific tasks, even surpassing larger proprietary models like GPT-4o. Further analyses confirm the benefits of in-the-flow optimization, showing improved planning, enhanced tool-calling reliability, and positive scaling with model size and reasoning turns.
+\end{abstract}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figs/fig1_teaser.pdf}
+    \caption{
+    \textbf{Left:} Performance of \model with a 7B-scale backbone before and after Flow-GRPO tuning across ten diverse reasoning benchmarks. Flow-GRPO substantially improves performance by enhancing planning quality and tool-calling reliability.
+    \textbf{Right:} \model achieves consistent gains over top baselines, including base LLMs, tool-integrated RL models, and training-free agentic systems. All 7B results use Qwen2.5-7B-Base/Instruct as the backbone and tools.}
+    \label{fig:teaser_main_scores}
+\end{figure}
+
+\input{sections/body}
+
+\bibliography{iclr2026_conference}
+\bibliographystyle{iclr2026_conference}
+
+\clearpage
+\input{sections/appendix}
+
+\end{document}

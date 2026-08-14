@@ -1,0 +1,42 @@
+\begin{tooldescbox}{{Base Generator}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+\textbf{Description:} A generalized tool that takes query from the user, and answers the question step by step to the best of its ability. It can also accept an image.
+
+\vspace{6pt}
+
+\inputtype{query: str - The query that includes query from the user to guide the agent to generate response.}
+
+\vspace{4pt}
+
+\outputtype{str - The generated response to the original query}
+
+\vspace{6pt}
+
+\textbf{Demo Commands:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item \textbf{Command:}
+\begin{simplecode}
+\texttt{execution = tool.execute(query="Summarize the following text in a few lines")}
+\end{simplecode}
+
+ \text{Description:} Generate a short summary given the query from the user.
+\end{itemize}
+\begin{limitationbox}
+The Base Generator may provide hallucinated or incorrect responses.
+\end{limitationbox}
+
+\begin{bestpracticebox}
+\begin{toolenum}
+    \item Use it for general queries or tasks that don't require specialized knowledge or specific tools in the toolbox.
+    \item Provide clear, specific query.
+    \item Use it to answer the original query through step by step reasoning for tasks without complex or multi-step reasoning.
+    \item For complex queries, break them down into subtasks and use the tool multiple times.
+    \item Use it as a starting point for complex tasks, then refine with specialized tools.
+    \item Verify important information from its responses.
+\end{toolenum}
+\end{bestpracticebox}
+
+\textbf{LLM Engine Required:} True
+\end{tooldescbox}

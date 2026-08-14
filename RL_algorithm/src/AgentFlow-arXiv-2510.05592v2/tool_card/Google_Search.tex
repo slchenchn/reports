@@ -1,0 +1,68 @@
+\begin{tooldescbox}{{Google Search}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+\textbf{Description:} A web search tool powered by Google Search that provides real-time information from the internet with citation support.
+
+\vspace{6pt}
+
+\inputtype{query: str - The search query to find information on the web.}
+
+\vspace{4pt}
+
+\inputtype{add\_citations: bool - Whether to add citations to the results. If True, the results will be formatted with citations. By default, it is True.}
+
+\vspace{4pt}
+
+\outputtype{str - The search results of the query.}
+
+\vspace{6pt}
+
+\textbf{Demo Commands:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item \textbf{Command:} 
+\begin{simplecode}
+{{execution = tool.execute(query="What is the capital of France?")}}
+\end{simplecode}
+
+    \enspace\text{Description:} Search for general information about the capital of France with default citations enabled.
+    
+    \vspace{4pt}
+    
+
+    \item \textbf{Command:} 
+    \begin{simplecode}
+    {{execution = tool.execute(query="Who won the euro 2024?", add\_citations=False)}}
+    \end{simplecode}
+
+    \enspace\text{Description:} Search for information about the Euro 2024 winner without citations.
+    
+    \vspace{4pt}
+    
+
+    \item \textbf{Command:} 
+    \begin{simplecode}
+    {{execution = tool.execute(query="Physics and Society article arXiv August 11, 2016”, add\_citations=True)}}
+    \end{simplecode}
+
+    \enspace\text{Description:} Search for specific academic articles with citations enabled.
+\end{itemize}
+\begin{limitationbox}
+\begin{toolenum}
+    \item This tool is only suitable for general information search.
+    \item This tool contains less domain-specific information.
+    \item This tool is not suitable for searching and analyzing videos on YouTube or other video platforms.
+\end{toolenum}
+\end{limitationbox}
+
+\begin{bestpracticebox}
+\begin{toolenum}
+    \item Choose this tool when you want to search for general information about a topic.
+    \item Choose this tool for question types of query, such as ``What is the capital of France?'' or ``Who invented the telephone?''.
+    \item The tool will return summarized information.
+    \item This tool is more suitable for definition, world knowledge, and general information search.
+\end{toolenum}
+\end{bestpracticebox}
+
+\textbf{LLM Engine Required:} False
+\end{tooldescbox}

@@ -1,0 +1,160 @@
+This case demonstrates that, when tuned with Flow-GRPO, the \textit{Action Planner} first attempts several solutions, recognizes their ineffectiveness, resorts to a brute-force approach, and finally verifies the result using a search engine.
+
+\begin{custombox}[title=Example from \# GameOf24]{toolcardborder}
+\textbf{Question:} Using the numbers [1, 1, 6, 9], create an expression that equals 24. You must use basic arithmetic operations (+, -, *, /) and parentheses.
+
+\vspace{1em}
+
+\textbf{Answer:} (1+1)*9+6
+\end{custombox}
+
+\begin{small}
+\begin{center}
+
+\begin{casebox}{successbg}{successframe}{Success Case: \model w/ Flow-GRPO}
+    \textbf{Action Step 1: Initial Attempt}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and test all possible arithmetic expressions using the numbers [1, 1, 6, 9] exactly once to check if any combination equals 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9], create an expression that equals 24 using basic arithmetic operations and parentheses.")}
+        \item \textbf{Result:}
+        \begin{casecode}{successbg}
+\# Given numbers
+
+numbers = [1, 1, 6, 9]
+
+\# Calculate the expression
+
+result = (numbers[0] + numbers[1]) * (numbers[3] - numbers[2])
+
+\# Print the result
+
+print(f"The result of the expression ({numbers[0]} + {numbers[1]} ) * ({numbers[3]} - {numbers[2]}) is: {result}")
+        \end{casecode}
+        The result of the expression (1 + 1 ) * (9 - 6) is: 6
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2: Tool Error}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and test all possible permutations of the numbers with different operator placements to find an expression that equals 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9], create an expression with +,-,*,/ that equals 24")}
+        \item \textbf{Result:} \textcolor{orange}{Error: eval() arg 1 must be a string, bytes or code object}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 3: Second Attempt}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate all possible combinations of the four numbers with every permutation of operators (+,-,*,/) to find a valid equation resulting in exactly 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9] create an expression with +,-,*,/ that equals to '24'")}
+        \item \textbf{Result:}
+        \begin{casecode}{successbg}
+\# Given numbers
+
+numbers = [1, 1, 6, 9]
+        \end{casecode}
+        \begin{casecode}{successbg}
+\# Calculate the expression
+
+result = (numbers[2] - numbers[0]) * (numbers[3] / numbers[1]) / numbers[1]
+
+\# Print the result
+
+print(f"The result of the expression is: {result}")
+        \end{casecode}
+        The result of the expression is: 45.0
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 4: Systematic Search (Breakthrough)}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and evaluate all possible permutations of the four numbers with every permutation of operators (+,-,*,/) to find a valid equation resulting in exactly 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9] create an expression that equals 24 using +,-,/,*")}
+        \item \textbf{Result:} \textbf{Successfully found valid expressions:} The expression (1+1)*9+6 equals 24. The expression 6+(1+1)*9 equals 24. The expression 6+(9*(1+1)) equals 24. The expression 9*(1+1)+6 equals 24.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 5: Confused Verification}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Simplify and verify if any minor adjustments to the existing promising expression can achieve an exact match of 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9] and basic arithmetic operations create an expression that equals 24: (9 * (6 * (1 + 1)))")}
+        \item \textbf{Result:} \textcolor{orange}{The result of the expression (9 * (1 + 1) * 6) is: 108}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 6: Final Verification}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Search online for examples or discussions related to creating expressions using given numbers that equal a target value.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="using the numbers [1, 1, 6, 9] create an expression that equals 24", add\_citations=True)}
+        \item \textbf{Result:} Here's an expression using the numbers that equals 24: (1 + 1) * 9 + 6 = 24
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP (via exhaustive search and verification)}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{successframe}{After a multi-step process of trial, error, and verification, the final correct expression is \textbf{(1 + 1) * 9 + 6 = 24}.}
+
+\end{casebox}
+
+\begin{casebox}{failbg}{failframe}{Failure Case: \model w/o Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and test Python code snippets to find an arithmetic expression using the numbers [1, 1, 6, 9] exactly once that equals 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Using the numbers [1, 1, 6, 9], create an expression that equals 24 using basic arithmetic operations and parentheses.")}
+        \item \textbf{Result:}
+        \begin{casecode}{failbg}
+\# Define the numbers
+
+numbers = [1, 1, 6, 9]
+
+\# Calculate the expression
+
+result = (6 * 9) - ((1 + 1) * 15)
+
+\# Print the result with a descriptive message
+
+print("The result of the expression is:", result)
+        \end{casecode}
+        The result of the expression is: 24
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{red}{STOP}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{red}{The agent incorrectly concludes the answer is $(6 \times 9) - ((1 + 1) \times 15)$, failing to notice it used the number \textbf{15}, which was not in the allowed input set.}
+\end{casebox}
+
+
+\end{center}
+\end{small}

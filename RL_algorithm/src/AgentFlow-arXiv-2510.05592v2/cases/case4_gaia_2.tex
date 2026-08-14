@@ -1,0 +1,221 @@
+This side-by-side comparison illustrates the critical impact of Flow-GRPO tuning on strategic tool usage. The trained \model agent demonstrates adaptive planning—recovering from failed searches, refining input formulations, and ultimately achieving a correct solution in a single effective trial. In contrast, the untrained agent, despite accessing the correct information early, fails to properly utilize the {Python Coder} tool and becomes trapped in a repetitive error loop, unable to learn or adjust. This highlights Flow-GRPO’s role in enabling not just tool selection, but \textit{strategic resilience} and \textit{goal-directed reasoning}.
+\begin{custombox}[title=Example from \# GAIA]{toolcardborder}
+
+\textbf{Question:} Compute the check digit the Tropicos ID for the Order Helotiales would have if it were an ISBN-10 number.
+
+\vspace{1em}
+
+\textbf{Answer:}  3
+\end{custombox}
+
+\begin{small}
+\begin{center}
+\begin{casebox}{successbg}{successframe}{Success Case: \model w/ Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve the Tropicos ID from the Wikipedia page on Helotiales.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Tropicos ID of Order Helotiales")}
+        \item \textbf{Result:} \textcolor{orange}{No results found for query: Tropicos ID of Order Helotiales}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Retrieve the Tropicos ID of Order Helotiales from a reliable online source.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Tropicos ID of Order Helotiales")}
+        \item \textbf{Result:} The Tropicos ID for the Order Helotiales is \smalltt{100370510}.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 3:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Write and execute a Python script to calculate the check digit for \smalltt{tropicos\_id} as if it were an ISBN-10 number.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Calculate the check digit for the ISBN-10 number " + tropicos\_id)}
+        \item \textbf{Result:} \textcolor{orange}{Error in execute\_tool\_command: name 'tropicos\_id' is not defined}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 4:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Write and execute a Python script to calculate the check digit for \smalltt{tropicos\_id} as if it were an ISBN-10 number.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Compute the check digit for 100370510 as an ISBN-10 number")}
+        \item \textbf{Result:}
+        \begin{casecode}{successbg}
+def calculate\_check\_digit(isbn):
+
+\hspace{4mm}\# Extract the first 9 digits of the ISBN-10
+
+\hspace{4mm}isbn\_digits = [int(digit) for digit in isbn[:9]]
+\\
+
+\hspace{4mm}\# Calculate the sum of products
+
+        \end{casecode}
+        \begin{casecode}{successbg}
+        
+\hspace{4mm}total\_sum = sum(position * digit for position, digit in enumerate(isbn\_digits, start=1))
+\\
+
+\hspace{4mm}\# Determine the check digit
+
+\hspace{4mm}check\_digit = total\_sum \% 11
+
+\hspace{4mm}if check\_digit == 10:
+
+\hspace{8mm}return 'X'
+
+        \end{casecode}
+        \begin{casecode}{successbg}
+        
+\hspace{4mm}else:
+
+\hspace{8mm}return str(check\_digit)
+\\
+
+\hspace{0mm}\# Given ISBN-10 number
+
+\hspace{0mm}isbn\_10 = "100370510"
+\\
+
+\hspace{0mm}\# Compute the check digit
+
+\hspace{0mm}check\_digit\_result = calculate\_check\_digit(isbn\_10)
+\\
+
+\hspace{0mm}\# Print the final result
+
+\hspace{0mm}print(f"The check digit for the ISBN-10 number {isbn\_10} is {check\_digit\_result}")
+\end{casecode}
+        Printed output: The check digit for the ISBN-10 number 100370510 is \textbf{3}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 5:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Execute the existing Python script to calculate and print the check digit for \smalltt{tropicos\_id} as an ISBN-10 number.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Compute the check digit for tropicos\_id 100370510 as an ISBN-10 number")}
+        \item \textbf{Result:}
+        \begin{casecode}{successbg}
+
+def calculate\_isbn10\_check\_digit(tropicos\_id):
+
+    \hspace{4mm}\# Step 1: Extract the first 9 digits of the Tropicos ID
+
+    \hspace{4mm}isbn\_digits = tropicos\_id[:9]
+
+    \hspace{4mm}\# Step 2: Initialize the sum for the check digit calculation
+
+    \hspace{4mm}total\_sum = 0
+
+    \hspace{4mm}\# Step 3: Calculate the sum of the products of each digit and its position
+
+    \hspace{4mm}for i, digit in enumerate(isbn\_digits, start=1):
+
+    \hspace{8mm}total\_sum += i * int(digit)
+
+
+    \hspace{4mm}check\_digit = total\_sum %
+
+
+    \hspace{4mm}\# If the check digit is 10, it is represented as 'X'
+
+    \hspace{4mm}if check\_digit == 10:
+
+    \hspace{8mm}check\_digit = 'X'
+    
+
+    \hspace{4mm}\# Step 5: Format the ISBN-10
+
+    \hspace{4mm}isbn\_10 = f"{isbn\_digits}{check\_digit}"
+
+    \hspace{4mm}return isbn\_10
+
+
+\# Given Tropicos ID
+tropicos\_id = "100370510"
+
+\# Step 6: Generate the ISBN-10 and print the result
+
+isbn\_10 = calculate\_isbn10\_check\_digit(tropicos\_id)
+
+print(f"The ISBN-10 number for the Tropicos ID {tropicos\_id} is: {isbn\_10}")
+        \end{casecode}
+        Printed output: The ISBN-10 number for the Tropicos ID 100370510 is: \textbf{1003705103}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP}
+    
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{successframe}{The check digit is 3, resulting in the full number \textbf{1003705103}.}
+
+\end{casebox}
+
+\begin{casebox}{failbg}{failframe}{Failure Case: \model w/o Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Wikipedia Search}
+        \item \textbf{Sub-goal:} Retrieve the Tropicos ID of the Order Helotiales from Wikipedia.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Tropicos ID for the Order Helotiales")}
+        \item \textbf{Result:} \textcolor{orange}{No results found for query: Tropicos ID for the Order Helotiales}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Retrieve the Tropicos ID of the Order Helotiales from a reliable web source.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Tropicos ID for the Order Helotiales", add\_citations=True)}
+        \item \textbf{Result:} The Tropicos ID for the Order Helotiales is \smalltt{100370510}.[1][2]
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Steps 3-9:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Calculate the check digit for the Tropicos ID 100370510 if it were an ISBN-10 number.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="Calculate the check digit for the ISBN-10 number 100370510")}
+        \item \textbf{Result:} \textcolor{red}{Error: name 'isbn' is not defined}
+        \item \textit{Note: Action Steps 3 through 9 all have identical subgoals, commands, and error results—the agent is stuck in a repetitive error loop, unable to fix the variable naming issue.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{red}{STOP, Stuck in Repetitive Tool Error}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{red}{The Python tool failed repeatedly with the same `isbn' variable error across 7 consecutive attempts (Steps 3-9). The agent was unable to recover from this error and failed to calculate the check digit.}
+\end{casebox}
+
+\end{center}    
+\end{small}

@@ -1,0 +1,64 @@
+Web search will directly access the URL in the query. Then the RAG (Retrieval-Augmented Generation) process begins by splitting content from the page into overlapping chunks of approximately 200 words each, with a 20-word overlap to preserve context across segments from the first 1M words in each URL. Next, both the user's query and the document chunks are embedded into the vector space using the OpenAI {text-embedding-3-small\footnote{\url{https://platform.openai.com/docs/models/text-embedding-3-small}}} model. The system computes the cosine similarity between the query embedding and each chunk embedding to rank the chunks by relevance. We set that the top 10 most similar chunks are selected and passed forward as context. And a base LLM engine will summarize the extracted context. 
+
+\begin{tooldescbox}{{Web Search}}
+\setlength{\parindent}{0pt}
+
+\textbf{Description:} A specialized tool for answering questions by retrieving relevant information from a given website using RAG (Retrieval-Augmented Generation).
+
+\vspace{6pt}
+
+\inputtype{query: str - The search query for the website.}
+
+\vspace{4pt}
+
+\inputtype{url: str - The URL of the website to retrieve information from.}
+
+\vspace{4pt}
+
+\outputtype{str - The answer to the user's query based on the information gathered from the website.}
+
+\vspace{6pt}
+
+\textbf{Demo Commands:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item \textbf{Command:} 
+\begin{simplecode}
+{{execution = tool.execute(query="What is the exact mass in kg of the moon?", url="https://en.wikipedia.org/wiki/Moon")}}
+\end{simplecode}
+
+    \enspace\text{Description:} Retrieve information about the moon's mass from Wikipedia.
+    
+    \vspace{4pt}
+    
+    \item \textbf{Command:} 
+    \begin{simplecode}
+    {{execution = tool.execute(query="What are the main features of Python programming language?", url="https://www.python.org/about/apps/")}}
+    \end{simplecode}
+
+    \enspace\text{Description:} Get information about Python features from the official website.
+\end{itemize}
+\begin{limitationbox}
+\begin{toolenum}
+    \item Requires valid URLs that are accessible and contain text content.
+    \item May not work with JavaScript-heavy websites or those requiring authentication.
+    \item Performance depends on the quality and relevance of the website content.
+    \item May return incomplete or inaccurate information if the website content is not comprehensive.
+    \item Limited by the chunking and embedding process which may miss context.
+    \item Requires OpenAI API access for embeddings and LLM generation.
+\end{toolenum}
+\end{limitationbox}
+
+\begin{bestpracticebox}
+\begin{toolenum}
+    \item Use specific, targeted queries rather than broad questions.
+    \item Ensure the URL is accessible and contains relevant information.
+    \item Prefer websites with well-structured, text-rich content.
+    \item For complex queries, break them down into smaller, specific questions.
+    \item Verify important information from multiple sources when possible.
+    \item Use it as part of a multi-step research process rather than a single source of truth.
+    \item It is highly recommended to use this tool after calling other web-based tools (e.g., Google Search, Wikipedia Search, etc.) to get the real, accessible URLs.
+\end{toolenum}
+\end{bestpracticebox}
+
+\textbf{LLM Engine Required:} True
+\end{tooldescbox}

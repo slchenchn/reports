@@ -1,0 +1,23 @@
+
+\begin{table}[htbp]
+  \centering
+  \vspace{-2mm}
+  \setlength{\tabcolsep}{0.4em}
+  \resizebox{0.95\textwidth}{!}{
+  \begin{tabular}{llllllllll}
+  \toprule
+  \textbf{Planner Model} & \textbf{Training} & \textbf{Bamboogle} & \textbf{2Wiki} & \textbf{GAIA} & \textbf{AIME24} & \textbf{AMC23} & \textbf{GameOf24} & \textbf{Avg.} \\
+  \midrule
+  Qwen-2.5-7B & Frozen & 58.4 & 60.0 & 17.2 & 16.7 & 47.4 & 31.0 & 38.5 \\
+  \midrule
+  GPT-4o & Frozen & \cellcolor{darkgreen!19.8}65.0 $_{\uparrow~6.6}$ & \cellcolor{darkgreen!30.0}70.0 $_{\uparrow~10.0}$ & \cellcolor{darkgreen!19.2}23.6 $_{\uparrow~6.4}$ & \cellcolor{darkgreen!0.0}16.7 $_{\uparrow~0.0}$ & \cellcolor{darkgreen!3.9}48.7 $_{\uparrow~1.3}$ & \cellcolor{darkgreen!33.0}42.0 $_{\uparrow~11.0}$ & \cellcolor{darkgreen!17.4}44.3 $_{\uparrow~5.8}$ \\
+  Qwen-2.5-7B & SFT & \cellcolor{darkred!84.0}30.4 $_{\downarrow~28.0}$ & \cellcolor{darkred!81.9}32.7 $_{\downarrow~27.3}$ & \cellcolor{darkred!32.7}~~6.3 $_{\downarrow~10.9}$ & \cellcolor{darkred!40.2}~~3.3 $_{\downarrow~13.4}$ & \cellcolor{darkred!29.7}37.5 $_{\downarrow~9.9}$ & \cellcolor{darkred!72.0}~~7.0 $_{\downarrow~24.0}$ & \cellcolor{darkred!57.0}19.5 $_{\downarrow~19.0}$ \\
+  Qwen-2.5-7B & Flow-GRPO & \cellcolor{darkgreen!33.6}69.6 $_{\uparrow~11.2}$ & \cellcolor{darkgreen!51.6}77.2 $_{\uparrow~17.2}$ & \cellcolor{darkgreen!47.7}33.1 $_{\uparrow~15.9}$ & \cellcolor{darkgreen!69.9}40.0 $_{\uparrow~23.3}$ & \cellcolor{darkgreen!42.3}61.5 $_{\uparrow~14.1}$ & \cellcolor{darkgreen!66.0}53.0 $_{\uparrow~22.0}$ & \cellcolor{darkgreen!51.6}55.7 $_{\uparrow~17.2}$ \\
+  \bottomrule
+  \end{tabular}
+  } %
+  \vspace{1mm}
+  \caption{Performance comparison of \model across different training methods.}
+  \vspace{-2mm}
+  \label{tab:individual_vs_inflow}
+\end{table}

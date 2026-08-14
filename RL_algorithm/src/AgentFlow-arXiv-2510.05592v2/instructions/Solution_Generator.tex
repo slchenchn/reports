@@ -1,0 +1,47 @@
+\begin{custombox}[title=Instruction for {Solution Generator}]{toolcardborder}
+\setlength{\parindent}{0pt}
+
+\textbf{Task:} Generate a concise final answer to the query based on all provided context.
+
+\vspace{6pt}
+
+\noindent\textbf{Context:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+ \item {Query:} {\{{Question}\}}
+ 
+ \item {Initial Analysis:} {\{{Query Analysis}\}}
+    
+ \item {Actions Taken:} {\{{Actions} {from Memory}\}}
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Instructions:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item Carefully review the original user query, the initial analysis, and the complete sequence of actions and their results.
+    \item Synthesize the key findings from the action history into a coherent narrative.
+    \item Construct a clear, step-by-step summary that explains how each action contributed to solving the query.
+    \item Provide a direct, precise, and standalone final answer to the original query.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Output Structure:}
+\begin{enumerate}[left=0pt, itemsep=0pt, parsep=0pt]
+    \item {Process Summary:} A clear, step-by-step breakdown of how the query was addressed. For each action, state its purpose (e.g., ``To verify X'') and summarize its key result or finding in one sentence.
+    \item {Answer:} A direct and concise final answer to the query. This should be a self-contained statement that fully resolves the user's question.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Rules:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+ \item The response must follow the exact two-part structure above.
+    
+ \item The {Process Summary} should be informative but concise, focusing on the logical flow of the solution.
+    
+ \item The {Answer} must be placed at the very end and be clearly identifiable.
+    
+ \item Do not include any additional sections, explanations, or disclaimers beyond the specified structure.
+\end{itemize}
+\end{custombox}

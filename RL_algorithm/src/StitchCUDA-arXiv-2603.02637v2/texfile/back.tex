@@ -1,0 +1,26 @@
+\section{Background}
+
+\label{sec:background}
+
+
+\textbf{Benchmarks and task formulations.}
+Recent work has standardized the evaluation of LLMs for CUDA programming via \emph{KernelBench}~\cite{kernelbench}, which frames automated kernel generation as translating a PyTorch reference into a CUDA extension and evaluates its functional correctness and speed relative to the reference. KernelBench Level~1/2 primarily emphasizes \emph{single-kernel} generation and a few fusion opportunities under fixed interfaces and micro-benchmark objectives, making the optimization target comparatively local and well-scoped. In contrast, Level~3/4 increasingly resemble program synthesis rather than kernel synthesis, where multiple kernels and host orchestration jointly determine end-to-end behavior and performance. 
+
+\textbf{LLM Agents and workflow.}
+A common approach is to externalize the kernel-development loop into an agentic workflow. CUDAForge \cite{cudaforge} exemplifies this design for kernel optimization: specialized agents (a coding agent and a feedback agent) iteratively refine an existing CUDA kernel, using correctness checks and profiling feedback to guide improvement. Moreover,
+cuPilot \cite{cupilot}, astra \cite{astra}, and QiMeng \cite{qimeng} further push agentic optimization toward evolutionary search and roofline-guided prompting.
+These systems demonstrate that decomposition and tool-augmented iteration can improve success rates and speedups in practice, but they largely operate within a single-kernel scope. 
+
+However, multi-agent approaches face several structural limitations scaling to end-to-end GPU programs. These workflows are prone to \emph{local optima} and \emph{specification drift}: iterative edits may overfit to specific inputs and profiling artifacts. Besides, as the search space grows (multiple kernels, host orchestration, and library calls), the coding agent suffers from long code context and tool traces, increasing the likelihood of inconsistent implementation, redundant edits, and unstable convergence, collectively limiting scalability beyond single-kernel optimization.
+
+
+\textbf{RL-training paradigms.}
+A growing line of work~\cite{kevin,cudal2,li2025cudal1improvingcudaoptimization} improves LLM-based kernel generators via post-training on \emph{verifiable} execution signals. Kevin~\cite{kevin} proposes a multi-turn RL recipe tailored to kernel generation, where reward is defined by functional correctness and runtime speedup over a reference implementation. Similarly, CUDA-L1~\cite{li2025cudal1improvingcudaoptimization} and CUDA-L2~\cite{cudal2} adopt rule-based rewards for GRPO training, targeting general kernel optimization and HGEMM, respectively.
+
+Despite promising results, RL-based methods face three recurring limitations: (i) correctness/speedup rewards are prone to reward hacking and degenerate behavior; (ii) coders are typically not trained to interpret structured execution feedback, limiting their effectiveness in end-to-end optimization; and (iii) although agentic RL could address this gap in principle, multi-turn rollouts in realistic CUDA environments are prohibitively costly, making training inefficient.
+
+
+
+
+
+

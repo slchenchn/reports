@@ -1,0 +1,118 @@
+This case demonstrates that a well-crafted initial search with a highly relevant query is far more effective than issuing numerous wrong paths. When tuned with Flow-GRPO, the \textit{Action Planner} in \model can identify the optimal search engine and formulate the most effective query, leading to a correct and targeted answer in a single trial.
+
+\begin{custombox}[title=Example from \# GAIA]{toolcardborder}
+
+\textbf{Question:} Assuming scientists in the famous youtube video The Thinking Machine (Artificial Intelligence in the 1960s) were interviewed the same year, what is the name of the scientist predicting the sooner thinking machines or robots? Answer using the format First name Last name.
+
+\vspace{1em}
+
+\textbf{Answer:} Claude Shannon
+\end{custombox}
+
+
+\begin{small}
+\begin{center}
+\begin{casebox}{successbg}{successframe}{Success Case : \model w/ Flow-GRPO}
+    \textbf{Action Turn 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Search for details on ``The Thinking Machine'' YouTube video and identify key figures making predictions about AI.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Assuming scientists in the famous youtube video The Thinking Machine (Artificial Intelligence in the 1960s) were interviewed the same year, what is the name of the scientist predicting sooner thinking machines or robots?")}
+        \item \textbf{Result:} The scientist who predicted the sooner emergence of thinking machines or robots in ``The Thinking Machine'' video from the 1960s was Claude Shannon. He stated, ``I confidently expect that within 10 or 15 years we will find emerging from the laboratories something not too far from the robots of science-fiction fame.'' This prediction was made in the 1961 documentary, which was produced by CBS to honor MIT's 100th birthday.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: } \textcolor{successframe}{The scientist who made the prediction is Claude Shannon.}
+
+\end{casebox}
+
+
+\begin{casebox}{failbg}{failframe}{Failure Case: \model w/o Flow-GRPO}
+    \textbf{Action Turn 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Web Search}
+        \item \textbf{Sub-goal:} Retrieve information from the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s) to identify the name of the scientist who made the prediction about thinking machines or robots.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="Who predicted the sooner thinking machines or robots in the YouTube video 'The Thinking Machine' (Artificial Intelligence in the 1960s)?", url="https://www.youtube.com/watch?v=your\_video\_id")}
+        \item \textbf{Result:} \textcolor{red}{The reference information provided does not contain any details regarding predictions made about thinking machines or robots in the YouTube video 'The Thinking Machine' (Artificial Intelligence in the 1960s). Therefore, I cannot provide an answer to the query.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Turn 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the name of the scientist who predicted the sooner development of thinking machines or robots in the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s).
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="In the YouTube video The Thinking Machine (Artificial Intelligence in the 1960s), which scientist predicted the sooner development of thinking machines or robots?", add\_citations=True)}
+        \item \textbf{Result:} In the YouTube video ``The Thinking Machine (Artificial Intelligence in the 1960s),'' Jerome Wiesner, then Director of the Research Laboratory of Electronics at MIT, predicted the sooner development of thinking machines. He stated, ``if you come back in four or 5 years I'll say `Sure they really do think.'''
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Turn 3:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the name of the scientist who predicted the sooner development of thinking machines or robots in the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s).
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="In the YouTube video The Thinking Machine (Artificial Intelligence in the 1960s), which scientist predicted the sooner development of thinking machines or robots?", add\_citations=True)}
+        \item \textbf{Result:} In the YouTube video ``The Thinking Machine (Artificial Intelligence in the 1960s),'' Professor Jerome B. Wiesner, director of the research laboratory of electronics at MIT, predicted the sooner development of thinking machines. He stated, ``I suspect if you come back in four or 5 years I'll say `Sure they really do think.''' Another scientist in the video confidently expected ``within a matter of 10 or 15 years something will emerge from the laboratories which is not too far from robot a science fiction fan.''
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Turn 4:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the exact year of the interview in the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s) where Jerome B. Wiesner made the prediction about thinking machines or robots.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="In the YouTube video The Thinking Machine (Artificial Intelligence in the 1960s), which scientist predicted the sooner development of thinking machines or robots?", add\_citations=True)}
+        \item \textbf{Result:} In the YouTube video ``The Thinking Machine (Artificial Intelligence in the 1960s),'' a scientist confidently predicted that ``within a matter of 10 or 15 years something will emerge from the laboratories which is not too far from the robot of science fiction fame.'' While the video features interviews with several pioneering scientists in artificial intelligence, including Jerome Wiesner, Oliver Selfridge, and Claude Shannon, the specific speaker for this particular prediction about the emergence of robots within 10 to 15 years is not explicitly named in the provided transcripts. Jerome Wiesner, one of the co-hosts, also made a prediction, stating he suspected that in ``four or 5 years'' machines would ``really do think.''
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Turn 5:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the exact year of the interview in the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s).
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="When was the YouTube video 'The Thinking Machine' released?", add\_citations=True)}
+        \item \textbf{Result:} The original television program titled `The Thinking Machine' aired on the CBS TV network on October 26, 1960. It was a special program produced by CBS News in conjunction with the Massachusetts Institute of Technology (MIT). This documentary explored early concepts of artificial intelligence and computers. While the original broadcast was in 1960, various versions of `The Thinking Machine' have been uploaded to YouTube at different times.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Turn 6:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find the exact year of the interview in the YouTube video ``The Thinking Machine'' (Artificial Intelligence in the 1960s) where Jerome Wiesner made his prediction about thinking machines or robots.
+        \item \textbf{Command:}
+
+			 \smalltt{tool.execute(query="In which year did Jerome Wiesner make his prediction about thinking machines or robots in the YouTube video 'The Thinking Machine' (Artificial Intelligence in the 1960s)?", add\_citations=True)}
+        \item \textbf{Result:} Jerome Wiesner made his prediction about thinking machines or robots in the YouTube video `The Thinking Machine' (Artificial Intelligence in the 1960s) in \textbf{1960}. The documentary, which features Wiesner, originally aired on October 26, 1960, as part of a CBS series titled ``Tomorrow''. In the video, Wiesner stated his confident expectation that ``within a matter of 10 or 15 years something will emerge from the laboratories which is not too far from robot a science fiction fan''.
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{red}{STOP, Initial Tool Failure \& Inefficient Search Path}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator:} \textcolor{red}{The answer is Jerome B. Wiesner. However, the initial direct video search failed, leading to multiple, somewhat redundant Google searches to extract the information.}
+\end{casebox}
+
+\end{center}
+\end{small}

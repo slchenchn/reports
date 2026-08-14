@@ -1,0 +1,63 @@
+Wikipedia search will first call Wikipedia API to retrieve relevant URLs with snippets. Then the RAG (Retrieval-Augmented Generation) process begins by extracting raw text content from the given webpage URL, cleaning it to remove HTML elements and retain only meaningful text. This content is then split into overlapping chunks of approximately 200 words each, with a 20-word overlap to preserve context across segments from the first 1M words in each URL. Next, both the user's query and the document chunks are embedded into the vector space using the OpenAI \texttt{text-embedding-3-small\footnote{\url{https://platform.openai.com/docs/models/text-embedding-3-small}}} model. The system computes the cosine similarity between the query embedding and each chunk embedding to rank the chunks by relevance. We set that the top 10 most similar chunks are selected and passed forward as context. And a base LLM engine will summarize the extracted context. 
+
+Wikipedia search will first call Wikipedia API to retrieve relevant URLs with snippets. 
+
+\begin{tooldescbox}{{Wikipedia Search}}
+\setlength{\parindent}{0pt}
+
+\text{Description:} A tool that searches Wikipedia and returns relevant pages with their page titles, URLs, abstract, and retrieved information based on a given query.
+
+\vspace{6pt}
+
+\inputtype{query: str - The search query for Wikipedia.}
+
+\vspace{4pt}
+
+\outputtype{dict - A dictionary containing search results, all matching pages with their content, URLs, and metadata.}
+
+\vspace{6pt}
+
+\textbf{Demo Commands:}
+\begin{itemize}[left=0pt, label={}, itemsep=0pt, parsep=0pt]
+\item \textbf{Command:} 
+\begin{simplecode}{{execution = tool.execute(query="What is the exact mass in kg of the moon")}}
+\end{simplecode}
+
+   \item \text{Description:} Search Wikipedia and get the information about the mass of the moon.
+    
+    \vspace{4pt}
+    
+    \item \textbf{Command:} 
+    \begin{simplecode}
+    {{execution = tool.execute(query="Funtion of human kidney")}}
+    \end{simplecode}
+    
+    \text{Description:} Search Wikipedia and get the information about the function of the human kidney.
+    
+    \vspace{4pt}
+    
+    \item \textbf{Command:}  
+    \begin{simplecode}
+    {{execution = tool.execute(query="When was the first moon landing?")}}
+    \end{simplecode}
+    
+    \text{Description:} Search Wikipedia and get the information about the first moon landing.
+\end{itemize}
+\begin{limitationbox}
+\begin{toolenum}
+    \item It is designed specifically for retrieving grounded information from Wikipedia pages only.
+    \item The returned information accuracy depends on Wikipedia's content quality.
+\end{toolenum}
+\end{limitationbox}
+
+\begin{bestpracticebox}
+\begin{toolenum}
+    \item Use specific, targeted queries rather than broad or ambiguous questions.
+    \item If initial results are insufficient, examine the ``other\_pages'' section for additional potentially relevant content.
+    \item Use this tool as part of a multi-step research process rather than a single source of truth.
+    \item You can use the Web Search to get more information from the URLs.
+\end{toolenum}
+\end{bestpracticebox}
+
+\textbf{LLM Engine Required:} True
+\end{tooldescbox}

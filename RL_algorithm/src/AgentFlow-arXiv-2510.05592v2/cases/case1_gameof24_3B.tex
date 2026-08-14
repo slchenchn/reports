@@ -1,0 +1,96 @@
+This case demonstrates that, with Flow-GRPO tuning, the \textit{Action Planner} can effectively leverage the search engine to retrieve correct answers for simple tasks in a highly efficient manner—unlike the untuned baseline, which requires multiple trials.
+
+\begin{custombox}[title=Example from \# GameOf24]{toolcardborder}
+\textbf{Question:} Using the numbers [1, 1, 1, 13], create an expression that equals 24. You must use basic arithmetic operations (+, -, *, /) and parentheses.
+
+\vspace{1em}
+
+\textbf{Answer:} (13-1)*(1+1)
+\end{custombox}
+
+\begin{small}
+\begin{center}
+
+    \begin{casebox}{successbg}{successframe}{Success Case: \model w/ Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Google Search}
+        \item \textbf{Sub-goal:} Find a valid arithmetic expression that equals 24 using the numbers [1, 1, 1, 13].
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="[1, 1, 1, 13] arithmetic expression to get 24")}
+        \item \textbf{Result:} Here's an arithmetic expression using the numbers 1, 1, 1, and 13 to get 24: (13 - 1) * (1 + 1) = 24
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Execution Verifier:} \textcolor{successframe}{PASS, STOP}
+
+    \vspace{1em}
+
+    \textbf{Solution Generator: }\textcolor{successframe}{The arithmetic expression is $((13 - 1) \times (1 + 1)) = 24$.}
+    
+\end{casebox}
+
+\begin{casebox}{failbg}{failframe}{Failure Case: \model w/o Flow-GRPO}
+    \textbf{Action Step 1:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and test all possible combinations of the numbers [1, 1, 1, 13] using basic arithmetic operations and parentheses to find an expression that equals 24.
+        \item \textbf{Command:} 
+        
+        \smalltt{tool.execute(query="[1, 1, 1, 13] execution = (1 * (13 - 1 - 1))")}
+        \item \textbf{Result:}
+        \begin{casecode}{failbg}
+        
+            \# Define the values
+            
+            value\_list = [1, 1, 1, 13]
+            
+            operation\_result = 1 * (13 - 1 - 1)
+            
+            \# Print the result with a descriptive message
+            
+            print(f"The result of the operation is: {operation\_result}")
+        \end{casecode}
+        The result of the operation is: 11
+    \end{itemize}
+
+    \vspace{1em}
+
+    \textbf{Action Step 2:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{Python Coder}
+        \item \textbf{Sub-goal:} Generate and test all possible combinations of the numbers [1, 1, 1, 13] using basic arithmetic operations and parentheses to find an expression that equals 24.
+        \item \textbf{Command:}
+        
+        \smalltt{tool.execute(query="[1, 1, 1, 13] -> ((1 + 1 + 1) * 13)")}
+        \item \textbf{Result:} \textcolor{red}{Error: unexpected indent ($<$string$>$, line 2)}.
+    \end{itemize}
+
+    \vspace{1em}
+
+
+    \textbf{Action Steps 3-8:}
+    \begin{itemize}[nosep, leftmargin=*]
+        \item \textbf{Tool:} \smalltt{No matched tool given} \textcolor{red}{\textbf{(Tool Not Found)}}
+        \item \textbf{Sub-goal:} Generate and test all possible combinations of the numbers [1, 1, 1, 13] using basic arithmetic operations and parentheses to find an expression that equals 24.
+        \item \textbf{Command:} Not command is generated due to the tool not found.
+        \item \textbf{Result:} Not result is generated due to the tool not found.
+        \item \textit{Note: These steps are identical repetitions where the agent failed to find a matching tool.}
+    \end{itemize}
+
+    \vspace{1em}
+
+    
+    \textbf{Execution Verifier:} \textcolor{red}{STOP, Tool Not Found}
+    
+    \vspace{1em}
+
+    
+    \textbf{Solution Generator: } \textcolor{red}{The agent incorrectly concludes that $(1 + 1 + 1) \times 13 = 24$.}
+    
+\end{casebox}
+
+\end{center}
+\end{small}
