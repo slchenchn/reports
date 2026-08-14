@@ -45,6 +45,8 @@
             --amber-wash: #f7eddc;
             --red: #a84232;
             --red-wash: #f8e9e5;
+            --purple: #6a4d9e;
+            --purple-wash: #efebf7;
             --serif: 'DM Serif Display', 'Noto Sans SC', serif;
             --sans: 'DM Sans', 'Noto Sans SC', sans-serif;
             --mono: 'IBM Plex Mono', 'Noto Sans SC', monospace;
@@ -808,7 +810,7 @@
                 </div>
 
                 <aside class="hero__aside" aria-label="论文列表">
-                    <div class="hero__aside-label">Three design points</div>
+                    <div class="hero__aside-label">Three design points + one optimizer</div>
                     <a class="paper-link" href="#agentflow" style="--paper-color:var(--green)">
                         <i class="paper-link__dot"></i><span class="paper-link__name">AgentFlow</span><span class="paper-link__mode">broadcast</span>
                     </a>
@@ -817,6 +819,9 @@
                     </a>
                     <a class="paper-link" href="#reveal" style="--paper-color:var(--blue)">
                         <i class="paper-link__dot"></i><span class="paper-link__name">ReVeal</span><span class="paper-link__mode">turn-aware</span>
+                    </a>
+                    <a class="paper-link" href="#sao" style="--paper-color:var(--purple)">
+                        <i class="paper-link__dot"></i><span class="paper-link__name">SAO</span><span class="paper-link__mode">single-rollout async</span>
                     </a>
                 </aside>
 
@@ -832,7 +837,8 @@
                     <li><a href="#agentflow">01 · AgentFlow</a></li>
                     <li><a href="#stitchcuda">02 · StitchCUDA</a></li>
                     <li><a href="#reveal">03 · ReVeal</a></li>
-                    <li><a href="#synthesis">04 · 横向综合</a></li>
+                    <li><a href="#sao">04 · SAO</a></li>
+                    <li><a href="#synthesis">05 · 横向综合</a></li>
                 </ol>
             </nav>
 
@@ -851,11 +857,12 @@
                         <div class="concept" style="--concept-color:var(--amber)"><span class="concept__index">03 · EXPENSIVE</span><h4>环境进入训练内环</h4><p>工具、judge、执行与 profiling 成本随采样规模放大</p></div>
                     </div> -->
 
-                    <h3>三篇工作的处理方式</h3>
-                    <div class="intro-papers" aria-label="三篇工作的解法概览">
+                    <h3>四篇工作的处理方式</h3>
+                    <div class="intro-papers" aria-label="四篇工作的解法概览">
                         <p><a href="#agentflow" style="color:var(--green)"><strong>AgentFlow</strong></a> 只训练 Planner，把 terminal advantage 广播到它的所有 turns</p>
                         <p><a href="#stitchcuda" style="color:var(--amber)"><strong>StitchCUDA</strong></a> 把 multi-turn workflow 拆成两类单轮任务，改用 single-turn GRPO</p>
                         <p><a href="#reveal" style="color:var(--blue)"><strong>ReVeal</strong></a> 交替生成代码和测试，并按执行结果分配每轮奖励</p>
+                        <p><a href="#sao" style="color:var(--purple)"><strong>SAO</strong></a> 面向异步与 online 场景改用 single-rollout actor-critic，成败取决于 critic 质量</p>
                     </div>
 
                     <!-- <div class="note note--method">
@@ -997,7 +1004,7 @@
                     <h3>方法：推理仍是多轮，只训练 Coder</h3>
                     <figure class="wide-figure">
                         <div class="figure-frame"><a href="assets/stitchcuda-paper-workflow.png" target="_blank" aria-label="打开 StitchCUDA workflow 原图"><img class="editorial-image" src="assets/stitchcuda-paper-workflow.png" alt="StitchCUDA 论文原图，展示 Planner、Coder、Verifier、Nsys NCU profiling、RAG database 和 feedback loop"></a></div>
-                        <figcaption data-label="FIG. 05">StitchCUDA 论文 Fig. 2：完整 Planner–Coder–Verifier workflow 与 profiling / RAG feedback path</figcaption>
+                        <figcaption data-label="FIG. 03">StitchCUDA 论文 Fig. 2：完整 Planner–Coder–Verifier workflow 与 profiling / RAG feedback path</figcaption>
                     </figure>
 
                     <ul class="plain-list">
@@ -1032,7 +1039,7 @@
 
                     <!-- <figure class="wide-figure">
                         <div class="figure-frame"><a href="assets/stitchcuda-paper-rl.png" target="_blank" aria-label="打开 StitchCUDA RL 原图"><img class="editorial-image" src="assets/stitchcuda-paper-rl.png" alt="StitchCUDA 论文原图，展示任务 1、任务 2、单轮 reinforcement learning loop 与 rubric reward"></a></div>
-                        <figcaption data-label="FIG. 06">StitchCUDA 论文 Fig. 3：左侧定义两类任务，中间为单轮 Coder GRPO，右侧为 rubric reward 目标</figcaption>
+                        <figcaption data-label="FIG. 04">StitchCUDA 论文 Fig. 3：左侧定义两类任务，中间为单轮 Coder GRPO，右侧为 rubric reward 目标</figcaption>
                     </figure> -->
 
                     <div class="equation">
@@ -1135,7 +1142,7 @@
                     <h3>算法流程：生成 code、生成 tests，再根据执行结果修订</h3>
                     <figure class="wide-figure">
                         <div class="figure-frame"><a href="assets/reveal-paper-method.png" target="_blank" aria-label="打开 ReVeal 方法原图"><img class="editorial-image" src="assets/reveal-paper-method.png" alt="ReVeal 论文原图，上半部分是 generation verification tool feedback loop，下半部分是 outcome generation verification rewards 的归属"></a></div>
-                        <figcaption data-label="FIG. 03">ReVeal 论文 Fig. 2：上半部分是 generation–verification rollout，下半部分是三类 reward 的计算与归属</figcaption>
+                        <figcaption data-label="FIG. 05">ReVeal 论文 Fig. 2：上半部分是 generation–verification rollout，下半部分是三类 reward 的计算与归属</figcaption>
                     </figure>
 
                     <ul class="plain-list">
@@ -1245,7 +1252,7 @@
                     </div>
                     <figure class="wide-figure">
                         <div class="figure-frame"><a href="assets/reveal-paper-test-time-scaling.png" target="_blank" aria-label="打开 ReVeal test-time scaling 原图"><img class="editorial-image" src="assets/reveal-paper-test-time-scaling.png" alt="ReVeal 论文原图，左侧展示 Code Pass@1 随 inference turns 增加，右侧展示 ReVeal、base model 与 single-turn RL 的 Pass@k"></a></div>
-                        <figcaption data-label="FIG. 04">ReVeal 论文 Fig. 1：左侧是同一 policy 的 test-time turn scaling，右侧比较 ReVeal、base model 与 single-turn outcome-only RL 的 Pass@k</figcaption>
+                        <figcaption data-label="FIG. 06">ReVeal 论文 Fig. 1：左侧是同一 policy 的 test-time turn scaling，右侧比较 ReVeal、base model 与 single-turn outcome-only RL 的 Pass@k</figcaption>
                     </figure>
 
                     <!-- <div class="note note--warning">
@@ -1261,30 +1268,144 @@
                 </section>
 
                 <!-- =================================================
-                     04 · SYNTHESIS
+                     04 · SAO
+                     ================================================= -->
+                <section class="doc-section" id="sao" style="--section-color:var(--purple); --section-wash:var(--purple-wash)">
+                    <div class="section-kicker">04 · SAO</div>
+                    <h2>SAO：single-rollout 的异步 actor-critic</h2>
+                    <div class="paper-stamp">
+                        <a class="stamp stamp--accent" href="https://arxiv.org/abs/2607.07508" target="_blank">arXiv 2607.07508v1</a>
+                    </div>
+
+                    <h3>Motivation：GRPO 的 group rollout 不适合异步 agentic 训练</h3>
+                    <ul class="plain-list">
+                        <li><strong>Latency 加剧 off-policy</strong><span>group 要等最慢的一条完成才能进入训练，数据生成时 policy 已经漂移，policy-lag 被放大</span></li>
+                        <li><strong>Online 场景没有 group</strong><span>真实线上环境每个 prompt 只返回一条 trajectory 反馈，组内统计 baseline 在数学上不可行</span></li>
+                    </ul>
+                    <div class="prose">
+                        <p>SAO（Single-rollout Asynchronous Optimization）是智谱面向 agentic RL 的工业级方案，已用于 GLM-5.2 与 GLM-5.3 的训练。它回到 single-rollout actor-critic：一条轨迹生成完立刻进训练，不等同伴。代价是失去 group baseline，variance 控制全部压回 value model，critic 的训练质量因此成为成败关键</p>
+                    </div>
+
+                    <h3>DIS：只用两个 policy 的双边 clipping</h3>
+                    <div class="prose">
+                        <p>解耦式 PPO 的异步实现通常维护三个模型，用两段 ratio 分别校正两类偏差，代价是 old-policy 要单独推理一次；异步场景下轨迹生成期间模型可能已更新多次，精确的 old-policy 还需要保留 checkpoint 历史。DIS（direct double-sided importance sampling）只保留首尾两个 policy：</p>
+                    </div>
+
+                    <div class="equation">
+                        \[
+                        \text{decoupled PPO:}\quad
+                        \underbrace{\frac{\pi_\theta}{\pi_{\theta_{\mathrm{old}}}}}_{\text{stale 校正}}
+                        \cdot
+                        \underbrace{\frac{\pi_{\theta_{\mathrm{old}}}}{\pi_{\mathrm{rollout}}}}_{\text{mismatch 校正}}
+                        \qquad\Longrightarrow\qquad
+                        \text{DIS:}\quad
+                        r_t(\theta)=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{\mathrm{rollout}}(a_t\mid s_t)}
+                        \]
+                        <small>分子来自 training forward，分母直接复用 rollout 阶段保存的 log-prob，省掉 old-policy recomputation</small>
+                    </div>
+
+                    <div class="prose">
+                        <p>Clipping 方式也不同：PPO 只在悲观方向截断（\(\hat A>0\) 且 ratio 过大，或 \(\hat A<0\) 且 ratio 过小，另一侧梯度照常通过）；DIS 两个方向越界都把 token 整体 mask 出梯度</p>
+                    </div>
+
+                    <div class="equation">
+                        \[
+                        \text{PPO:}\quad
+                        \begin{cases}
+                        \hat A_t>0: & \min\!\bigl(r_t,\ 1+\epsilon\bigr)\,\hat A_t \\[4pt]
+                        \hat A_t<0: & \max\!\bigl(r_t,\ 1-\epsilon\bigr)\,\hat A_t
+                        \end{cases}
+                        \]
+                        \[
+                        \text{DIS:}\quad
+                        \mathcal L=\mathbb E_t\bigl[f(r_t)\,\hat A_t\log\pi_\theta(a_t\mid s_t)\bigr],
+                        \qquad
+                        f(x)=
+                        \begin{cases}
+                        x, & 1-\varepsilon_l \lt x \lt 1+\varepsilon_h \\
+                        0, & \text{否则}
+                        \end{cases}
+                        \]
+                        <small>PPO 只截断悲观方向：\(\hat A>0\) 时封顶 \(1+\epsilon\)，\(\hat A<0\) 时兜底 \(1-\epsilon\)，另一方向不限制；DIS 的 \(f\) 在两侧越界都直接清零</small>
+                    </div>
+
+                    <div class="prose">
+                        <p>信任区间设得非常宽：数学任务 \((0.7,\,6.0)\)，coding agent \((0.2,\,4.0)\)。宽区间能 work 的前提是 critic 给出的 advantage 足够准，错误的优势估计不会被逐 token 的 ratio 进一步放大</p>
+                    </div>
+
+                    <h3>Critic 的三个工程优化</h3>
+                    <ul class="plain-list">
+                        <li><strong>更新更勤</strong><span>policy 每更新 1 次，value network 更新 K=2 次；value lr 5e-6 高于 policy lr 1e-6</span></li>
+                        <li><strong>Value pretrain</strong><span>先用大规模语料预训练 value model，消除冷启动；没有 pretrain 时早期 advantage 噪声会直接毒化 policy</span></li>
+                        <li><strong>Frozen attention</strong><span>RL 期间冻结 critic 的 attention 参数，只训 MoE projection；pilot 实验发现 critic 梯度不稳定主要来自 attention 层，预训练的 attention 已具备足够的语义聚焦能力</span></li>
+                    </ul>
+
+                    <h3>结果：稳定训练约 1000 步，收敛优于 GRPO</h3>
+                    <div class="prose">
+                        <p>Backbone 为 Qwen3-30B-A3B-Thinking。对照组中 vanilla GRPO 约 160 步崩溃、VAPO 约 90 步崩溃；SAO 稳定训练约 1000 步，400 步后与 GRPO（w/ DIS）明显分叉</p>
+                    </div>
+
+                    <div class="figure-frame" style="overflow-x:auto; margin-bottom:28px">
+                        <table class="compact-table compact-table--neutral" aria-label="SAO 与 GRPO 在数学推理基准上的结果">
+                            <thead><tr><th>Method</th><th>AIME2025</th><th>BeyondAIME</th><th>HMMT Nov 2025</th><th>IMOAnswerBench</th></tr></thead>
+                            <tbody>
+                                <tr><td>GRPO</td><td>84.2</td><td>54.8</td><td>76.0</td><td>55.8</td></tr>
+                                <tr><td>GRPO（w/ DIS）</td><td>93.5</td><td>70.8</td><td>84.0</td><td>70.0</td></tr>
+                                <tr><td>SAO</td><td>97.3</td><td>74.8</td><td>88.3</td><td>74.0</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <figure class="wide-figure">
+                        <div class="figure-frame" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px">
+                            <a href="assets/sao-main_result_aime.png" target="_blank" aria-label="打开 AIME 2025 训练曲线原图"><img class="editorial-image" src="assets/sao-main_result_aime.png" alt="AIME 2025 训练曲线：SAO 几乎全程领先 GRPO (w/ DIS)，vanilla GRPO 约 160 步崩溃"></a>
+                            <a href="assets/sao-main_result_beyondaime.png" target="_blank" aria-label="打开 BeyondAIME 训练曲线原图"><img class="editorial-image" src="assets/sao-main_result_beyondaime.png" alt="BeyondAIME 训练曲线：SAO 领先 GRPO (w/ DIS)"></a>
+                            <a href="assets/sao-main_result_hmmtnov.png" target="_blank" aria-label="打开 HMMT Nov 2025 训练曲线原图"><img class="editorial-image" src="assets/sao-main_result_hmmtnov.png" alt="HMMT Nov 2025 训练曲线：SAO 领先 GRPO (w/ DIS)"></a>
+                        </div>
+                        <figcaption data-label="FIG. 07">SAO 论文训练曲线：AIME2025 / BeyondAIME / HMMT Nov 2025 上 SAO 几乎全程领先 GRPO（w/ DIS），vanilla GRPO 早期崩溃</figcaption>
+                    </figure>
+
+                    <div class="prose">
+                        <p>SWE-Bench Verified 上 base 23.0 → GRPO（w/ DIS）27.0 → SAO 29.8。模拟 online learning（judge 偏好随阶段切换风格）中，SAO 在每次 reward 偏移后快速重对齐，running-mean baseline 因滑窗惯性明显滞后且收敛更低。部署侧，SAO 已用于 GLM-5.2（750B-A40B）与 GLM-5.3 的训练，<a href="https://z.ai/blog/glm-5.3" target="_blank">GLM-5.3 官方 blog</a> 明确写到沿用 "SAO with compaction"；但论文只给出 GLM-5.2 的一句部署声明，两个模型都没有模型级实验数据</p>
+                    </div>
+
+                    <div class="limitation">
+                        <span class="limitation__label">Open question</span>
+                        <h3>方法简单、阈值宽松，为什么 work 得这么好</h3>
+                        <p>实验只覆盖单一 backbone（Qwen3-30B-A3B）、一个 coding benchmark 和受控模拟的 online 场景，无法深入归因。两个候选解释：</p>
+                        <ul class="plain-list">
+                            <li><strong>Infra 消除了 mismatch</strong><span>GLM 的 RL infra 本身足够好，rollout 与训练的偏差已被工程消除大半，宽 clipping 放过的极端 token 本来就不多，代价随之变小</span></li>
+                            <li><strong>Critic 比组内 baseline 更准</strong><span>经过 value pretrain 与高频更新的 critic 给出的 advantage 比 GRPO 的组内统计 baseline 更准，single-rollout 的 variance 劣势被补平</span></li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- =================================================
+                     05 · SYNTHESIS
                      ================================================= -->
                 <section class="doc-section" id="synthesis" style="--section-color:var(--red); --section-wash:var(--red-wash)">
-                    <div class="section-kicker">04 · Synthesis</div>
+                    <div class="section-kicker">05 · Synthesis</div>
                     <h2>训练边界、credit 与环境成本的对比</h2>
                     <!-- <p class="section-lead">GAIA 的 judge-based accuracy、LiveCodeBench 的 golden tests 与 KernelBench 的 correctness + speedup 对应三种不同可验证性，方法不能脱离任务信号直接互换</p> -->
 
-                    <h3>用三条轴线比较</h3>
-                    <p class="section-lead">训练边界决定梯度经过谁，credit 粒度决定信号多细，环境策略决定昂贵交互在什么时候发生</p>
+                    <!-- <h3>用三条轴线比较</h3> -->
+                    <p class="section-lead">多轮agentic RL面临的训练成本高、训练不稳定、reward方差大的问题，4篇文章的解法总结：</p>
 
                     <figure class="wide-figure">
                         <div class="figure-frame" style="overflow-x:auto">
-                            <table class="design-matrix" aria-label="三篇论文的三维设计空间">
+                            <table class="design-matrix" aria-label="四篇论文的三维设计空间">
                                 <thead>
-                                    <tr><th>Design axis</th><th class="paper-head" style="color:var(--green)">AgentFlow</th><th class="paper-head" style="color:var(--amber)">StitchCUDA</th><th class="paper-head" style="color:var(--blue)">ReVeal</th></tr>
+                                    <tr><th></th><th>Trainable boundary</th><th>Credit granularity</th><th>Environment strategy</th></tr>
                                 </thead>
                                 <tbody>
-                                    <tr><th>Trainable boundary</th><td><strong>只训练 Planner</strong><span>executor / verifier / generator frozen</span></td><td><strong>只训练 Coder</strong><span>Planner / Verifier 在 RL 环外</span></td><td><strong>训练共享 policy</strong><span>generation + verification，另有 PPO value critic</span></td></tr>
-                                    <tr><th>Credit granularity</th><td><strong>trajectory broadcast</strong><span>同一 group-normalized advantage 给所有 turns</span></td><td><strong>single-turn task</strong><span>trajectory 先被切成 recurring tasks</span></td><td><strong>turn-aware return</strong><span>generation 与 verification 有不同归因</span></td></tr>
-                                    <tr><th>Environment strategy</th><td><strong>live tool loop</strong><span>工具与 GPT-4o judge 进入 rollout</span></td><td><strong>offline extraction</strong><span>先收集 feedback transition，再做 GRPO</span></td><td><strong>cheap verification</strong><span>利用 execution 与 golden solution</span></td></tr>
+                                    <tr><th class="paper-head" style="color:var(--green)">AgentFlow</th><td><strong>只训练 Planner</strong><span>executor / verifier / generator frozen</span></td><td><strong>trajectory broadcast</strong><span>同一 group-normalized advantage 给所有 turns</span></td><td><strong>live tool loop</strong><span>工具与 GPT-4o judge 进入 rollout</span></td></tr>
+                                    <tr><th class="paper-head" style="color:var(--amber)">StitchCUDA</th><td><strong>只训练 Coder</strong><span>Planner / Verifier 在 RL 环外</span></td><td><strong>single-turn task</strong><span>trajectory 先被切成 recurring tasks</span></td><td><strong>offline extraction</strong><span>先收集 feedback transition，再做 GRPO</span></td></tr>
+                                    <tr><th class="paper-head" style="color:var(--blue)">ReVeal</th><td><strong>训练共享 policy</strong><span>generation + verification，另有 PPO value critic</span></td><td><strong>turn-aware return</strong><span>generation 与 verification 有不同归因</span></td><td><strong>cheap verification</strong><span>利用 execution 与 golden solution</span></td></tr>
+                                    <tr><th class="paper-head" style="color:var(--purple)">SAO</th><td><strong>policy + 独立 critic</strong><span>critic 冻结 attention，只训 MoE projection</span></td><td><strong>token-level GAE</strong><span>每个 token 有独立 advantage</span></td><td><strong>async single-rollout</strong><span>轨迹完成即训练，不等 group</span></td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <figcaption data-label="TABLE 02">三篇工作在 trainable boundary、credit granularity 与 environment strategy 上的选择</figcaption>
+                        <figcaption data-label="TABLE 02">四篇工作在 trainable boundary、credit granularity 与 environment strategy 上的选择</figcaption>
                     </figure>
 
                     <!-- <div class="prose">
