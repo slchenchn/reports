@@ -1,15 +1,22 @@
 # Kernel Agent RSI：经验的积累、筛选与遗忘
 
-经验管理要决定哪些历史继续进入上下文、哪些应当被召回，哪些经验已经失效、哪些暂时降权
+经验管理要决定哪些历史继续进入上下文、哪些应当被召回、哪些经验已经失效、哪些暂时降权
 
 本文档涉及的论文与工程材料：
 
 | 材料 | 发表时间 | 作者单位 / 维护方 | 本次关注的问题 |
 |---|---|---|---|
-| [daVinci-kernel](https://arxiv.org/abs/2606.16497) | 2026-06-15 | Shanghai Innovation Institute（SII）、GAIR | 怎样联合训练技能选择、kernel 生成和技能总结 |
+| [daVinci-kernel](https://arxiv.org/abs/2606.16497) | 2026-06-15 | Shanghai Innovation Institute（SII）、上海交通大学、GAIR；刘鹏飞 | 怎样联合训练技能选择、kernel 生成和技能总结 |
 | [NVIDIA：KDA² / KDA v0.6](https://nvlabs.github.io/kda/blog/2026-09-27-kda-for-kda/) | 2026-09-27 | NVIDIA Agentic, MIT Han Lab | 知识怎样总结、筛选、更新与撤回，公开机制还有哪些缺口 |
 | [KOPE：Beyond Scaling](https://arxiv.org/abs/2608.25570) | 2026-08-26 | 香港城市大学、华为 | Memory Graph 怎样记录决策与结果，active context 怎样按预算筛选，再检查跨硬件迁移 |
 | [Scaling Discovery Requires Forgetting](https://arxiv.org/abs/2610.20563) | 2026-10-14 | UC Berkeley、Stanford | 同一任务内累积的历史，何时应从下一轮搜索中移除 |
+
+## 主要结论
+
+- **积累**：daVinci-kernel 把技能的选择、使用和总结放进同一个 RL 闭环，技能库只追加、不清理；KernelWiki 的知识页带适用条件和出处，可以纠错、撤回，但从任务经验自动沉淀成知识页的流程没有公开；KOPE 用 Graph 给历史 Case 排序，再按 token 预算决定本轮注入哪些
+- **遗忘**：现有工作分别做了三种操作，本轮不注入（KOPE）、撤回失效条目（KernelWiki）、清空搜索历史只留最佳解（Scaling Discovery Requires Forgetting）。三者作用在不同层面，需要分开控制
+- **迁移**：经验要绑定硬件、软件栈和输入条件，正确性与性能收益分开验收。KOPE 把 Ascend 经验用到 RISC-V CPU 上，通过率上升，性能反而下降；KDA 的失败候选说明，测试漏洞也会被当成经验积累下来
+- **缺的证据**：现有实验比较的是有无经验，或经验库与模型权重一起更新，没有单独测出经验库在使用中持续更新的收益。最直接的下一步是固定模型与 harness，在未见算子上比较无经验、静态经验、可积累经验三组的 Correct@8（8 个独立候选中至少一个正确）、speedup 与求解成本
 
 ---
 
@@ -39,7 +46,7 @@
 
 ## 联合训练技能选择、使用与总结
 
-该工作由 SII、GAIR 团队完成
+该工作由 SII、上海交通大学与 GAIR 完成，通讯作者为刘鹏飞
 
 [daVinci-kernel](https://arxiv.org/html/2606.16497v3#S3)让三个角色共享同一 LLM 权重，分别组织训练信号，联合更新模型与技能库
 
@@ -50,7 +57,7 @@
 | 角色 | 接收什么 | 学习信号 |
 |---|---|---|
 | Selector | 任务与候选技能摘要 | 所选方案下的 policy 回报 |
-| Policy | 任务与技能正文 | 多轮执行 reward，使用 5-turn TRLOO |
+| Policy | 任务与技能正文 | 多轮执行 reward，用 TRLOO 计算优势：每个 turn 的回报减去同组其他 rollout 的均值 |
 | Summarizer | 已有技能、首轮与最佳实现 | 候选技能经执行验收后的收益 |
 
 <!-- 角色数据组织可以继续检查[公开实现的数据流说明](https://github.com/GAIR-NLP/daVinci-kernel/blob/9ba953acc591028ff4f073c6f9f62f56a5ef66d3/davinci-kernel/kernel/skill/skill_data_flow.md)：selector 读取技能摘要，policy 读取正文，summarizer 同时看到已有技能，便于提炼增量发现 -->
@@ -72,7 +79,7 @@ $r_1$ 为原轨迹首轮 speedup，$r_{\mathrm{verify}}$ 为保留已有技能�
 | 采样 | 3 个技能方案加 1 个空技能方案，各 4 条 rollout |
 | 验收位置 | 产生该技能的原任务 |
 
-来源任务验收确认局部增量收益，跨任务可用性需要另外测量
+验收只在来源任务上做，新技能能否帮到其他任务没有测
 
 **召回与二次筛选**：BM25 先做粗召回，索引由 skill 的 `name / description / tags / content` 拼接而成，取前 20 个候选；LLM 再根据当前任务和候选技能摘要筛选，最多选 3 个，随后将所选 skill 的正文注入 Policy
 
@@ -105,7 +112,7 @@ $r_1$ 为原轨迹首轮 speedup，$r_{\mathrm{verify}}$ 为保留已有技能�
 
 ## Figure 3：维持表现的证据强于持续提升
 
-完整方案从最早记录的 checkpoint 起就处于高位，后续主要在相近水平波动；带 skill 的 Ablation 2 / 3 / 4 则在后期逐步退化。
+完整方案从最早记录的 checkpoint 起就处于高位，后续主要在相近水平波动；带 skill 的 Ablation 2 / 3 / 4 则在后期逐步退化
 因此，从这个消融实验看，更支持联合训练有助于维持表现，对“经验持续积累使系统不断变强”的支持较弱
 <!-- 。此外，模型权重与技能库同时变化，图中也缺少冻结初始技能库的对照，难以单独判断新增 skill 的收益 -->
 
@@ -182,7 +189,7 @@ KernelWiki 从已有生产实现、PR、文档和竞赛案例中整理优化知�
 | `confidence / reproducibility` | 区分证据等级和代码复现程度 |
 | `sources`、代码摘录与适用限制 | 让使用者能核对原始实现，并判断是否能迁移 |
 
-例如 Ping-Pong Scheduling 除双 tile 交替计算的思路，还写明独立存储、barrier phase、覆盖时序和额外资源开销。**公开了总结结果与字段，还缺少任务结束后自动总结经验的 writer prompt、触发条件和入库验收协议**
+例如 Ping-Pong Scheduling 除双 tile 交替计算的思路，还写明独立存储、barrier phase、覆盖时序和额外资源开销。**公开的是总结好的知识页；任务结束后怎样自动总结经验、何时触发、怎样验收入库，都没有公开**
 
 ### 怎样构造：从材料收集到知识页
 
@@ -193,15 +200,13 @@ KernelWiki 从已有生产实现、PR、文档和竞赛案例中整理优化知�
 | 1. 收集 PR 候选 | 按配置好的仓库、关键词和截止日期搜索 merged PR，抓取正文、changed files 与 diff，登记候选 | GitHub API + Python 脚本 | 不调用 LLM |
 | 2. 筛选候选 | 按文件路径、后缀、patch 中的 device / DSL kernel 实现信号判断是否入库，记录接受或排除原因；证据获取失败时暂缓处理 | 规则判定 | 不调用 LLM |
 | 3. 生成 PR 来源页 | 将上游正文摘录、变更文件、架构与标签等填入固定模板，保存为 `sources/prs/...md`；已有页面默认跳过 | 模板生成 + 元数据规则 | 不调用 LLM |
-| 4. 归纳知识页 | 扫描来源材料，发现未覆盖的优化概念，综合成技术、诊断与 kernel 案例，新增或补充 `wiki/` 页面 | 语义归纳与撰写；人和 LLM 的分工未说明 | 未说明具体写作模型，也未公开完整的自动生成流程 |
+| 4. 归纳知识页 | 扫描来源材料，发现未覆盖的优化概念，综合成技术、诊断与 kernel 案例，新增或补充 `wiki/` 页面 | 语义归纳与撰写，人工与 LLM 的分工不明 | 未公开 |
 | 5. 生成索引与校验 | 从页面的 YAML frontmatter 生成 `queries/` 索引，检查字段、标签、引用和证据要求 | Python 脚本 + 规则校验 | 不调用 LLM |
-| 6. 后续内容审核 | 检查事实、架构归类与数值，发现问题后修正页面、规则和测试，再重新校验 | LLM 审阅 + 脚本复核 | 审核记录中有 `claude-opus-5`，也有 `claude-opus-5[1m]` 扩展上下文版本 |
-
-**模型信息的缺口主要在第 4 步**：后续审核用的模型已有记录，最初把材料写成知识页用了哪个模型仍未说明
+| 6. 后续内容审核 | 检查事实、架构归类与数值，发现问题后修正页面、规则和测试，再重新校验 | LLM 审阅 + 脚本复核 | Claude Opus 5，部分审核使用 1M 上下文版本 |
 
 <!-- 构造流程：KernelWiki b6b4301 的 scripts/refresh_candidate_ledger.py、scripts/pr_policy.py、scripts/generate-pr-pages.py、scripts/generate-indices.py、scripts/validate.py；知识归纳计划：https://github.com/mit-han-lab/KernelWiki/blob/b6b4301f15e8ce6955a56776690643ce5db369e6/data/plan-supersession-baselines/plan-phase2.body.md；审核模型：https://github.com/mit-han-lab/KernelWiki/blob/b6b4301f15e8ce6955a56776690643ce5db369e6/audit/unverified-claims.md -->
 
-`verified` 条目要求 official-doc 与 upstream-code 两类证据。结构校验确认来源字段和引用齐全，经验在新任务上是否有效仍需运行验证
+`verified` 条目要同时有官方文档和上游代码两类证据。校验只检查字段与引用是否齐全，不检查经验在新任务上是否有效
 
 ### 怎样选用和更新
 
@@ -215,7 +220,7 @@ KernelWiki 从已有生产实现、PR、文档和竞赛案例中整理优化知�
 
 一个具体例子是 Ping-Pong 页原先关联了无关的 CUTLASS backward-attention 文件，维护时删除了该“完整实现”并保留说明。撤回原因、日期与原资产路径仍被保留，旧文件可从 Git 历史恢复
 
-可确认的是**知识内容可纠正、可撤回，并保留出处**。自动根据经验使用收益决定保留或淘汰，以及任务失败怎样触发知识修订、重新验收并采用，公开材料仍不完整，不能直接认定已有自主持续学习闭环
+**KernelWiki 的遗忘是审核驱动的纠错与撤回，撤回的内容可以恢复，出处也保留下来**。按使用收益自动淘汰经验、由任务失败触发知识修订，这两步没有公开
 
 ## 任务内记忆：探索记录与执行证据
 
@@ -237,12 +242,12 @@ Agent 在当前任务中不断产生新经验：某个改动是否正确、在�
 
 ## 两层记忆怎样衔接
 
-KernelWiki 提供优化方向，任务内的执行证据检验这些方向在当前 kernel、硬件与输入上的效果。**任务内记录进一步提炼成通用经验、通过跨任务验收并写回 KernelWiki，这一步的自动流程仍未清楚展开**。因此，要分别看待任务内经验积累、跨任务知识维护，以及两者之间的经验沉淀
+KernelWiki 提供优化方向，任务内的执行证据检验这些方向在当前 kernel、硬件与输入上的效果。**把任务内记录提炼成通用经验、跨任务验收后写回 KernelWiki，KDA 没有给出这一步的自动流程**
 
 ## 结果怎样读
 
 - **K-Search**：LLM 先规划优化策略，再生成具体实现，根据执行反馈调整搜索树中各方向的优先级，并剪去无效分支
-- **Humanize**：通过 Claude Code 插件组织“计划—实现—独立审查”循环。先确定验收标准，Claude Code 实现和测试，Codex 独立检查结果，未通过就继续修改
+- **Humanize**：通过 Claude Code 插件组织“计划、实现、独立审查”循环。先确定验收标准，Claude Code 实现和测试，Codex 独立检查结果，未通过就继续修改
 
 图中先比较 K-Search 与 Humanize 两种工作流，后两行再依次向 Humanize 加入 KernelWiki 和 ncu-report-skill
 
@@ -252,11 +257,11 @@ KernelWiki 提供优化方向，任务内的执行证据检验这些方向在当
 
 <!-- 图源：KDA 官方技术报告配套仓库：https://raw.githubusercontent.com/mit-han-lab/mlsys2026-flashinfer-contest/d61573ffb2008b6e68fb32fe8e17703e4b2448c9/docs/assets/ablation_on_skills.png；对应技术报告 Table 3，原图未修改 -->
 
-DSA TopK indexer 在 48 小时预算下接入 KernelWiki 后，speedup 从 3.71× 提高到 6.14×；动态更新和遗忘的增益还需冻结 wiki 的对照
+DSA TopK indexer 在 48 小时预算下接入 KernelWiki 后，speedup 从 3.71× 提高到 6.14×。这个对比只看有无 wiki，wiki 的动态更新带来多少收益没有单独测
 
 9 月博客中的失败候选还暴露了常数替代 L2 normalization、硬编码序列边界、数值技巧超出适用范围等问题。作者用隔离分布、fresh seeds、极值检查、逐元素容差与真实模型轨迹加强验收。经验记录因此需要绑定输入条件和 verifier revision，防止把测试漏洞积累成通用 trick
 
-Humanize（NVIDIA、UCLA、MIT、清华大学、Nunchux AI；Sihao Liu 等，含韩松、Tony Nowatzki）：系统生成了大量复盘建议，但论文没有找到这些建议与插件主干改动之间的强关联。这说明“产生反馈”到“落实改进”之间仍有缺口，但它没有提供解决这个缺口的经验管理算法
+<!-- Humanize（NVIDIA、UCLA、MIT、清华大学、Nunchux AI；Sihao Liu 等，含韩松、Tony Nowatzki）：系统生成了大量复盘建议，但论文没有找到这些建议与插件主干改动之间的强关联。这说明“产生反馈”到“落实改进”之间仍有缺口，但它没有提供解决这个缺口的经验管理算法 -->
 
 ---
 
@@ -264,7 +269,7 @@ Humanize（NVIDIA、UCLA、MIT、清华大学、Nunchux AI；Sihao Liu 等，含
 
 KOPE 主要实验在 Ascend 910C 上优化 AscendC kernel
 
-它把探索过程中产生的执行反馈积累成外部记忆，再用于后续尝试与任务。**GLM-5.2 和 Deepseek-V4-Pro 分别作为生成、修改 kernel 的 Agent 底座，独立运行两组评测**，模型权重保持固定；生成的 kernel 则由编译器和评测工具在 Ascend 910C 上实际执行
+它把探索过程中产生的执行反馈积累成外部记忆，再用于后续尝试与任务。**GLM-5.2 和 DeepSeek-V4-Pro 分别作为生成、修改 kernel 的 Agent 底座，独立运行两组评测**，模型权重保持固定；生成的 kernel 则由编译器和评测工具在 Ascend 910C 上实际执行
 
 Experience Graph Memory 负责保存执行记录并支持检索，Active Context Management and Injection 负责按预算组装 prompt，供当前配置的 LLM 使用。这两个模块是记忆与上下文机制，并不分别对应上述两个模型
 
@@ -293,11 +298,11 @@ Experience Graph Memory 负责保存执行记录并支持检索，Active Context
 | 环节 | 方法 | 是否由模型选择 |
 |---|---|---|
 | 精确召回 | 按算子、优化层、思路 ID、结果标签过滤结构化 Case | 字段匹配规则 |
-| 语义召回 | 从 Journal 和经验摘要中补充语义相关候选 | 论文写明使用语义检索，但没有说明编码模型、相似度算法和 top-k 等配置 |
-| Graph 排序 | 根据单步收益、后继收益与 confidence 计算分数 | 固定数值公式，没有描述另用 LLM reranker |
+| 语义召回 | 从 Journal 和经验摘要中补充语义相关候选 | 语义检索，编码模型与 top-k 未给出 |
+| Graph 排序 | 根据单步收益、后继收益与 confidence 计算分数 | 固定公式，不用 LLM rerank |
 | 上下文准入 | 按 Hot / Warm / Cold 优先级及 token cap 选入内容 | 固定预算规则 |
 
-因此，可以确认的是**字段过滤 + 语义召回 + 图评分排序**。论文没有将召回方法写成 BM25，也没有把 GLM-5.2 或 Deepseek-V4-Pro 指定为独立的检索模型
+整个召回流程是**字段过滤 + 语义召回 + 图评分排序**，与 daVinci-kernel 的 BM25 + LLM 精排不同，KOPE 的排序完全由规则和公式完成
 
 ### Graph 排序的计算
 
@@ -325,7 +330,7 @@ $$
 
 相关性筛选和结果标签分组在先，这个分数用于同一结果标签、相关性相近的候选之间排序
 
-图结构的作用主要体现在第二步：一个 Case 自身收益不大，但它的后续分支表现很好，也可能获得更高评分。它利用了历史优化轨迹中的后续结果，而不只看当前节点的 speedup；图中的边记录探索关系，不能据此认定前一步促成了后续加速
+图结构的作用主要体现在第二步：一个 Case 自身收益不大，但它的后续分支表现很好，也可能获得更高评分。排序因此会参考历史优化轨迹中的后续结果，不只看当前节点的 speedup
 
 ## Active Context：本轮注入哪些内容
 
@@ -362,7 +367,7 @@ $$
 - **Graph 怎样真正进入 LLM 的上下文？** 论文明确利用后继关系做检索排序，注入时主要描述 Case、代码变化和摘要；完整路径、子图、边和不同分支怎样一起提供给 LLM，没有充分展开，`prev_case_id` 是否保留在 prompt 中也不清楚
 - **Graph 相比同内容的 Flat Memory 多贡献多少？** 当前消融比较整套记忆的启用与禁用，无法单独拆出记忆内容、图排序和结构注入各自的收益；Active Context 的消融也同时改变了检索、压缩和注入
 
-进一步可以固定相同 Cases / Journals 与预算，比较“无记忆 → Flat Retrieval → Graph-aware Ranking → 图排序加 Trajectory Injection”。这能分别判断记忆、图结构排序，以及向 LLM 展示优化路径的贡献；这是后续实验建议
+要拆开这几部分的贡献，可以固定相同 Cases / Journals 与预算，依次比较“无记忆 → Flat Retrieval → Graph-aware Ranking → 图排序加 Trajectory Injection”
 
 ## 跨硬件复用：经验需要适用条件
 
@@ -370,9 +375,9 @@ $$
 
 **为什么从 NPU 迁移到 CPU？** 作者希望检验 KOPE 离开 Ascend 环境后，是否仍能复用经验、从目标平台反馈中继续改进。这里同时更换了硬件（Ascend NPU → RISC-V CPU）、语言（AscendC → Triton）、编译路径和评测环境（CANN Bench → FlagGems）。Agent 为目标 CPU 重新生成实现，复用的是优化经验和工作流
 
-从实验设计看，这可以作为硬件与软件栈差异较大的迁移测试。另一款 NPU 或 GPU 也可以用于迁移实验；**作者没有具体解释为何选 K3，也没有比较这些备选目标**
+这是一次跨度很大的迁移测试，论文没有解释为什么选 K3，也没有在其他 NPU 或 GPU 上做对比
 
-这里值得关注的是：一条经验帮助实现正确，不代表它还能帮助实现更快
+**帮助实现正确的经验，未必能帮助实现更快**
 
 | K3 使用的经验 | 通过率，分母 204 个 case | 固定 123 个共同通过 case 的 geomean speedup |
 |---|---|---|
@@ -397,11 +402,13 @@ Ascend 经验扩大了通过范围，却使共同 case 的性能变差；加入 
 
 实验使用 Pi Agent 和 DeepSeek V4.1 Flash，研究同一任务中的长期迭代。核心观察是：历史不断积累后，Agent 的探索越来越保守，增加轮次也难以继续取得收益
 
+作者的做法是周期性清空搜索历史，从当前最佳解重新开始。在四个任务上，这种带遗忘的 Agent 团队比独立并行 Agent 最多高 15%，比单 Agent 最多高 39%
+
 ![同等费用下，单 Agent、独立并行 Agent 与带遗忘的团队的搜索曲线](assets/forgetting-figure1-scaling.png)
 
 灰线为单 Agent，黄线为四个独立并行 Agent，蓝线为共享候选并周期性遗忘的四人团队，蓝色虚线标记遗忘时点。左图 AHC014 的分数越高越好，右图 VLIW kernel 的 cycles 越低越好；遗忘后，团队多次突破此前的平台期
 
-图中横轴是累计模型费用，展示的是每种配置三次运行中表现最好的一次，未展示三次运行的均值与波动范围
+横轴是累计模型费用，每种配置取三次运行中最好的一次
 
 <!-- Figure 1：arXiv:2610.20563v1，源码 figures/main.pdf；直接渲染为 PNG，未改动图中内容 -->
 
@@ -465,7 +472,7 @@ VLIW 的三次单 Agent 实验中，大量轮次主动结束探索，没有提�
 | Continue | +1.4% ± 1.3% | $24.67 |
 | Forget | +9.2% ± 6.9% | $15.32 |
 
-这是 AHC014 上同一起点、相同 proposal 数的比较。重启后上下文更短，成本下降，搜索行为也发生变化；两种作用仍可进一步拆分
+这是 AHC014 上同一起点、相同 proposal 数的比较。Forget 的增益更高，费用也更低，后者来自重启后更短的上下文
 
 同一起点的团队实验还比较了每个 Agent 后续前 10 次 proposal 的行为
 
@@ -474,7 +481,7 @@ VLIW 的三次单 Agent 实验中，大量轮次主动结束探索，没有提�
 | 每次修改代码行数 | 6 | 40 |
 | 每次 reasoning token | 2.9k | 9.4k |
 
-重启后，Agent 恢复了较大幅度的修改，并投入更多推理。行为变化与性能改善同时出现，但实验没有单独证明增加 reasoning token 就是收益的原因
+重启后，Agent 恢复了较大幅度的修改，并投入更多推理
 
 <!-- Figure 4：arXiv:2610.20563v1，源码 figures/ablation.pdf；直接渲染为 PNG；分数与费用对应 Table 3，行为统计见 §5 的同起点团队实验 -->
 
@@ -507,16 +514,16 @@ VLIW 的一个团队运行展示了新方向怎样从失败变成有效优化
 
 ## Limitation
 
-实验只覆盖四种任务：AHC014、Frontier-CS Q171、VLIW SIMD kernel 优化和 nanochat 训练脚本优化；底层模型只有 DeepSeek V4.1 Flash，每种配置在每个任务上重复三次。
+实验只覆盖四种任务：AHC014、Frontier-CS Q171、VLIW SIMD kernel 优化和 nanochat 训练脚本优化；底层模型只有 DeepSeek V4.1 Flash，每种配置在每个任务上重复三次
 任务、模型与重复次数都有限，能否推广到其他模型、更复杂的研究任务和更长的运行过程，仍需验证
 
-这里验证的是同一任务内的会话与搜索状态重置，没有逐条评估长期 skill 效用的删除算法。kernel 实验使用 **VLIW SIMD 模拟器**，CUDA / Triton GPU 上的收益仍需另外验证
+这里验证的是同一任务内的会话与搜索状态重置，不涉及跨任务 skill 的删除。kernel 实验跑在 **VLIW SIMD 模拟器**上，没有在真实 GPU 上测 CUDA / Triton kernel
 
 清空失败记录还可能导致重复探索同一条失败路径，论文没有系统统计这种重复尝试的代价
 
 ### 尚未拆分：到底该遗忘哪一类历史
 
-本文同时清空 Session 与 Search state，尚未分离两者各自的贡献。可以补充下面的四组消融，这是后续实验建议
+本文同时清空 Session 与 Search state，没有分开两者各自的贡献。可以补充下面四组消融
 
 | 实验 | 清空会话历史 | 清空搜索历史 |
 |---|---|---|
@@ -525,96 +532,8 @@ VLIW 的一个团队运行展示了新方向怎样从失败变成有效优化
 | Search Reset | 否 | 是 |
 | Full Forgetting，本文做法 | 是 | 是 |
 
-Context Reset 与 Baseline 比较，可以衡量仅重置会话的作用；Full Forgetting 与 Context Reset 比较，才能判断移除候选与反馈历史还有多少额外收益。因此，现有结果支持整体重启有效，对“具体应该遗忘什么”的回答仍有限
+Context Reset 与 Baseline 比较，可以衡量仅重置会话的作用；Full Forgetting 与 Context Reset 比较，才能判断移除候选与反馈历史还有多少额外收益。现有结果只说明整体重启有效，没有回答具体该遗忘哪一类历史
 
 <!-- 四组消融及 Memory 类型对比为本文档的分析与实验建议，非论文已报告的实验；重复失败路径的成本未见系统评测 -->
 
 <!-- 论文：https://arxiv.org/pdf/2610.20563v1；Figures 1 / 2 / 4 / 5 从 https://arxiv.org/src/2610.20563v1 提取对应 PDF 资产；作者与实验设置见首页及 §4 -->
-
----
-
-# 6. 积累与遗忘需要分开控制
-
-下表是本次分享的比较与归纳，单项结果保留各自的任务、硬件和预算口径
-
-| 工作 | 最值得借鉴的部分 | 仍需回答的问题 |
-|---|---|---|
-| daVinci-kernel | 将技能选择、使用、总结放进训练闭环 | 技能库更新与权重更新各自贡献多少 |
-| KDA / KernelWiki | 带条件与来源的知识页、规则检索、纠错与可审计撤回 | 自动总结和修订怎样验收，动态更新是否改善后续任务 |
-| KOPE | Journal / Case 记执行证据，Memory Graph 排序，active context 按预算注入 | 图结构的独立收益，以及跨硬件经验的适用边界 |
-| Scaling Discovery Requires Forgetting | 用 reducer 显式切断 session 与候选历史的继承 | 当前任务的重启收益能否迁移到 GPU，怎样与长期技能库结合 |
-
-遗忘涉及不同操作：**重置当前搜索、撤销失效条目、筛选本轮可见内容、降权待复核经验**。经验的价值由后续任务上的实际作用决定
-
-| 补充阅读 | 作者单位与作者 | 对实验设计的提醒 |
-|---|---|---|
-| [Learning What to Remember](https://arxiv.org/abs/2606.12945) | 华泰证券、OneBeget.com；Zhibao Chen、Qian Cheng | 提前淘汰经验的策略看不到未来终测题；原文仅测 gold-evidence retention，未测最终 QA |
-| [Selective Forgetting](https://arxiv.org/abs/2608.28978) | Toronto Metropolitan University；Theo Rusu 等；论文另列 Flybits，注明工作早于该任职 | 图裁剪节省存储，回答质量没有提高；容量下降与能力提升分别报告 |
-
-其余官方工程材料及作者仓库见[主调研的遗忘专题](main.md#遗忘专题经验怎样退出恢复和停止影响当前求解)，该专题只纳入近半年首次公开的材料
-
----
-
-# 7. 实验提案：先隔离经验库更新的收益
-
-以下是基于上述材料提出的实验设计，尚未运行
-
-```mermaid
-flowchart LR
-    A[来源任务产生经验] --> B[独立验收集决定入库]
-    B --> C[冻结经验库快照]
-    C --> D[未见算子终测]
-```
-
-| 对照组 | 固定的部分 | 允许变化的部分 |
-|---|---|---|
-| 无经验 | 模型、harness、硬件与输入协议 | 当前任务内的 kernel 候选 |
-| 静态经验 | 同上，加固定的初始经验库 | 当前任务内的 kernel 候选 |
-| 可积累经验 | 同上，从相同初始经验库出发 | 来源任务上的经验库更新，以及当前任务内候选 |
-
-三组匹配完整预算，计入总结、检索、入库验证和终测调用的成本。终测反馈不回流，按算子族划分任务，防止仅靠相邻 shape 的复用解释收益
-
-| 要判断的收益 | 终测指标 |
-|---|---|
-| 更容易生成正确实现 | Correct@8：8 个新鲜、独立并行候选中至少一个完全正确的任务比例 |
-| 更容易生成高性能实现 | 满足 correctness 后达到预定 speedup 的任务比例 |
-| 更省求解成本 | 到达相同目标所需 token、compile / test 次数与 GPU 时间 |
-| 经验是否造成退化 | 多 seed、逐任务变化，以及已有能力的回归检查 |
-
-确认冻结权重下的经验收益后，再加入 daVinci-kernel 式联合训练，单独测量权重更新带来的增量
-
-针对遗忘，再从相同搜索快照分出以下对照；这是本次分享提出的实验，不是原论文已有的消融
-
-| 对照 | Session | 旧候选历史 | 跨任务技能库 |
-|---|---|---|---|
-| 继续搜索 | 继承 | 保留 | 固定 |
-| 仅重置对话 | 清空 | 保留 | 固定 |
-| 同时重置两类搜索状态 | 清空 | 只保留最佳候选 | 固定 |
-| 测量技能库的增量 | 清空 | 只保留最佳候选 | 在同一冻结快照上比较检索开 / 关 |
-
-分别报告相同 proposal 数和相同完整预算的结果。旧轨迹可保存在 agent 当前不可见的审计归档中，避免将退出上下文等同于销毁实验记录
-
-长期经验从相同来源条目出发，另比较全量注入、条件筛选、冲突撤销、可恢复降权与永久删除，匹配本轮上下文和完整预算。加入“环境变化后旧条件再次出现”的任务，测量失效期间的负迁移，以及旧条件重现后的恢复率
-
-提前淘汰策略只看当时已知的历史；终测任务描述只能用于本轮检索。这样才能区分长期保留能力与按题筛选能力
-
----
-
-# 8. 经验记录至少要能回答这些问题
-
-以下字段是本次分享提出的记录建议，便于将发现、适用条件和证据一起带入后续任务
-
-| 字段 | 需要保存的内容 |
-|---|---|
-| 变换与范例 | 做了什么修改，可执行的最小实现与来源 revision |
-| 适用条件 | 算子语义、shape / dtype、数值范围与 layout |
-| 硬件与软件 | GPU / accelerator、编译器、运行库和关键配置 |
-| 执行证据 | correctness、容差、私有输入覆盖和 verifier revision |
-| 性能证据 | baseline、计时边界、重复测量与适用 workload |
-| 迁移记录 | 在哪些后续任务有效、无效或造成退化 |
-| 状态与版本 | 有效、待复核或已撤销，替代关系、适用范围及最近复核依据 |
-| 退出与恢复条件 | 何时停止注入、何时重新验证，降权后怎样恢复，审计归档与当前可见上下文分别保存什么 |
-
-**经验管理需要同时决定入库、检索与退出上下文的条件，收益最终在独立任务上验收**
-
-本稿的研究结果来自原文，源码用于静态核对机制；实验提案与比较为本文归纳，本次未运行 GPU 复现实验。完整调研见 [Kernel Agent 的 RSI 近期进展调研](main.md)

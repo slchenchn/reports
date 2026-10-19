@@ -393,56 +393,14 @@ Hot payload $H$ 必须满足 $H\leq B_k$；先预留 $H$，再容纳上限为 $Q
 
 ## 遗忘专题：经验怎样退出、恢复和停止影响当前求解
 
-Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验库还涉及条目失效、当前任务的可见范围、低效条目的降权，以及存储空间的回收。下面的工作补充这些问题，实验均未直接验证 CUDA / Triton Kernel Agent 的跨任务收益
+Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验库还涉及哪些内容值得跨会话保留、怎样回收存储，以及怎样在后台整理已有记忆。下面的工作补充这些问题，实验均未直接验证 CUDA / Triton Kernel Agent 的跨任务收益
 
 | 工作与首次公开 | 作者单位 / 发布团队与作者 | 可核对的技术机制 | 阅读定位 |
 |---|---|---|---|
-| [TEPA](https://arxiv.org/abs/2608.07429)，2026-08-07 | 长沙理工大学、上海交通大学；Yan Zhou 等，通讯作者 Suncheng Xiang，单位见[PDF 首页](https://arxiv.org/pdf/2608.07429v1) | 同一 conflict key 下累计支持与冲突证据，使条目在 Hypothesis、Active、Revoked 间转换；仅检索 Active | 重点读，回答旧经验什么时候失效 |
-| [What Should an Agent Forget? / RD-Forget](https://arxiv.org/abs/2609.10263)，2026-09-09 | 北京航空航天大学、华东师范大学；Yuhang Li、Yuchen Li，共同一作 | 保留原始 archive，按 query 构造 memory view；同槽旧值标记 superseded，历史问题可重新纳入 | 重点读，回答保存与使用怎样分开 |
-| [Remember Before You're Asked / MemDream](https://arxiv.org/abs/2609.34545)，2026-09-28 | 悉尼科技大学 Australian Artificial Intelligence Institute（AAII）；Mingfei Lu 等 | 自生成 probes → 诊断 → 修复；用 GRPO 学习修复策略，prune 降低检索权重并允许恢复 | 重点读，回答遗忘能否可逆、能否主动验收 |
 | [Learning What to Remember](https://arxiv.org/abs/2606.12945)，2026-06-11 | 华泰证券、OneBeget.com；Zhibao Chen、Qian Cheng | 用 gradient-free search 学习多因素价值权重；对比看到未来问题的 oracle 与看不到问题的 blind retention | 评测参考，区分预先遗忘与按题检索 |
 | [Selective Forgetting: A Graph-Based Memory Framework](https://arxiv.org/abs/2608.28978)，2026-08-29 | Toronto Metropolitan University；Theo Rusu、Sourena Khanzadeh、Manar Alalfi；论文另列 Flybits，注明工作早于该任职 | 按 recency、frequency、degree 与 turn decay 加权，删除低分节点、关联边和向量索引 | 效率与损失的对照，含公开实现 |
 | [Shared Selective Persistent Memory](https://arxiv.org/abs/2607.09493)，2026-07-10；[Apple 页面](https://machinelearning.apple.com/research/shared-selective-persistent-memory)发表于 9 月 | Apple；Sanjana Pedada、Aditya Dhavala、Neelraj Patil | 跨会话只保留任务规范、数据 schema、工具配置、输出约束与产物，舍弃推理和工具轨迹 | 工程参考，按内容类型决定保留范围 |
 | [Claude Managed Agents：Dreaming](https://claude.com/resources/articles/new-in-claude-managed-agents)，2026-05-19 | Anthropic，官方团队文章，未列个人作者 | 后台读取 memory store 与历史 sessions，合并重复、替换冲突条目，输出独立的新 store | 工程参考，整理结果可审查、可弃用 |
-
-### TEPA：用执行证据撤销已经失效的经验
-
-[TEPA 的方法与 Algorithm 1](https://arxiv.org/html/2608.07429v1)为条目记录 key、value、支持数、冲突数和状态，用 Beta-Bernoulli 后验及近期成功率决定撤销。旧条目移入 archive 后退出普通检索；有执行条件时，TEPA-Full 在提升候选前增加 support、counterfactual 与无关域检查
-
-| 原文验证 | 结果 | 结论范围 |
-|---|---|---|
-| 受控 hidden-regime 全反转，50 seeds | TEPA 成功率 0.950，移除 revocation 后 0.211，无 memory 为 0.309 | 使用确定性 executor 和 schema key，隔离失效经验的作用 |
-| MemoryAgentBench SH-6k | TEPA 与 last-write-wins 均为 0.890 | 显式给出最新单跳事实时，按 key 替换已是强基线 |
-
-**对 Kernel Agent 的推断**：把适用硬件、编译器、算子条件和 verifier revision 纳入 key；当独立执行证据推翻旧结论时撤销其有效状态。性能 trick 往往只在局部 shape 有效，需要先缩小适用范围，避免一次失败撤销整个算子族
-
-### RD-Forget：原始证据保留，当前求解只看适用版本
-
-[RD-Forget §3](https://arxiv.org/html/2609.10263v1#S3)把事实归入 `subject / relation / scope` 槽，建立 `superseded_by` 关系。当前状态问题屏蔽已替代值；历史或修订链问题开启 rescue 后可重新选择。最后由 selector 与 greedy packer 在 token 预算内形成当前 view
-
-| Luna 的 matched 消融，原文 Table 2 | LongMemEval 知识更新准确率 | MemoryAgentBench fact consolidation 准确率 |
-|---|---|---|
-| Full | 93.59% | 74.00% |
-| 保持旧版本 Active，关闭 forgetting | 60.26% | 51.00% |
-
-这是按题组织证据的实验，curator 能看到问题和 source history；memory view 的预算不包含读取原始 history 的全部成本。消融也可能改变上游提取出的证据，不能把差值全部归因于一个过滤开关
-
-**对 Kernel Agent 的推断**：同一 trick 可在不同 GPU、dtype 或 compiler revision 下保留多个版本，由任务条件决定本轮可见版本；旧记录继续支持回归定位与迁移分析
-
-### MemDream：先自测，再修复或可逆降权
-
-[MemDream §3.2](https://arxiv.org/html/2609.34545v1#S3.SS2)给出了具体的整理闭环：Dreamer 针对孤立、冗余或陈旧节点生成 probes，预期答案取自已有内容；Analyst 定位检索失败，Consolidator 执行 extract、synthesize、merge、prune。Dense / BM25 的 RRF 分数乘以节点权重参与检索，prune 再将权重乘以衰减系数；后续 probe 显示条目重新有用时可恢复权重
-
-| LoCoMo、GPT-4.1 reader，原文 Table 6 | 平均 F1 |
-|---|---|
-| 完整方案，可逆 soft decay | 55.14 |
-| 无 Dreamer，保持初始 memory | 52.09 |
-| Consolidator 仅 SFT，移除 GRPO | 52.98 |
-| `w/o Decay`，改用永久删除 | 41.04 |
-
-`w/o Decay` 的具体含义是把 soft decay 换成硬删除，不能解读成“保留所有 memory”。该消融支持可恢复性的重要性；probe 答案来自已存内容，知识真实性仍需外部证据。论文另计后台整理成本，完整循环约需数十分钟
-
-**对 Kernel Agent 的推断**：可用历史最小 kernel 与独立输入生成执行 probes，用 correctness 和性能回归代替纯文本检索得分；先降权待复核的经验，再决定恢复、收窄适用范围或撤销
 
 ### 存储减少、证据保留与求解收益分别报告
 
@@ -498,7 +456,7 @@ Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验
 
 第一项适合较快验证跨任务积累是否有用，可参考 GEAK 的 verified-result memory 和 Atrex 的 canonical episode record；第二项与 Dream-RSI 的问题最接近；第三项借鉴 AIDE²，但应先限定可修改范围，保证能够解释收益来源。需要训练技能能力时，daVinci-kernel 给出 selector / policy / summarizer 联合 RL 的具体方案，先固定权重测技能库收益，再研究联合更新更容易归因
 
-经验管理还应增加退出上下文的对照。同题搜索参考 Scaling Discovery Requires Forgetting，比较继续、仅重置 session、同时重置 session 与旧候选历史；长期经验参考 TEPA、RD-Forget 和 MemDream，分别测量冲突撤销、条件筛选与可恢复降权。先固定另一层状态，再隔离各自贡献
+经验管理还应增加退出上下文的对照。同题搜索参考 Scaling Discovery Requires Forgetting，比较继续、仅重置 session、同时重置 session 与旧候选历史；长期经验分别测量冲突撤销、条件筛选与可恢复降权。先固定另一层状态，再隔离各自贡献
 
 可先把研究问题收敛为：**固定模型、GPU 和总预算后，从历史任务积累的知识或搜索策略，能否让未见算子更快得到正确且高性能的 kernel**。验收参考 KDA 的私有分布与真实轨迹，经验迁移同时统计 correctness 和性能，避免 KOPE 展示的两者分离
 
@@ -529,7 +487,6 @@ Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验
 | daVinci-kernel | [官方仓库](https://github.com/GAIR-NLP/daVinci-kernel)、[14B RL 模型与文件](https://huggingface.co/SII-GAIR-NLP/daVinci-kernel-14B-RL/tree/main) | 训练实现、模型权重与 `skill_library.jsonl` 均有公开入口；本次核对了文件索引，未运行训练 |
 | KOPE | [论文方法与附录](https://arxiv.org/html/2608.25570v1) | 可核对 Journal / Case、图排序、hot / warm / cold 预算组装与跨硬件结果；本次未确认官方公开实现 |
 | Scaling Discovery Requires Forgetting | [论文方法、状态结构与 prompt](https://arxiv.org/pdf/2610.20563v1) | 方法描述可复核；本次未确认该方法专用的完整公开 harness |
-| TEPA、RD-Forget、MemDream | 遗忘专题各节的论文方法、消融与附录 | 可核对状态转换、view 构造与 soft decay；本次未确认三者完整可运行的官方仓库 |
 | Selective Forgetting | [作者仓库](https://github.com/skhanzad/Selective-Amnesia) | 提供图记忆、裁剪和 benchmark 入口；本次仅静态检查，未运行评测 |
 | Learning What to Remember | [作者仓库](https://github.com/zhibao-dev/Learning-Multi-Factor-Memory) | 提供价值函数、blind retention 实验及缓存结果；实测指标为 gold-evidence retention |
 | optimize_anything | [GEPA 实现](https://github.com/gepa-ai/gepa)、[论文 artifact](https://github.com/gepa-ai/optimize-anything-artifact) | 可检查 API 与实验材料；需要再核对 kernel 实验的预算和配置 |
