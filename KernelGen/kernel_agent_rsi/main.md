@@ -520,4 +520,4 @@ Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验
 
 [第一人展示稿：经验的积累、筛选与遗忘](speaker1.md)围绕 daVinci-kernel、KDA / KernelWiki、KOPE 和 Scaling Discovery Requires Forgetting，介绍经验训练、知识维护、图检索、上下文管理与搜索重置，并给出独立任务上的验证建议
 
-[模型训练专题](model_training.md)单独讨论 daVinci-kernel、OPD-Evolver、MemDream、SIA、iCoder 与 MASS 的参数更新、训练信号、部署行为和复现边界
+[模型训练专题](model_training.md)单独讨论 daVinci-kernel、OPD-Evolver、SIA、iCoder 与 MASS 的参数更新、训练信号、部署行为和复现边界

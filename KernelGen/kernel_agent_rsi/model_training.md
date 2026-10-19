@@ -9,17 +9,16 @@
 | 路线 | 更新的参数 | 部署或下一轮怎样使用 | 代表工作 |
 |---|---|---|---|
 | 求解与经验使用联合训练 | Kernel policy、技能选择和总结能力 | 用训练后的模型生成 kernel，并利用技能库 | daVinci-kernel |
-| 经验管理能力训练 | 选择、写入、合并、删除或修复记忆的 policy | 训练好的模型操作持续变化的外部经验库 | OPD-Evolver、MemDream |
+| 经验管理能力训练 | 选择、写入、合并、删除或修复记忆的 policy | 训练好的模型操作持续变化的外部经验库 | OPD-Evolver |
 | Agent 组织任务模型训练 | 任务模型的权重；训练方案由 agent 决定或修订 | 新 checkpoint 进入下一轮求解与评估 | SIA、iCoder |
 | 团队轨迹训练共享模型 | Executor 使用的共享权重 | 更新后的模型重新担任 executor、optimizer 和 evaluator | MASS |
 
-**“训练过经验管理模型”和“部署期间持续更新模型权重”需要分别判断**。OPD-Evolver 的 fast loop 与 MemDream 的部署阶段都保持参数固定；它们的训练贡献在于先学出更好的经验操作能力
+**“训练过经验管理模型”和“部署期间持续更新模型权重”需要分别判断**。OPD-Evolver 的 fast loop 保持参数固定；它的训练贡献在于先学出更好的经验操作能力
 
 | 工作与首次公开 | 作者单位与作者 | 直接 kernel 证据 |
 |---|---|---|
 | [daVinci-kernel](https://arxiv.org/abs/2606.16497)，2026-06-15 | Shanghai Innovation Institute（SII）、上海交通大学、GAIR；Dayuan Fu 等，通讯作者 Pengfei Liu（刘鹏飞） | CUDA / Triton，KernelBench |
 | [OPD-Evolver](https://arxiv.org/abs/2606.17628)，2026-06-16 | NUS、复旦大学、北京大学、ByteDance；Guibin Zhang、Xun Xu 共同一作，含 Shuicheng Yan（颜水成） | 通用交互、代码 / SQL 和记忆任务，未提供 GPU kernel 实验 |
-| [MemDream](https://arxiv.org/abs/2609.34545)，2026-09-28 | 悉尼科技大学 AAII；Mingfei Lu 等 | 对话记忆与检索任务，迁移到 kernel 需要重新验证 |
 | [SIA](https://arxiv.org/abs/2605.27276)，2026-05-26 | Prannay Hebbar、Yogendra Manawat 等；论文未列单位，Hexo Labs 按[首作者项目页](https://prannayh.com/)标注 | H100 上的 TriMul 单一工作负载 |
 | [iCoder](https://arxiv.org/abs/2609.29626)，2026-08-28，按原文首发标注 | 上海交通大学、NUS、DP Technology、Endless Frontier；Cheng Yang 等，顾问含 Junchi Yan、Shuicheng Yan、Weinan E，通讯作者 Linfeng Zhang、Qibing Ren | KernelBench、TritonBench-G，与 RTL 共同训练 |
 | [MASS](https://arxiv.org/abs/2610.12176)，2026-10-08 | Sakana AI、UC Berkeley；Hyunin Lee 等，含 Matei Zaharia、Somayeh Sojoudi、Yujin Tang | 开放式研究任务，尚无直接 kernel 实验 |
@@ -86,30 +85,6 @@ Student 先按部署条件采样，teacher 在相同 student prefix 上输出 to
 它直接回答“怎样训练模型选择、总结和维护经验”，还需要 kernel 执行反馈的专门实验。评测从空经验库开始，测试流中的积累与训练阶段权重学习是不同变量
 
 [官方实现的 Training 说明](https://github.com/bingreeky/opd-evolver/blob/8e563eda420581043132a69be50241bfe05e881a/README.md#training)明确只提供 executor OPD 的小规模示范路径；完整 selector / reflection 组件及 slow–fast 联合训练日程未包含，不能将仓库入口等同于完整复现
-
-## MemDream：训练记忆修复策略，部署时更新外部图
-
-[训练方法 §3.3](https://arxiv.org/html/2609.34545v1#S3.SS3)使用共享 Llama-3.1-8B 底座与三个独立 LoRA adapter。训练对象是 Dreamer、Analyst 和 Consolidator，主回答模型可保持固定
-
-| 阶段 | 数据或 reward | 更新谁 |
-|---|---|---|
-| SFT | GPT-4.1 生成的 probe、诊断和修复示范，基于 MSC 对话数据 | 三个 adapter |
-| 独立 GRPO | Dreamer 看 probe 区分度及覆盖；Analyst 看诊断可执行性与结构；Consolidator 看 QA-F1、覆盖、时间线和简洁性 | 各角色按各自 reward 更新 |
-| 联合训练 | 新 dream queries 上，修复前后的平均检索 F1 增量 | Dreamer 与 Consolidator，Analyst 冻结 |
-
-Consolidator 执行 `extract / synthesize / merge / prune`。Prune 将节点检索权重乘以固定系数 `0.2`，后续相关性恢复时可升权。训练学习修复行为，衰减系数和 reward 项权重仍是预设规则；不能将全部遗忘机制都归为模型学习
-
-### GRPO 与可恢复遗忘分别有什么证据
-
-[Table 6](https://arxiv.org/html/2609.34545v1#S4.SS3)使用固定 GPT-4.1 reader，在 LoCoMo 上比较
-
-| 设置 | 平均 F1 |
-|---|---|
-| 完整方案 | 55.14 |
-| Consolidator 保留 SFT 权重，移除 GRPO | 52.98 |
-| `w/o Decay`，prune 改为永久删除 | 41.04 |
-
-最后一行比较的是硬删除与可恢复降权。训练全部在部署前完成，部署期间参数固定，只修订外部记忆。Probe 的预期答案来自已存内容，因此修复检索成功不等于核实原知识真实性；迁移到 kernel 时应接入独立执行验证
 
 ## SIA：Feedback-Agent 决定何时更新任务模型
 
@@ -189,7 +164,6 @@ Correctness 使用新鲜并行 Correct@8，避免用历史累计 best 代替；�
 |---|---|---|
 | daVinci-kernel | [训练说明](https://github.com/GAIR-NLP/daVinci-kernel/blob/9ba953acc591028ff4f073c6f9f62f56a5ef66d3/davinci-kernel/README.md)、[技能数据流](https://github.com/GAIR-NLP/daVinci-kernel/blob/9ba953acc591028ff4f073c6f9f62f56a5ef66d3/davinci-kernel/kernel/skill/skill_data_flow.md)；`9ba953a` | 可检查训练角色、技能快照与数据组织，本次未运行训练 |
 | OPD-Evolver | [Training](https://github.com/bingreeky/opd-evolver/blob/8e563eda420581043132a69be50241bfe05e881a/README.md#training)；`8e563ed` | Executor OPD 示范路径与模型入口；完整联合训练流程未包含 |
-| MemDream | [论文 §3.3 与附录 D](https://arxiv.org/html/2609.34545v1#A4) | 可核对角色 reward、LoRA 与训练阶段；本次未确认专用完整官方代码入口 |
 | SIA | [论文 §4.3、§5、§7.3](https://arxiv.org/html/2605.27276v2) | 可核对 LoRA、训练基础设施及算法选择描述；本次未确认专用完整官方实现 |
 | iCoder | [仓库说明](https://github.com/bingreeky/iCoder/blob/77d52582ad3657c410e3dcee33abfb558c1096a4/README.md)；`77d5258` | Research Skills 与评测组件公开，完整训练基础设施未包含 |
 | MASS | [reproduction notes](https://github.com/SakanaAI/mass/blob/fb403581bed2c974b3f99e7236224169da643079/docs/reproduction.md)、[experiment coverage](https://github.com/SakanaAI/mass/blob/fb403581bed2c974b3f99e7236224169da643079/docs/experiment_coverage.md)；`fb40358` | Release 与论文选择规则存在差异，部分完整 benchmark runner 与历史预算未包含 |
