@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="920" viewBox="0 0 1380 920" role="img" aria-labelledby="title desc">
+<title id="title">Kernel Agent 的经验管理闭环</title>
+<desc id="desc">顶部经验库连接积累、召回使用和管理三条路径。中间路径从经验库召回并筛选经验，执行 kernel 后产生反馈。反馈沿左右路径向上，分别生成并验收新经验、更新与遗忘旧经验。遗忘也可以直接重置当前上下文</desc>
+<defs>
+ <marker id="blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5275ad"/></marker>
+ <marker id="green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#218778"/></marker>
+ <marker id="amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ba783c"/></marker>
+ <style>
+ text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#203047}
+ .heading{font-size:25px;font-weight:600}
+ .node-title{font-size:22px;font-weight:600}
+ .sub{font-size:16px;fill:#637183}
+ .phase{font-size:19px;font-weight:600}
+ .small{font-size:14px;fill:#8c633c}
+ </style>
+</defs>
+<rect width="1380" height="920" fill="#fff"/>
+<text x="690" y="43" text-anchor="middle" class="heading">Kernel Agent 的经验管理闭环</text>
+
+<rect x="50" y="207" width="390" height="533" rx="22" fill="#f3f6fc" stroke="none" stroke-width="1.4"/>
+<rect x="495" y="207" width="390" height="533" rx="22" fill="#eef8f5" stroke="none" stroke-width="1.4"/>
+<rect x="940" y="207" width="390" height="533" rx="22" fill="#fcf6ef" stroke="none" stroke-width="1.4"/>
+<text x="145" y="244" text-anchor="middle" class="phase" style="fill:#416594">01  经验积累</text>
+<text x="590" y="244" text-anchor="middle" class="phase" style="fill:#21796d">02  召回与使用</text>
+<text x="1035" y="244" text-anchor="middle" class="phase" style="fill:#9b642e">03  更新与遗忘</text>
+<rect x="390" y="80" width="600" height="90" rx="18" fill="#f1f4f9" stroke="#c5cfdf" stroke-width="1.4"/>
+<text x="690" y="116" text-anchor="middle" class="node-title">经验库  Memory / skills</text>
+<text x="690" y="145" text-anchor="middle" class="sub">经验内容 · 适用条件 · 执行证据 · 权重与有效状态</text>
+<rect x="75" y="274" width="340" height="100" rx="14" fill="#fff" stroke="#ccd8ec" stroke-width="1.4"/>
+<text x="245" y="310" text-anchor="middle" class="node-title">写入经验库</text>
+<text x="245" y="344" text-anchor="middle" class="sub">保存通过验收的经验及证据</text>
+<rect x="75" y="434" width="340" height="100" rx="14" fill="#fff" stroke="#ccd8ec" stroke-width="1.4"/>
+<text x="245" y="470" text-anchor="middle" class="node-title">验证与筛选</text>
+<text x="245" y="504" text-anchor="middle" class="sub">检查正确性、收益与适用范围</text>
+<rect x="75" y="594" width="340" height="100" rx="14" fill="#fff" stroke="#ccd8ec" stroke-width="1.4"/>
+<text x="245" y="630" text-anchor="middle" class="node-title">提炼候选经验</text>
+<text x="245" y="664" text-anchor="middle" class="sub">优化策略 · 适用条件 · 成败证据</text>
+<rect x="520" y="274" width="340" height="100" rx="14" fill="#fff" stroke="#b9dcd2" stroke-width="1.4"/>
+<text x="690" y="310" text-anchor="middle" class="node-title">按当前任务召回</text>
+<text x="690" y="344" text-anchor="middle" class="sub">任务特征 · 硬件 · shape</text>
+<rect x="520" y="434" width="340" height="100" rx="14" fill="#fff" stroke="#b9dcd2" stroke-width="1.4"/>
+<text x="690" y="470" text-anchor="middle" class="node-title">筛选与上下文注入</text>
+<text x="690" y="504" text-anchor="middle" class="sub">相关性 · 证据质量 · token 预算</text>
+<rect x="520" y="594" width="340" height="100" rx="14" fill="#fff" stroke="#b9dcd2" stroke-width="1.4"/>
+<text x="690" y="630" text-anchor="middle" class="node-title">适配并执行 kernel</text>
+<text x="690" y="664" text-anchor="middle" class="sub">正确性测试 · 性能测量</text>
+<rect x="965" y="274" width="340" height="100" rx="14" fill="#fff" stroke="#e8d3bc" stroke-width="1.4"/>
+<text x="1135" y="310" text-anchor="middle" class="node-title">同步经验状态</text>
+<text x="1135" y="344" text-anchor="middle" class="sub">更新内容、权重与有效性</text>
+<rect x="965" y="434" width="340" height="100" rx="14" fill="#fff" stroke="#e8d3bc" stroke-width="1.4"/>
+<text x="1135" y="470" text-anchor="middle" class="node-title">更新与选择性遗忘</text>
+<text x="1135" y="499" text-anchor="middle" class="sub">修正、合并、降权或撤回旧经验</text>
+<text x="1135" y="521" text-anchor="middle" class="sub">按需重置当前搜索上下文</text>
+<rect x="965" y="594" width="340" height="100" rx="14" fill="#fff" stroke="#e8d3bc" stroke-width="1.4"/>
+<text x="1135" y="630" text-anchor="middle" class="node-title">检查既有经验</text>
+<text x="1135" y="664" text-anchor="middle" class="sub">新证据是否支持旧结论</text>
+<path d="M 245 434 V 377" fill="none" stroke="#5275ad" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="245.0,377.0 238.5,390.0 251.5,390.0" fill="#5275ad"/>
+<path d="M 690 374 V 431" fill="none" stroke="#218778" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="690.0,431.0 683.5,418.0 696.5,418.0" fill="#218778"/>
+<path d="M 1135 434 V 377" fill="none" stroke="#ba783c" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="1135.0,377.0 1128.5,390.0 1141.5,390.0" fill="#ba783c"/>
+<path d="M 245 594 V 537" fill="none" stroke="#5275ad" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="245.0,537.0 238.5,550.0 251.5,550.0" fill="#5275ad"/>
+<path d="M 690 534 V 591" fill="none" stroke="#218778" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="690.0,591.0 683.5,578.0 696.5,578.0" fill="#218778"/>
+<path d="M 1135 594 V 537" fill="none" stroke="#ba783c" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="1135.0,537.0 1128.5,550.0 1141.5,550.0" fill="#ba783c"/>
+<path d="M 245 274 V 125 H 387" fill="none" stroke="#5275ad" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="387.0,125.0 374.0,118.5 374.0,131.5" fill="#5275ad"/>
+<path d="M 690 170 V 271" fill="none" stroke="#218778" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="690.0,271.0 683.5,258.0 696.5,258.0" fill="#218778"/>
+<path d="M 1135 274 V 125 H 993" fill="none" stroke="#ba783c" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="993.0,125.0 1006.0,118.5 1006.0,131.5" fill="#ba783c"/>
+<path d="M 965 484 H 863" fill="none" stroke="#ba783c" stroke-width="2.4" stroke-linejoin="round" stroke-dasharray="6 5"/>
+<polygon points="863.0,484.0 876.0,477.5 876.0,490.5" fill="#ba783c"/>
+<text x="912" y="464" text-anchor="middle" class="small">重置上下文</text>
+<rect x="190" y="802" width="1000" height="86" rx="18" fill="#f5f7fa" stroke="#d2d9e2" stroke-width="1.4"/>
+<text x="690" y="837" text-anchor="middle" class="node-title">新的执行反馈</text>
+<text x="690" y="866" text-anchor="middle" class="sub">提炼新经验，并重新评估既有经验</text>
+<path d="M 690 694 V 799" fill="none" stroke="#218778" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="690.0,799.0 683.5,786.0 696.5,786.0" fill="#218778"/>
+<path d="M 245 802 V 697" fill="none" stroke="#5275ad" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="245.0,697.0 238.5,710.0 251.5,710.0" fill="#5275ad"/>
+<path d="M 1135 802 V 697" fill="none" stroke="#ba783c" stroke-width="2.4" stroke-linejoin="round"/>
+<polygon points="1135.0,697.0 1128.5,710.0 1141.5,710.0" fill="#ba783c"/>
+</svg>
