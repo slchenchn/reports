@@ -387,7 +387,7 @@ Hot payload $H$ 必须满足 $H\leq B_k$；先预留 $H$，再容纳上限为 $Q
 
 ### Scaling Discovery Requires Forgetting：遗忘的是哪些状态
 
-[论文 §3 与附录 prompt](https://arxiv.org/pdf/2610.20563v1)将候选记录为带分数与反馈的 commits，reducer 决定下一轮可见的文件和 session；轮内可读取同伴候选，轮次重启时清空两类搜索历史。其算法与实验细节见[第一人展示稿](speaker1.md#5-scaling-discovery-requires-forgetting保留解重置搜索历史)
+[论文 §3 与附录 prompt](https://arxiv.org/pdf/2610.20563v1)将候选记录为带分数与反馈的 commits，reducer 决定下一轮可见的文件和 session；轮内可读取同伴候选，轮次重启时清空两类搜索历史。其算法与实验细节见[第一人展示稿](speaker1.md#4-scaling-discovery-requires-forgetting保留解重置探索历史)
 
 这为“哪些历史继续影响当前搜索”提供了具体干预。将该方法用于长期经验库时，还需另测条目的适用性、效用与退出条件，区分同题搜索重启和跨任务技能遗忘
 
@@ -518,6 +518,6 @@ Scaling Discovery Requires Forgetting 处理同题搜索的重启。长期经验
 
 ### 本地分享材料
 
-[第一人展示稿：经验的积累、筛选与遗忘](speaker1.md)围绕 daVinci-kernel、KDA / KernelWiki、KOPE 和 Scaling Discovery Requires Forgetting，介绍经验训练、知识维护、图检索、上下文管理与搜索重置，并给出独立任务上的验证建议
+[第一人展示稿：经验的积累、筛选与遗忘](speaker1.md)围绕 daVinci-kernel、KDA / KernelWiki、Scaling Discovery Requires Forgetting、KOPE 与 RSI-top，介绍经验训练、知识维护、探索重置，以及精心组织上下文与记忆的另一条路线
 
 [模型训练专题](model_training.md)单独讨论 daVinci-kernel、OPD-Evolver、SIA、iCoder 与 MASS 的参数更新、训练信号、部署行为和复现边界

@@ -59,7 +59,7 @@ AIDE² 的内层 Agent 做具体研究任务，外层 Agent 修改内层 harness
 
 Prompt 平均缩小约 16 倍，省下的 token 重新投入搜索。这套设计由 Agent 自己改出来，说明“给当前操作看哪些历史”本身就是可搜索的对象
 
-搜索策略也围绕历史组织：每个初始 draft 的子树作为 bandit 的一个 arm，分配不同 lineage 的预算；最佳 lineage 停滞后，复制全局最佳代码，以新策略开启新 lineage。这与 [Scaling Discovery Requires Forgetting](speaker1.md#5-scaling-discovery-requires-forgetting保留解重置搜索历史) 的“保留最佳解、重开搜索”思路接近
+搜索策略也围绕历史组织：每个初始 draft 的子树作为 bandit 的一个 arm，分配不同 lineage 的预算；最佳 lineage 停滞后，复制全局最佳代码，以新策略开启新 lineage。这与 [Scaling Discovery Requires Forgetting](speaker1.md#4-scaling-discovery-requires-forgetting保留解重置探索历史) 的“保留最佳解、重开搜索”思路接近
 
 ### Ignition Test：改进者是否更会改进
 

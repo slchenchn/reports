@@ -6,17 +6,22 @@
 
 | 材料 | 发表时间 | 作者单位 / 维护方 | 本次关注的问题 |
 |---|---|---|---|
-| [daVinci-kernel](https://arxiv.org/abs/2606.16497) | 2026-06-15 | Shanghai Innovation Institute（SII）、上海交通大学、GAIR；刘鹏飞 | 怎样联合训练技能选择、kernel 生成和技能总结 |
+| [daVinci-kernel](https://arxiv.org/abs/2606.16497) | 2026-06-15 | Shanghai Innovation Institute（SII）、GAIR | 怎样联合训练技能选择、kernel 生成和技能总结 |
 | [NVIDIA：KDA² / KDA v0.6](https://nvlabs.github.io/kda/blog/2026-09-27-kda-for-kda/) | 2026-09-27 | NVIDIA Agentic, MIT Han Lab | 知识怎样总结、筛选、更新与撤回，公开机制还有哪些缺口 |
+| [Scaling Discovery Requires Forgetting](https://arxiv.org/abs/2610.20563) | 2026-10-14 | UC Berkeley、Stanford | 同一任务内累积的历史，何时应从下一轮探索中移除 |
+| [Anthropic：Automated Alignment Researchers](https://alignment.anthropic.com/2026/automated-alignment-researchers/) | 2026-08-28 | Anthropic | 每轮清空会话、保留研究记录，对应 Forgetting 缺少的一组消融 |
 | [KOPE：Beyond Scaling](https://arxiv.org/abs/2608.25570) | 2026-08-26 | 香港城市大学、华为 | Memory Graph 怎样记录决策与结果，active context 怎样按预算筛选，再检查跨硬件迁移 |
-| [Scaling Discovery Requires Forgetting](https://arxiv.org/abs/2610.20563) | 2026-10-14 | UC Berkeley、Stanford | 同一任务内累积的历史，何时应从下一轮搜索中移除 |
+| [AMD GEAK v4](https://www.amd.com/en/developer/resources/technical-articles/2026/geak-v4.html) | 2026-07-23 | AMD | 经验只提出候选，执行证据决定接受 |
+| [RSI-top](https://rsi-top.github.io) | 2026-10 | Stanford Scaling Intelligence Lab；Azalia Mirhoseini | 把每条轨迹压成一行指标，停滞时按需展开，用多样化干预跳出平台期 |
 
-## 主要结论
+<!-- RSI-top 项目页未标日期，引用了 2026-10 的工作 -->
 
-- **积累**：daVinci-kernel 把技能的选择、使用和总结放进同一个 RL 闭环，技能库只追加、不清理；KernelWiki 的知识页带适用条件和出处，可以纠错、撤回，但从任务经验自动沉淀成知识页的流程没有公开；KOPE 用 Graph 给历史 Case 排序，再按 token 预算决定本轮注入哪些
-- **遗忘**：现有工作分别做了三种操作，本轮不注入（KOPE）、撤回失效条目（KernelWiki）、清空搜索历史只留最佳解（Scaling Discovery Requires Forgetting）。三者作用在不同层面，需要分开控制
+<!-- ## 主要结论
+
+- **积累**：daVinci-kernel 把技能的选择、使用和总结放进同一个 RL 闭环，技能库只追加、不清理；KernelWiki 的知识页带适用条件和出处，可以纠错、撤回，但从任务经验自动沉淀成知识页的流程没有公开
+- **历史怎样退出上下文**：有两条路线。一条是周期性重置：Scaling Discovery Requires Forgetting 清空会话和探索历史、只留最佳解，Anthropic AAR 清空会话、保留方法与分数记录。另一条是精心组织上下文与记忆，由设计者规定结构和注入规则，不交给 Agent 自己压缩：KOPE 用 Graph 排序、按 token 预算注入，GEAK 规定经验只能提出候选，RSI-top 把每条轨迹压成一行指标、停滞时按需展开。两条路线都观察到长历史让探索收窄，分歧在于跳出平台期还要不要旧历史
 - **迁移**：经验要绑定硬件、软件栈和输入条件，正确性与性能收益分开验收。KOPE 把 Ascend 经验用到 RISC-V CPU 上，通过率上升，性能反而下降；KDA 的失败候选说明，测试漏洞也会被当成经验积累下来
-- **缺的证据**：现有实验比较的是有无经验，或经验库与模型权重一起更新，没有单独测出经验库在使用中持续更新的收益。最直接的下一步是固定模型与 harness，在未见算子上比较无经验、静态经验、可积累经验三组的 Correct@8（8 个独立候选中至少一个正确）、speedup 与求解成本
+- **缺的证据**：现有实验比较的是有无经验，或经验库与模型权重一起更新，没有单独测出经验库在使用中持续更新的收益；Forgetting 与 RSI-top 都在 VLIW kernel 模拟任务上报告了 cycles，但模型、框架与预算不同，无法直接比较。最直接的下一步是固定模型与 harness，在未见算子上比较无经验、静态经验、可积累经验三组的 Correct@8（8 个独立候选中至少一个正确）、speedup 与求解成本 -->
 
 ---
 
@@ -30,7 +35,7 @@
 
 <!-- 上图是本次分享采用的分析框架，具体系统覆盖其中不同环节
 
-遗忘可以发生在不同层面：从当前搜索上下文中移除历史，降低某条经验的召回权重，或将失效经验标记为不可用。是否继续保存原始记录，是另一个独立的管理决策
+遗忘可以发生在不同层面：从当前探索上下文中移除历史，降低某条经验的召回权重，或将失效经验标记为不可用。是否继续保存原始记录，是另一个独立的管理决策
 
 | 积累对象 | 保存的内容 | 后续怎样使用与管理 |
 |---|---|---|
@@ -46,7 +51,7 @@
 
 ## 联合训练技能选择、使用与总结
 
-该工作由 SII、上海交通大学与 GAIR 完成，通讯作者为刘鹏飞
+<!-- 该工作由 SII、上海交通大学与 GAIR 完成，通讯作者为刘鹏飞 -->
 
 [daVinci-kernel](https://arxiv.org/html/2606.16497v3#S3)让三个角色共享同一 LLM 权重，分别组织训练信号，联合更新模型与技能库
 
@@ -197,7 +202,7 @@ KernelWiki 从已有生产实现、PR、文档和竞赛案例中整理优化知�
 
 | 步骤 | 具体做法与产物 | 规则还是模型 | 使用的模型 |
 |---|---|---|---|
-| 1. 收集 PR 候选 | 按配置好的仓库、关键词和截止日期搜索 merged PR，抓取正文、changed files 与 diff，登记候选 | GitHub API + Python 脚本 | 不调用 LLM |
+| 1. 收集 PR 候选 | 按配置好的仓库、关键词和截止日期检索 merged PR，抓取正文、changed files 与 diff，登记候选 | GitHub API + Python 脚本 | 不调用 LLM |
 | 2. 筛选候选 | 按文件路径、后缀、patch 中的 device / DSL kernel 实现信号判断是否入库，记录接受或排除原因；证据获取失败时暂缓处理 | 规则判定 | 不调用 LLM |
 | 3. 生成 PR 来源页 | 将上游正文摘录、变更文件、架构与标签等填入固定模板，保存为 `sources/prs/...md`；已有页面默认跳过 | 模板生成 + 元数据规则 | 不调用 LLM |
 | 4. 归纳知识页 | 扫描来源材料，发现未覆盖的优化概念，综合成技术、诊断与 kernel 案例，新增或补充 `wiki/` 页面 | 语义归纳与撰写，人工与 LLM 的分工不明 | 未公开 |
@@ -246,7 +251,7 @@ KernelWiki 提供优化方向，任务内的执行证据检验这些方向在当
 
 ## 结果怎样读
 
-- **K-Search**：LLM 先规划优化策略，再生成具体实现，根据执行反馈调整搜索树中各方向的优先级，并剪去无效分支
+- **K-Search**：LLM 先规划优化策略，再生成具体实现，根据执行反馈调整探索树中各方向的优先级，并剪去无效分支
 - **Humanize**：通过 Claude Code 插件组织“计划、实现、独立审查”循环。先确定验收标准，Claude Code 实现和测试，Codex 独立检查结果，未通过就继续修改
 
 图中先比较 K-Search 与 Humanize 两种工作流，后两行再依次向 Humanize 加入 KernelWiki 和 ncu-report-skill
@@ -265,7 +270,183 @@ DSA TopK indexer 在 48 小时预算下接入 KernelWiki 后，speedup 从 3.71�
 
 ---
 
-# 4. KOPE：Memory Graph 与 Active Context Management
+# 4. Scaling Discovery Requires Forgetting：保留解，重置探索历史
+
+<!-- 作者单位为 UC Berkeley、Stanford、Bespoke Labs，首作者 Shangyin Tan，作者还包括 Koushik Sen、Alex Dimakis、Matei Zaharia -->
+
+实验使用 Pi Agent 和 DeepSeek V4.1 Flash，研究同一任务中的长期迭代。核心观察是：历史不断积累后，Agent 的探索越来越保守，增加轮次也难以继续取得收益
+
+作者的做法是周期性清空探索历史，从当前最佳解重新开始。在四个任务上，这种带遗忘的 Agent 团队比独立并行 Agent 最多高 15%，比单 Agent 最多高 39%
+
+![同等费用下，单 Agent、独立并行 Agent 与带遗忘的团队的探索曲线](assets/forgetting-figure1-scaling.png)
+
+灰线为单 Agent，黄线为四个独立并行 Agent，蓝线为共享候选并周期性遗忘的四人团队，蓝色虚线标记遗忘时点。左图 AHC014 的分数越高越好，右图 VLIW kernel 的 cycles 越低越好；遗忘后，团队多次突破此前的平台期
+
+横轴是累计模型费用，每种配置取三次运行中最好的一次
+
+<!-- Figure 1：arXiv:2610.20563v1，源码 figures/main.pdf；直接渲染为 PNG，未改动图中内容 -->
+
+## 长会话之后，Agent 出现了什么问题
+
+单 Agent 持续运行、多个 Agent 独立并行、团队共享候选，都可能进入平台期。后期会出现三种表现
+
+| 表现 | 观察到的行为 |
+|---|---|
+| 修改越来越小 | 从较大的结构调整退到几行局部修改 |
+| 推理投入下降 | 每轮 reasoning token 逐渐减少，探索方向收缩 |
+| 有想法却不做实验 | 反复判断已经到达极限，或因方案复杂、风险高而放弃实现 |
+
+![长会话中的修改幅度与 reasoning token 逐渐下降，遗忘后恢复](assets/forgetting-figure5-search-narrowing.png)
+
+左图是每次 proposal 的代码修改行数，右图是每轮 thinking token。蓝色虚线处重置历史后，两者重新上升，随后又逐渐下降
+
+VLIW 的三次单 Agent 实验中，大量轮次主动结束探索，没有提交新候选
+
+| 统计项 | 结果 |
+|---|---|
+| 没有产生候选的已完成 turn | 532 / 763，约 69.7% |
+| 这些轮次占用的模型费用 | 66.2% |
+| 无候选且至多读取一个文件、没有修改代码便宣布平台期 | 531 / 532 |
+
+一个 Agent 在达到 1710 cycles 时判断已接近机器的实际性能极限，之后仍自行降到 1644 cycles；同一任务中，带遗忘的团队最终达到 1077 cycles。它对优化空间的判断明显过早
+
+更典型的是 selection-tree 案例：Agent 先因错误的成本估算否决一种新实现，随后纠正估算并分析了寄存器需求，却仍以复杂、风险高为由不做实验，连续 11 个 turn 没有新候选。这表明停滞可以发生在仍有新想法的时候，已有历史与判断可能让 Agent 越来越不愿行动
+
+<!-- Figure 5：arXiv:2610.20563v1，源码 figures/analysis.pdf；直接渲染为 PNG，未改动图中内容；后期行为见论文 §5 -->
+
+## 怎样遗忘：保留最佳解，清空两类历史
+
+“两类历史”分别是 **Session 中的会话历史**，包括此前的消息、工具交互与推理记录；以及 **探索历史**，包括历次候选实现、对应分数、judge 反馈与候选之间的演化关系。重启时同时切断这两类历史的继承，只保留最佳候选及其分数
+
+![持续会话与团队周期性遗忘：下一轮从最佳候选重新开始](assets/forgetting-figure2-restart.png)
+
+每个 Agent 有自己的会话与探索记录。轮内可以读取同伴的候选 commits 和分数，借用其他分支的发现；重启时，全队从同一个最佳候选出发
+
+| 状态 | 轮次重启时怎样处理 |
+|---|---|
+| 当前最佳候选与分数 | 保留，所有 Agent 从它重新开始 |
+| 会话历史（Session） | 启动新会话，清空此前消息、工具交互与推理记录 |
+| 探索历史 | 新工作区只提供最佳候选及其分数，隐去其他候选、分数、反馈与 lineage |
+| Task 与 judge | 保持相同任务和验收目标 |
+
+执行上由 reducer 决定下一轮能看到哪些文件、续接哪个 session。保留最佳实现，能够继承已经写进代码的有效优化；清空探索过程，则让新一轮重新考虑此前被排除的方向
+
+<!-- Figure 2：arXiv:2610.20563v1，源码 figures/idea.pdf；直接渲染为 PNG；reducer 与两类历史见论文 §3 -->
+
+## 遗忘的收益怎样验证
+
+从已经停滞的同一状态出发，比较继续原会话与重启：每个 Agent 都再执行 30 次 proposal
+
+![同一平台期继续探索与遗忘重启的对照](assets/forgetting-figure4-continue-vs-forget.png)
+
+黑线是共同的前期探索，灰线继续原会话，蓝线重启。三个面板依次是单 Agent、四个独立 Agent、四人共享候选的团队
+
+| 同一四人团队的后续策略 | 相对起点的分数增益，3 次重复 | 每次运行的模型费用 |
+|---|---|---|
+| Continue | +1.4% ± 1.3% | $24.67 |
+| Forget | +9.2% ± 6.9% | $15.32 |
+
+这是 AHC014 上同一起点、相同 proposal 数的比较。Forget 的增益更高，费用也更低，后者来自重启后更短的上下文
+
+同一起点的团队实验还比较了每个 Agent 后续前 10 次 proposal 的行为
+
+| 指标，中位数 | Continue | Forget |
+|---|---|---|
+| 每次修改代码行数 | 6 | 40 |
+| 每次 reasoning token | 2.9k | 9.4k |
+
+重启后，Agent 恢复了较大幅度的修改，并投入更多推理
+
+<!-- Figure 4：arXiv:2610.20563v1，源码 figures/ablation.pdf；直接渲染为 PNG；分数与费用对应 Table 3，行为统计见 §5 的同起点团队实验 -->
+
+## 遗忘与 Communication 怎样互补
+
+VLIW 的一个团队运行展示了新方向怎样从失败变成有效优化
+
+| 阶段 | cycles，越低越好 | 发生了什么 |
+|---|---|---|
+| 遗忘前 | 1201 | 改进已缩小到每次几个 cycles |
+| 遗忘后尝试大改动 | 首次 1409，第二次 1201 | 换一种树节点读取方式，先退化，再勉强回到起点 |
+| 借用同伴的技巧 | 1136 | 读取同伴的代码 diff，用一个简化技巧修复新实现 |
+| 该轮结束 | 1114 | 团队继续改善结果 |
+
+在这个案例中，遗忘让 Agent 重新尝试较大的改动，Communication 则帮助它吸收同伴的技巧，修复最初失败的方案。两者分别支持新方向的探索和探索结果的继续完善
+
+<!-- VLIW 轨迹与 selection-tree 案例均见论文 §5；协作修复的细节仅描述到借用简化技巧，未给出该技巧的具体代码机制 -->
+
+## 对 Memory 管理的启发：最佳代码也是压缩后的经验
+
+把“已验证产物”和“产生它的历史叙述”分开管理：最佳实现可作为下一轮起点，历史尝试和解释则可以阶段性清空。有效的优化已经写入代码，因此最佳代码本身也承载了部分历史知识
+
+| Memory 思路 | 主要保留什么 |
+|---|---|
+| Experience Memory | 成功或失败的经验条目，供后续检索 |
+| Graph Memory | 经验内容，以及候选之间的关联与演化关系 |
+| 本文 Forgetting | 最佳代码及其分数，清空此前会话与探索记录 |
+
+这提示我们同时考虑 Memory 对 exploitation 和 exploration 的影响：经验能帮助利用已有知识，也可能让 Agent 过早排除新方向。对于 Kernel Optimization，更值得研究的是保留可复用的技术知识，同时减少历史失败叙述对后续探索的约束
+
+## Limitation
+
+实验只覆盖四种任务：AHC014、Frontier-CS Q171、VLIW SIMD kernel 优化和 nanochat 训练脚本优化；底层模型只有 DeepSeek V4.1 Flash，每种配置在每个任务上重复三次
+任务、模型与重复次数都有限，能否推广到其他模型、更复杂的研究任务和更长的运行过程，仍需验证
+
+这里验证的是同一任务内的会话与探索状态重置，不涉及跨任务 skill 的删除。kernel 实验跑在 **VLIW SIMD 模拟器**上，没有在真实 GPU 上测 CUDA / Triton kernel
+
+清空失败记录还可能导致重复探索同一条失败路径，论文没有系统统计这种重复尝试的代价
+
+### 尚未拆分：到底该遗忘哪一类历史
+
+本文同时清空会话历史与探索历史，没有分开两者各自的贡献。可以补充下面四组消融
+
+| 实验 | 清空会话历史 | 清空探索历史 |
+|---|---|---|
+| Baseline | 否 | 否 |
+| Context Reset | 是 | 否 |
+| Exploration Reset | 否 | 是 |
+| Full Forgetting，本文做法 | 是 | 是 |
+
+Context Reset 与 Baseline 比较，可以衡量仅重置会话的作用；Full Forgetting 与 Context Reset 比较，才能判断移除候选与反馈历史还有多少额外收益。现有结果只说明整体重启有效，没有回答具体该遗忘哪一类历史
+
+<!-- 四组消融及 Memory 类型对比为本文档的分析与实验建议，非论文已报告的实验；重复失败路径的成本未见系统评测 -->
+
+<!-- 论文：https://arxiv.org/pdf/2610.20563v1；Figures 1 / 2 / 4 / 5 从 https://arxiv.org/src/2610.20563v1 提取对应 PDF 资产；作者与实验设置见首页及 §4 -->
+
+## Anthropic AAR：清空会话，保留研究记录
+
+上面四组中的 Context Reset 已有现成的实现。Anthropic 8 月的 [Automated Alignment Researchers](https://alignment.anthropic.com/2026/automated-alignment-researchers/) 让 5 个 Claude Opus 4.8 Agent 并行研究对齐训练方法，每次迭代开启新 session，不继承对话，连续性全部来自持久记录
+
+| 记录 | 内容 |
+|---|---|
+| 个人 memory file | 自己尝试过的方法与分数 |
+| 共享 forum 与 leaderboard | 所有 Agent 的方法、分数与代码快照，可以在他人代码上继续修改 |
+| 共享 survey | 研究开始前整理的相关方法与复现要点，运行中可追加 |
+
+它和 Context Reset 有两点不同
+
+- **保留的探索记录是精简过的**：只有方法、分数和代码快照，没有原始候选、judge 反馈和推理过程。selection-tree 案例里，Agent 被自己“方案复杂、风险高”的判断拦住；只记方法和分数的文件，携带的这类自我判断可能更少
+- **没有和完全遗忘对比**：它说明清空会话、保留探索记录可以支撑长时间研究，没有回答这样是否比只留最佳解更好
+
+<!-- 机制见 https://alignment.anthropic.com/2026/automated-alignment-researchers/ §2–§3：每次迭代 fresh session，每次运行最长 48 小时或到平台期为止 -->
+
+## 重置之后保留什么
+
+把各家的做法排在一起，“具体该遗忘哪一类历史”可以转成“保留下来的历史应该是什么形式”
+
+| 后续探索能看到的历史 | 代表 |
+|---|---|
+| 会话与探索历史全部保留 | Continue 基线 |
+| 每条轨迹压成一行指标，需要时展开完整轨迹；会话不重置 | RSI-top，见第 6 节 |
+| 精简的方法、分数与代码快照；会话清空 | Anthropic AAR |
+| 只留最佳解及分数 | Scaling Discovery Requires Forgetting |
+
+四组消融里的 Context Reset 可以再拆成两组：保留原始探索历史，或只保留 AAR 式的精简记录
+
+---
+
+# 5. KOPE：Memory Graph 与 Active Context Management
+
+上一节的 Forgetting 与 Anthropic AAR 周期性重置会话。另一条路线由设计者精心组织 Agent 的上下文与记忆，预先规定经验的结构、排序规则和每轮注入预算，不依赖 Agent 自己压缩或重置：KOPE 用 Experience Graph 与分层 token 预算，AMD GEAK v4 规定经验在上下文里能起什么作用，RSI-top（第 6 节）用预先设计的指标面板索引全部历史
 
 KOPE 主要实验在 Ascend 910C 上优化 AscendC kernel
 
@@ -352,6 +533,18 @@ $$
 
 因此，这里要区分“这轮不看某条经验”和“长期撤回或删除这条经验”。前者已有明确的预算与选择机制，后者仍缺少具体方案
 
+## AMD GEAK v4：经验只提出候选，执行证据决定接受
+
+[GEAK v4](https://www.amd.com/en/developer/resources/technical-articles/2026/geak-v4.html) 的经验分三层：运行内记录本次的方向、独立 speedup、端到端变化与结论；跨次 learned cards 按 kernel 类型、GPU 与 regime 保存已验证的规律；参考知识包括按算子、backend、GPU、dtype、regime 组织的 `perf_knowledge`，以及人写的 `expert_skills` recipe
+
+关键规则是**历史经验只能增加候选方向，不能代替当前设备上的测量，也不能直接排除需要尝试的路径**
+
+KOPE 决定哪些经验进入本轮上下文，GEAK 进一步限定进入上下文的经验能起什么作用。这正对着上一节 Forgetting 的失败模式：Agent 因已有历史和判断过早放弃新方向。按这条规则，一条错误经验最多浪费一次尝试，不会封死一个探索方向
+
+GEAK 没有给出这条规则的单独消融；要确认它的价值，可以和允许经验直接排除方向的版本对比
+
+<!-- 机制来自 GEAK v4 官方文章 Evidence-gated learning / perf_knowledge 段落 -->
+
 ## 实验结果与 Graph 的局限
 
 组件消融使用 GLM-5.2，覆盖固定的 53 个算子、1,060 个 case
@@ -396,144 +589,90 @@ Ascend 经验扩大了通过范围，却使共同 case 的性能变差；加入 
 
 ---
 
-# 5. Scaling Discovery Requires Forgetting：保留解，重置搜索历史
+# 6. RSI-top：把历史压成指标面板，停滞时按需展开
 
-<!-- 作者单位为 UC Berkeley、Stanford、Bespoke Labs，首作者 Shangyin Tan，作者还包括 Koushik Sen、Alex Dimakis、Matei Zaharia -->
+RSI-top 来自 Stanford Scaling Intelligence Lab（Azalia Mirhoseini 组）。它和 Forgetting 观察到同一个问题，给出的解法相反：Agent 不能简单遗忘，因为跳出平台期需要知道试过什么、什么有效、哪些分支还有希望
 
-实验使用 Pi Agent 和 DeepSeek V4.1 Flash，研究同一任务中的长期迭代。核心观察是：历史不断积累后，Agent 的探索越来越保守，增加轮次也难以继续取得收益
+![OpenEvolve 停滞后，RSI-top 介入并跳出平台期](assets/rsi-top-escape-stall.png)
 
-作者的做法是周期性清空搜索历史，从当前最佳解重新开始。在四个任务上，这种带遗忘的 Agent 团队比独立并行 Agent 最多高 15%，比单 Agent 最多高 39%
+Anthropic kernel 优化任务上 OpenEvolve + Gemini 3.7 Flash 的最佳分数曲线，纵轴为 1363 / cycles，越高越好。RSI-top 从 OpenEvolve 第一次停滞处分叉，此前历史共享；最终 RSI-top 为 1109 cycles，OpenEvolve 为 1244 cycles
 
-![同等费用下，单 Agent、独立并行 Agent 与带遗忘的团队的搜索曲线](assets/forgetting-figure1-scaling.png)
+<!-- 项目页 https://rsi-top.github.io 的图表由 JS 绘制，本文图片为渲染后截图，未改动内容 -->
 
-灰线为单 Agent，黄线为四个独立并行 Agent，蓝线为共享候选并周期性遗忘的四人团队，蓝色虚线标记遗忘时点。左图 AHC014 的分数越高越好，右图 VLIW kernel 的 cycles 越低越好；遗忘后，团队多次突破此前的平台期
+## 长时探索大部分时间在停滞
 
-横轴是累计模型费用，每种配置取三次运行中最好的一次
+OpenEvolve 和 ShinkaEvolve 各配 DeepSeek v4 Flash 与 Gemini 3.7 Flash，在 Anthropic kernel 优化任务上跑了四组，最佳分数停滞的时间占 84%–92%。停滞定义为开跑一小时后、至少 20 分钟内最佳分数改善不到 2 cycles
 
-<!-- Figure 1：arXiv:2610.20563v1，源码 figures/main.pdf；直接渲染为 PNG，未改动图中内容 -->
+作者把原因之一归为 context inertia：模型在上下文中认定一个方向后，即使证据表明该换方向，仍继续沿它尝试；每次尝试又加深了上下文对下一次的牵引。这和 Forgetting 观察到的“修改越来越小”是同一现象
 
-## 长会话之后，Agent 出现了什么问题
+## 四种上下文管理方式
 
-单 Agent 持续运行、多个 Agent 独立并行、团队共享候选，都可能进入平台期。后期会出现三种表现
+![四种管理固定上下文窗口的方式：完整历史、周期性摘要、重置上下文与指标面板](assets/rsi-top-context-strategies.png)
 
-| 表现 | 观察到的行为 |
-|---|---|
-| 修改越来越小 | 从较大的结构调整退到几行局部修改 |
-| 推理投入下降 | 每轮 reasoning token 逐渐减少，搜索方向收缩 |
-| 有想法却不做实验 | 反复判断已经到达极限，或因方案复杂、风险高而放弃实现 |
-
-![长会话中的修改幅度与 reasoning token 逐渐下降，遗忘后恢复](assets/forgetting-figure5-search-narrowing.png)
-
-左图是每次 proposal 的代码修改行数，右图是每轮 thinking token。蓝色虚线处重置历史后，两者重新上升，随后又逐渐下降
-
-VLIW 的三次单 Agent 实验中，大量轮次主动结束探索，没有提交新候选
-
-| 统计项 | 结果 |
-|---|---|
-| 没有产生候选的已完成 turn | 532 / 763，约 69.7% |
-| 这些轮次占用的模型费用 | 66.2% |
-| 无候选且至多读取一个文件、没有修改代码便宣布平台期 | 531 / 532 |
-
-一个 Agent 在达到 1710 cycles 时判断已接近机器的实际性能极限，之后仍自行降到 1644 cycles；同一任务中，带遗忘的团队最终达到 1077 cycles。它对优化空间的判断明显过早
-
-更典型的是 selection-tree 案例：Agent 先因错误的成本估算否决一种新实现，随后纠正估算并分析了寄存器需求，却仍以复杂、风险高为由不做实验，连续 11 个 turn 没有新候选。这表明停滞可以发生在仍有新想法的时候，已有历史与判断可能让 Agent 越来越不愿行动
-
-<!-- Figure 5：arXiv:2610.20563v1，源码 figures/analysis.pdf；直接渲染为 PNG，未改动图中内容；后期行为见论文 §5 -->
-
-## 怎样遗忘：保留最佳解，清空两类历史
-
-“两类历史”分别是 **Session 中的会话历史**，包括此前的消息、工具交互与推理记录；以及 **Search state 中的搜索历史**，包括历次候选实现、对应分数、judge 反馈与候选之间的演化关系。重启时同时切断这两类历史的继承，只保留最佳候选及其分数
-
-![持续会话与团队周期性遗忘：下一轮从最佳候选重新开始](assets/forgetting-figure2-restart.png)
-
-每个 Agent 有自己的会话与搜索记录。轮内可以读取同伴的候选 commits 和分数，借用其他分支的发现；重启时，全队从同一个最佳候选出发
-
-| 状态 | 轮次重启时怎样处理 |
-|---|---|
-| 当前最佳候选与分数 | 保留，所有 Agent 从它重新开始 |
-| 会话历史（Session） | 启动新会话，清空此前消息、工具交互与推理记录 |
-| 搜索历史（Search state） | 新工作区只提供最佳候选及其分数，隐去其他候选、分数、反馈与 lineage |
-| Task 与 judge | 保持相同任务和验收目标 |
-
-执行上由 reducer 决定下一轮能看到哪些文件、续接哪个 session。保留最佳实现，能够继承已经写进代码的有效优化；清空探索过程，则让新一轮重新考虑此前被排除的方向
-
-<!-- Figure 2：arXiv:2610.20563v1，源码 figures/idea.pdf；直接渲染为 PNG；reducer 与两类历史见论文 §3 -->
-
-## 遗忘的收益怎样验证
-
-从已经停滞的同一状态出发，比较继续原会话与重启：每个 Agent 都再执行 30 次 proposal
-
-![同一平台期继续搜索与遗忘重启的对照](assets/forgetting-figure4-continue-vs-forget.png)
-
-黑线是共同的前期搜索，灰线继续原会话，蓝线重启。三个面板依次是单 Agent、四个独立 Agent、四人共享候选的团队
-
-| 同一四人团队的后续策略 | 相对起点的分数增益，3 次重复 | 每次运行的模型费用 |
+| 方式 | 例子 | 结果 |
 |---|---|---|
-| Continue | +1.4% ± 1.3% | $24.67 |
-| Forget | +9.2% ± 6.9% | $15.32 |
+| 完整历史 | 全部轨迹 | 超出上下文窗口 |
+| 周期性摘要 | Codex | 放得下，每次压缩丢失细节 |
+| 重置上下文 | Fork-and-Flush | 轨迹丢失，只保留工作区 |
+| 指标面板 | RSI-top | 每条轨迹压成一列指标，只展开需要的少数轨迹 |
 
-这是 AHC014 上同一起点、相同 proposal 数的比较。Forget 的增益更高，费用也更低，后者来自重启后更短的上下文
+## 方法：先设计指标，停滞时干预
 
-同一起点的团队实验还比较了每个 Agent 后续前 10 次 proposal 的行为
+![RSI-top 的两个阶段：开跑前生成并编译指标，运行中在停滞时干预](assets/rsi-top-method.png)
 
-| 指标，中位数 | Continue | Forget |
+1. **开跑前设计指标**：LLM 读任务描述，写出指标规格，每个指标有固定的输入和输出，编译成脚本
+2. **后台打分**：每条轨迹结束后，指标脚本在后台给它打分，下一条轨迹同时在运行；每条轨迹在面板上新增一行数字
+3. **检测停滞**：monitor 盯着面板上的最佳分数，停滞时暂停框架原有的探索循环
+4. **按需展开**：Agent 扫描指标行，只加载最有信息量的少数完整轨迹
+5. **干预后交还**：Agent 提出多个新方向，每个方向作为一条独立轨迹并行运行，结束后恢复原有探索
+
+RSI-top 作为插件包在 OpenEvolve、ShinkaEvolve 外层，不改它们内部的选择与变异规则
+
+## 指标面板：25 个指标
+
+kernel 任务的 25 个指标由 LLM 在开跑前生成，整个运行中保持不变，分四类
+
+| 类别 | 衡量什么 | 例子 |
 |---|---|---|
-| 每次修改代码行数 | 6 | 40 |
-| 每次 reasoning token | 2.9k | 9.4k |
+| Unary | 单条轨迹本身 | cycles、是否得到有效评测、记录的修改数 |
+| Binary | 与一个参照比较：父节点、当前最佳或最相近的历史状态 | 相对父节点的增益、与父节点或最佳代码的距离、与最近历史的相似度 |
+| Region | 最近一个窗口内的轨迹 | 重复或空操作比例、有效率、重复失败率、父节点选择集中度、主导失败签名占比 |
+| Global | 整个运行 | 距上次有效改进的时间、当前最佳维持了多少步、后代达到的最佳 cycles 与刷新最佳的次数 |
 
-重启后，Agent 恢复了较大幅度的修改，并投入更多推理
+Region 类直接量化了探索收窄：重复率、重复失败率、父节点集中度升高，都说明 Agent 在原地打转。Global 类里“后代达到的最佳结果”和 KOPE 的 Graph 排序一样，用后继表现评价一个节点
 
-<!-- Figure 4：arXiv:2610.20563v1，源码 figures/ablation.pdf；直接渲染为 PNG；分数与费用对应 Table 3，行为统计见 §5 的同起点团队实验 -->
+## 多样性控制
 
-## 遗忘与 Communication 怎样互补
+只共享面板不能保证提议足够多样。干预由多个 Agent 组成的 cohort 完成，从三个方向把它们推开
 
-VLIW 的一个团队运行展示了新方向怎样从失败变成有效优化
-
-| 阶段 | cycles，越低越好 | 发生了什么 |
-|---|---|---|
-| 遗忘前 | 1201 | 改进已缩小到每次几个 cycles |
-| 遗忘后尝试大改动 | 首次 1409，第二次 1201 | 换一种树节点读取方式，先退化，再勉强回到起点 |
-| 借用同伴的技巧 | 1136 | 读取同伴的代码 diff，用一个简化技巧修复新实现 |
-| 该轮结束 | 1114 | 团队继续改善结果 |
-
-在这个案例中，遗忘让 Agent 重新尝试较大的改动，Communication 则帮助它吸收同伴的技巧，修复最初失败的方案。两者分别支持新方向的探索和探索结果的继续完善
-
-<!-- VLIW 轨迹与 selection-tree 案例均见论文 §5；协作修复的细节仅描述到借用简化技巧，未给出该技巧的具体代码机制 -->
-
-## 对 Memory 管理的启发：最佳代码也是压缩后的经验
-
-把“已验证产物”和“产生它的历史叙述”分开管理：最佳实现可作为下一轮起点，历史尝试和解释则可以阶段性清空。有效的优化已经写入代码，因此最佳代码本身也承载了部分历史知识
-
-| Memory 思路 | 主要保留什么 |
+| 手段 | 做法 |
 |---|---|
-| Experience Memory | 成功或失败的经验条目，供后续检索 |
-| Graph Memory | 经验内容，以及候选之间的关联与演化关系 |
-| 本文 Forgetting | 最佳代码及其分数，清空此前会话与搜索记录 |
+| 不同视图 | 每个 Agent 随机看到 25 个指标中的 15 个，关注不同信号，展开不同轨迹 |
+| 不同想法 | Verbalized Sampling：每个 Agent 一次提出 8 个方向的组合，各附一个口头概率，表示普通规划者独立提出它的可能性，低概率标出不显眼的想法 |
+| 不同分支 | 父子关系把历史连成 DAG，要求每个 Agent 把方向落在不同的因果子图上 |
 
-这提示我们同时考虑 Memory 对 exploitation 和 exploration 的影响：经验能帮助利用已有知识，也可能让 Agent 过早排除新方向。对于 Kernel Optimization，更值得研究的是保留可复用的技术知识，同时减少历史失败叙述对后续探索的约束
+Prompt 还规定，只有“瓶颈 → 机制 → 预期效果”的假设实质不同才算不同方向，只改目标、参数或措辞不算
 
-## Limitation
+## 结果
 
-实验只覆盖四种任务：AHC014、Frontier-CS Q171、VLIW SIMD kernel 优化和 nanochat 训练脚本优化；底层模型只有 DeepSeek V4.1 Flash，每种配置在每个任务上重复三次
-任务、模型与重复次数都有限，能否推广到其他模型、更复杂的研究任务和更长的运行过程，仍需验证
+Kernel 任务的四组框架与模型组合，都在停滞后被 RSI-top 带出平台期。作为参照，作者也让 GPT-5.6 Sol 和 Claude Opus 5 单独跑框架，直到花完 $300 API 预算；Flash 级模型加 RSI-top 达到接近的分数，成本只是其一小部分
 
-这里验证的是同一任务内的会话与搜索状态重置，不涉及跨任务 skill 的删除。kernel 实验跑在 **VLIW SIMD 模拟器**上，没有在真实 GPU 上测 CUDA / Triton kernel
+MLE-bench（75 个 Kaggle 比赛）上，RSI-top 配 Gemini 3.7 Flash、1 张 A100、12 小时，多数对比方法用了 24 小时
 
-清空失败记录还可能导致重复探索同一条失败路径，论文没有系统统计这种重复尝试的代价
-
-### 尚未拆分：到底该遗忘哪一类历史
-
-本文同时清空 Session 与 Search state，没有分开两者各自的贡献。可以补充下面四组消融
-
-| 实验 | 清空会话历史 | 清空搜索历史 |
+| 指标 | RSI-top | 对比 |
 |---|---|---|
-| Baseline | 否 | 否 |
-| Context Reset | 是 | 否 |
-| Search Reset | 否 | 是 |
-| Full Forgetting，本文做法 | 是 | 是 |
+| 奖牌率 | 63.1% ± 6.3 | 与 AIBuildAI（Claude Opus 4.6，24 小时）并列最高 |
+| 有效提交 | 100% | MARS+、AIBuildAI 同为 100% |
+| 超过中位数 | 77.3% | 列出方法中最高 |
+| 金牌率 | 43.1% | 列出方法中最高 |
 
-Context Reset 与 Baseline 比较，可以衡量仅重置会话的作用；Full Forgetting 与 Context Reset 比较，才能判断移除候选与反馈历史还有多少额外收益。现有结果只说明整体重启有效，没有回答具体该遗忘哪一类历史
+## 与 Forgetting 的对照与局限
 
-<!-- 四组消融及 Memory 类型对比为本文档的分析与实验建议，非论文已报告的实验；重复失败路径的成本未见系统评测 -->
+两者都认为长历史会让探索收窄，分歧在于跳出平台期时要不要旧历史：Forgetting 清掉历史，让 Agent 重新敢做大改动；RSI-top 保留全部历史，但压成可比较的指标，再用多样性控制把 Agent 推向不同方向
 
-<!-- 论文：https://arxiv.org/pdf/2610.20563v1；Figures 1 / 2 / 4 / 5 从 https://arxiv.org/src/2610.20563v1 提取对应 PDF 资产；作者与实验设置见首页及 §4 -->
+- 没有和 Forgetting 或 Fork-and-Flush 在相同设置下直接比较。Forgetting 在 VLIW kernel 上达到 1077 cycles，RSI-top 为 1109 cycles，两者的模型、框架和预算都不同
+- 指标面板、按需展开与多样性控制各自贡献多少，项目页没有拆开
+- Kernel 曲线按 wall-clock 时间比较，干预 cohort 相对 OpenEvolve 单跑的额外调用成本没有报告
+- Kernel 任务跑在模拟器上，不是真实 GPU；目前只有项目页，没有论文
+
+<!-- 项目页 https://rsi-top.github.io；kernel 任务为 https://github.com/anthropics/original_performance_takehome，很可能与 Forgetting 的 VLIW SIMD 任务相同。项目页另提到同期的 Fork-and-Flush（arXiv 2610.07447）与 Anthropic Memento harness，均为“丢弃对话、保留工作”的重置方案，本文未展开 -->
